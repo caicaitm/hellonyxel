@@ -1,0 +1,18 @@
+{
+	"attrs": {
+		"compute_score": 16,
+		"cooling_score": -2,
+		"mem_type": "DDR4",
+		"memory_size_gb": 16,
+		"part_type": "ram",
+		"power_w": 5
+	},
+	"description": "内存条 DDR4 16GB（算力16）",
+	"id": "ram_ddr4_16",
+	"name": "DDR4 内存 16GB",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"ram"
+	]
+}

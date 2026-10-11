@@ -1,0 +1,135 @@
+================================================================================
+ HelloNyxel 积木类型对照表 —— res://block_types/*.json 分别对应哪种积木
+ 最后更新：2026-09-30
+================================================================================
+
+【文件与类型名的关系（唯一规则）】
+  BlockTypes.get_def(name) 走 _file_for(name) → 按 **文件名** 加载：
+      res://block_types/<类型名>.json
+  即：**文件名 = 类型名**。JSON 内部的 "name" 字段若与文件名不一致，
+  只影响「我的积木类型」菜单的列举（list_names 按 name 去重），**不影响加载**。
+  （见 blocks/block_type_registry.gd）
+
+【保存位置 save_location】
+  本目录下目前 **全部 11 个 JSON 都是 "本体"**（= 生效）。MOD / DLC 只是占位、不生效。
+  所有改动都以 JSON 为准（磁盘优先）；代码里的 ensure_builtin_type(...) 只是
+  「JSON 缺失时」的内存回退，**绝不写盘**。
+
+【标签简写对照】
+  show=显示  fill=填充  border=边框  collision=碰撞  text=文本  draggable=可拖动
+  selectable=可选中  gravity=重力  auto_generated=系统自动生成（标签选择页默认隐藏）
+
+--------------------------------------------------------------------------------
+一、桌面系统 / 环境类（由引擎自动生成，非玩家手工创建）
+--------------------------------------------------------------------------------
+
+ 1) BedRockX.json          → 类型名 BedRockX        「桌面屏障·横向」
+    尺寸 1920×1（一条横向细条）   display_layer -100   无边框无填充（全透明）
+    碰撞图层：1~30 + default + dragging + detect_zone（共 33 层 —— 挡住所有积木）
+    标签：collision, desktop_barrier
+    代码出处：blocks/desktop_barrier.gd（常量 TYPE_X）；由 DesktopBarrier.spawn_all 生成 4 条之一
+    作用：★ 全项目**唯一**把积木留在屏幕内的机制（移动逻辑不做屏幕夹取）。
+
+ 2) BedRockY.json          → 类型名 BedRockY        「桌面屏障·纵向」
+    尺寸 1×1080（一条纵向细条）   其余与 BedRockX 完全相同
+    代码出处：blocks/desktop_barrier.gd（常量 TYPE_Y）
+    ★ 新增命名碰撞图层时，必须同时改这两个 JSON 的 collision_layer（改代码常量不生效）。
+
+ 3) icon_boundary.json     → 类型名 icon_boundary   「桌面图标边界墙」
+    JSON **不含宽高**（尺寸由代码按每个图标的选中框实时算，4 条 1px 细墙围一个图标）
+    display_layer 0       碰撞图层：default + desktop_icon
+    标签：show, fill, collision, desktop_icon_boundary, auto_generated
+    代码出处：blocks/desktop_icon_boundary.gd（常量 TYPE = "icon_boundary"）
+    作用：围住每个桌面图标 → 积木不能盖住图标。也是「回收站/虚视跳转器」落点要避开的区域。
+
+ 4) page_frame.json        → 类型名 page_frame       「程序页面（边框）」
+    JSON **不含宽高**（随被模拟的窗口实时算）   display_layer 90（模板值）
+    碰撞图层：default + program_page_border
+    标签：show, fill, collision, program_page_border, auto_generated
+    代码出处：blocks/window_page.gd（常量 FRAME_TYPE = "page_frame"）
+    作用：把一个真实窗口模拟成「关卡页面」时，最外圈的那道边框积木。
+
+ 5) page_cover.json        → 类型名 page_cover       「程序页面（覆盖）」
+    JSON **不含宽高**（随窗口实时算）   display_layer 32（模板基数）
+    碰撞图层：program_page_cover（★ **独占功能层，不含 default** → 纯视觉遮挡、不挡积木）
+    标签：show, fill, program_page_cover, auto_generated, always_unselectable, cutout
+    代码出处：blocks/window_page.gd（常量 COVER_TYPE = "page_cover"）
+    作用：盖住窗口区域的半透明覆盖积木。★ 带 cutout（镂空）→ 运行时 display_layer 会被
+          window_page.gd::_cover_layer_for **夹在 [32, 63]**（不夹会在窗口数 ≥33 时镂掉玩家积木）。
+
+--------------------------------------------------------------------------------
+二、桌面常驻功能积木（启动时自动放置到桌面，可拖动）
+--------------------------------------------------------------------------------
+
+ 6) virtual_jump.json      → 类型名 virtual_jump     「虚视跳转器」
+    JSON 48×48；上桌面后会被拉到与图标选中框同尺寸（实测 114×109）
+    display_layer 0       碰撞图层：default + desktop_icon
+    标签：show, fill, border, collision, text, draggable, **button_open_darknet**
+    底部栏文字：(C)[虚视跳转器]
+    填充 #7B3A9DCC（紫）/ 边框 #C77DFFFF
+    代码出处：desktop/desktop.gd（常量 VIRTUAL_JUMP_TYPE / VIRTUAL_JUMP_SID）
+    作用：桌面上的一个"按钮"积木 —— **双击打开暗网入口页**（res://html/darknet_entry.html，
+          信号名 open_darknet）。启动首轮自动挑空白点放置 + 3s 兜底。
+
+ 7) recycle_bin.json       → 类型名 recycle_bin      「回收站」
+    JSON 48×48；上桌面后同样拉到 114×109（与虚视跳转器一致）
+    display_layer 0       碰撞图层：detect_zone（★ **独占功能层，不含 default**）
+    标签：show, fill, border, collision, text, draggable, **to_detect_recycle_bin**
+    底部栏文字：(C)[回收站]
+    填充 #4A5A6ACC（石板灰）/ 边框 #9FB3C8FF
+    代码出处：desktop/desktop.gd（常量 RECYCLE_BIN_TYPE / RECYCLE_BIN_SID）
+    作用：★ 与「虚视跳转器」**唯一区别就是标签** —— 后者是"按钮"、这个是"检测区"。
+          **不含任何 button_* → 双击不做任何事**；有积木中心进入它 → 该积木获得
+          detected_recycle_bin（由事件链/脚本消费，引擎本身不特判）。
+          ★ 检测区必须独占 detect_zone 层，否则会挡住对方、中心点进不去 = 永远检测不到。
+
+--------------------------------------------------------------------------------
+三、玩家可用 / 模板类（游戏内可创建，作为"起点模板"）
+--------------------------------------------------------------------------------
+
+ 8) Blank.json             → 类型名 Blank            「空白积木」（默认积木）
+    160×100               display_layer 64（高于覆盖层，是正常玩家积木的层级）
+    碰撞图层：default
+    标签：show, border, fill, text, collision, selectable
+    代码出处：blocks/block_type_registry.gd（常量 BLANK_TYPE = "Blank"）
+    作用：右键空白处「新建积木(空白)」与 /create_block（不给 block_type）共用。
+          ★ 改这个 JSON，之后新建的空白积木就跟着变。★ 它是内部模板，
+            本身不出现在「我的积木类型」菜单里（HIDDEN_TYPES）。
+
+ 9) portal.json            → 类型名 portal           「传送门」
+    160×100               display_layer 64       碰撞图层：default
+    标签：show, border, fill, selectable + **三个空后缀族标签**
+          portal_entrance_ / portal_exit_ / teleportable_
+    作用：传送门积木的模板。三个族标签是"待填组名"的占位（族标签后缀不能为空，
+          空后缀会被丢弃、不生效），玩家在标签选择页给它们补上组名后才真正成为
+          入口 / 出口 / 可传送对象。
+    代码出处：autoload/portal_manager.gd（前缀常量 ENTRANCE_PRE / EXIT_PRE / TELEPORTABLE_PRE）
+
+--------------------------------------------------------------------------------
+四、预留 / 当前未被使用
+--------------------------------------------------------------------------------
+
+10) icon_placeholder.json  → 类型名 **icon_placeholder**（★ 磁盘 JSON 里误写成 "virtual_jump"）
+    「图标占位」= 桌面图标副本（把真实桌面图标"复制"成一块积木，用于伪装桌面文件）
+    48×48（创建时由代码强制覆盖为当前图标尺寸）   display_layer 0
+    碰撞图层：default + desktop_icon
+    代码出处：desktop/desktop.gd（常量 ICON_COPY_TYPE = "icon_placeholder"）
+    ⚠ **状态：已登记类型但项目里没有任何地方创建它**（grep 无 create_block 调用点），属预留。
+    ⚠ **已知不一致**：该 JSON 是 virtual_jump.json 的整份副本（只把文字改成 APP_Name），
+      连 "name" 都还是 "virtual_jump"。而代码里 _icon_copy_def() 登记的内存模板是另一套
+      （蓝紫配色 #3A7BD5AA/#2E6BD6FF、**不含 text / 不含 button_open_darknet**）。
+      因 get_def 优先磁盘 JSON → 若将来真的创建它，会得到"带文字 APP_Name + 带按钮标签"的
+      错误外观（双击还会打开暗网入口）。**建议修正**（见文末"待办"）。
+
+11) wide_banner.json       → 类型名 wide_banner      「宽横幅」
+    400×40                display_layer 0        碰撞图层：default
+    标签：show, border, fill, text, collision
+    ⚠ **状态：无任何代码引用**（grep 全项目为空），是早期留下的示例/预留类型。
+
+================================================================================
+五、已知不一致 / 待办（仅记录，未改动）
+================================================================================
+ · icon_placeholder.json 的 "name" 字段应为 "icon_placeholder"（现为 "virtual_jump"）；
+   其内容也与代码里的 _icon_copy_def() 内存模板不一致（配色/标签不同）。
+   修 "name" 的副作用：会让它开始出现在「我的积木类型」菜单里
+   （现在因 name 撞车被 list_names 去重跳过）—— 若要修，需一并决定是否加入 HIDDEN_TYPES。

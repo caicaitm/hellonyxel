@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"compute_score": 14,
+		"cooling_score": -1,
+		"part_type": "ssd",
+		"power_w": 4,
+		"storage_capacity_gb": 1024,
+		"storage_if": "SATA3",
+		"storage_type": "SSD"
+	},
+	"description": "固态硬盘 SATA3 1024GB",
+	"id": "ssd_sata_1t",
+	"name": "固态 1TB SATA",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"ssd"
+	]
+}

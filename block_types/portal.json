@@ -1,0 +1,33 @@
+{
+	"attack_boxes": [],
+	"base_attack": 1.0,
+	"border_color": "#FFFFFFFF",
+	"border_width": 3.0,
+	"child_ids": [],
+	"collision_layer": [
+		"default"
+	],
+	"display_layer": 64,
+	"facing": 1,
+	"fill_anim": 0,
+	"fill_color": "#4090F0FF",
+	"fill_mode": 0,
+	"fill_path": "",
+	"height": 100.0,
+	"name": "portal",
+	"parent_id": 0,
+	"rotation_deg": 0.0,
+	"save_location": "本体",
+	"tags": [
+		"show",
+		"border",
+		"fill",
+		"selectable",
+		"portal_entrance_",
+		"portal_exit_",
+		"teleportable_"
+	],
+	"text_boxes": [],
+	"value_bars": [],
+	"width": 160.0
+}

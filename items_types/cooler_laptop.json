@@ -1,0 +1,16 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": 30,
+		"part_type": "cooler",
+		"power_w": 3
+	},
+	"description": "散热器（散热30）",
+	"id": "cooler_laptop",
+	"name": "笔记本散热模组",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"cooler"
+	]
+}

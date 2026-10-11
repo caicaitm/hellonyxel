@@ -1,0 +1,18 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": -2,
+		"form_factor": "ATX",
+		"part_type": "psu",
+		"power_supply_w": 1000,
+		"power_w": 7
+	},
+	"description": "电源 额定1000W（ATX）",
+	"id": "psu_atx_1000",
+	"name": "电源 1000W ATX",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"psu"
+	]
+}

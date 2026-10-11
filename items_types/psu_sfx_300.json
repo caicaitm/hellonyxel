@@ -1,0 +1,18 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": -2,
+		"form_factor": "SFX",
+		"part_type": "psu",
+		"power_supply_w": 300,
+		"power_w": 3
+	},
+	"description": "电源 额定300W（SFX）",
+	"id": "psu_sfx_300",
+	"name": "电源 300W SFX",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"psu"
+	]
+}

@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": 0,
+		"data_speed_mbps": 2500,
+		"nic_if": "PCIe",
+		"part_type": "nic",
+		"power_w": 3,
+		"provides_online": true
+	},
+	"description": "网卡 PCIe 2500Mbps",
+	"id": "nic_pcie_2_5g",
+	"name": "网卡 2.5GbE PCIe",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"nic"
+	]
+}

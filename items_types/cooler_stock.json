@@ -1,0 +1,16 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": 25,
+		"part_type": "cooler",
+		"power_w": 3
+	},
+	"description": "散热器（散热25）",
+	"id": "cooler_stock",
+	"name": "原装下压散热",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"cooler"
+	]
+}

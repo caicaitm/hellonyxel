@@ -1,0 +1,24 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": -4,
+		"dock_if": "DDR5",
+		"part_type": "dock",
+		"power_supply_w": 0,
+		"power_w": 3,
+		"provides_if": {},
+		"provides_limits": {},
+		"provides_slots": {
+			"nic": 1,
+			"storage": 2
+		}
+	},
+	"description": "拓展设备（需 DDR5，提供 存储×2、网卡×1）",
+	"id": "dock_dimm_m2",
+	"name": "内存槽转接卡(2×M.2)",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"dock"
+	]
+}

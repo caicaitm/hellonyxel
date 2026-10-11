@@ -1,0 +1,18 @@
+{
+	"attrs": {
+		"compute_score": 35,
+		"cooling_score": -2,
+		"mem_type": "DDR5",
+		"memory_size_gb": 32,
+		"part_type": "ram",
+		"power_w": 8
+	},
+	"description": "内存条 DDR5 32GB（算力35）",
+	"id": "ram_ddr5_32",
+	"name": "DDR5 内存 32GB",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"ram"
+	]
+}

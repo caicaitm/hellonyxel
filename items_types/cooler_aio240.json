@@ -1,0 +1,16 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": 80,
+		"part_type": "cooler",
+		"power_w": 6
+	},
+	"description": "散热器（散热80）",
+	"id": "cooler_aio240",
+	"name": "240 一体水冷",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"cooler"
+	]
+}

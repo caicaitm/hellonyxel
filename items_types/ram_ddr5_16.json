@@ -1,0 +1,18 @@
+{
+	"attrs": {
+		"compute_score": 20,
+		"cooling_score": -2,
+		"mem_type": "DDR5",
+		"memory_size_gb": 16,
+		"part_type": "ram",
+		"power_w": 6
+	},
+	"description": "内存条 DDR5 16GB（算力20）",
+	"id": "ram_ddr5_16",
+	"name": "DDR5 内存 16GB",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"ram"
+	]
+}

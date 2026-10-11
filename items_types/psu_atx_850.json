@@ -1,0 +1,18 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": -2,
+		"form_factor": "ATX",
+		"part_type": "psu",
+		"power_supply_w": 850,
+		"power_w": 6
+	},
+	"description": "电源 额定850W（ATX）",
+	"id": "psu_atx_850",
+	"name": "电源 850W ATX",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"psu"
+	]
+}

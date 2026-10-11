@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"compute_score": 40,
+		"cooling_score": -1,
+		"part_type": "ssd",
+		"power_w": 6,
+		"storage_capacity_gb": 2048,
+		"storage_if": "M.2_NVMe",
+		"storage_type": "SSD"
+	},
+	"description": "固态硬盘 M.2_NVMe 2048GB",
+	"id": "ssd_m2_2t",
+	"name": "固态 2TB M.2",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"ssd"
+	]
+}

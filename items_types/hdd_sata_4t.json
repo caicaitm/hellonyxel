@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": -3,
+		"part_type": "hdd",
+		"power_w": 9,
+		"storage_capacity_gb": 4096,
+		"storage_if": "SATA3",
+		"storage_type": "HDD"
+	},
+	"description": "机械硬盘 SATA3 4096GB",
+	"id": "hdd_sata_4t",
+	"name": "机械 4TB",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"hdd"
+	]
+}

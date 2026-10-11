@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"compute_score": 360,
+		"cooling_score": -43,
+		"gpu_if": "PCIe4x16",
+		"part_type": "gpu",
+		"power_w": 320,
+		"size_mm": 310,
+		"vram_gb": 16
+	},
+	"description": "显卡 PCIe4x16 16GB（长310mm，算力360）",
+	"id": "gpu_pcie4x16_rtx4080",
+	"name": "显卡 RTX4080",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"gpu"
+	]
+}

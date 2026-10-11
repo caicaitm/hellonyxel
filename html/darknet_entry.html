@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>虚视跳转器</title>
+<style>
+  :root {
+    --bg: #050505;
+    --panel: rgba(255, 255, 255, 0.045);
+    --txt: #e8e8e8;
+    --dim: rgba(255, 255, 255, 0.55);
+    --faint: rgba(255, 255, 255, 0.32);
+    --line: rgba(255, 255, 255, 0.26);
+    --line-strong: rgba(255, 255, 255, 0.6);
+  }
+  * { box-sizing: border-box; border-radius: 0 !important; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: radial-gradient(120% 90% at 50% 0%, #0c0c0c 0%, var(--bg) 55%);
+    color: var(--txt);
+    font-family: "Cascadia Code", "Consolas", "Courier New", "Microsoft YaHei", monospace;
+  }
+  /* 扫描线氛围（白色，极淡）*/
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.028) 0px,
+      rgba(255, 255, 255, 0.028) 1px,
+      transparent 2px,
+      transparent 4px);
+    mix-blend-mode: screen;
+    z-index: 5;
+  }
+  .crt {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 56px 24px 40px;
+    position: relative;
+    z-index: 1;
+  }
+  h1.glitch {
+    font-size: 46px;
+    letter-spacing: 10px;
+    margin: 0 0 14px;
+    color: #ffffff;
+    text-shadow: 0 0 14px rgba(255, 255, 255, 0.28);
+    position: relative;
+  }
+  /* 故障层：白 + 中灰（纯黑白内的"色差"用灰阶层次表达）*/
+  h1.glitch::before, h1.glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%;
+    overflow: hidden;
+  }
+  h1.glitch::before { color: rgba(255, 255, 255, 0.9); transform: translate(-2px, 0); clip-path: inset(0 0 55% 0); opacity: 0.5; }
+  h1.glitch::after  { color: rgba(255, 255, 255, 0.45); transform: translate(2px, 0);  clip-path: inset(55% 0 0 0); opacity: 0.5; }
+  .addr {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    padding: 22px 18px;
+    box-shadow: inset 0 0 24px rgba(255, 255, 255, 0.04);
+  }
+  .oct {
+    width: 104px;
+    flex: 0 1 104px;
+    min-width: 0;
+    padding: 9px 6px;
+    font-size: 16px;
+    text-align: center;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--line);
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.12s ease, background 0.12s ease;
+  }
+  .oct:focus { border-color: #ffffff; background: rgba(255, 255, 255, 0.09); }
+  .oct::placeholder { color: rgba(255, 255, 255, 0.28); font-size: 14px; }
+  .dot { color: var(--dim); font-size: 26px; line-height: 1; user-select: none; }
+  .go {
+    display: block;
+    width: 100%;
+    margin: 22px 0 0;
+    padding: 16px;
+    font-size: 22px;
+    letter-spacing: 6px;
+    font-weight: 800;
+    color: #000000;
+    background: #ffffff;
+    border: 1px solid #ffffff;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.08s ease;
+  }
+  .go:hover { background: transparent; color: #ffffff; }
+  /* 按下特效：反色加深 + 缩小；松开自动恢复（靠 transition 回弹）*/
+  .go:active {
+    transform: scale(0.96);
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+  }
+  .go:disabled { cursor: default; background: rgba(255, 255, 255, 0.2); color: rgba(0, 0, 0, 0.75); border-color: rgba(255, 255, 255, 0.4); }
+
+  /* 进度条附加部分 */
+  .progress {
+    display: none;
+    margin: 20px 0 0;
+  }
+  .progress.show { display: block; }
+  .prog-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    letter-spacing: 1px;
+    margin-bottom: 7px;
+  }
+  #progLabel { color: #ffffff; }
+  .prog-row .tag { color: var(--dim); }
+  .bar {
+    height: 14px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid var(--line);
+    overflow: hidden;
+  }
+  #barFill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.55), #ffffff);
+  }
+
+  .status {
+    margin: 16px 0 0;
+    min-height: 20px;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    color: var(--dim);
+  }
+  .status.ok { color: rgba(255, 255, 255, 0.92); }
+  .status.bad { color: #ffffff; font-weight: 700; }
+  .foot { margin-top: 30px; font-size: 11px; letter-spacing: 4px; color: var(--faint); }
+
+  /* ===== 底部装饰：伪 3D 方块地球（与 darknet_404 共用 globe.js）===== */
+  .globe-wrap {
+    width: 100%;
+    margin: 46px 0 0;
+    text-align: center;
+    user-select: none;
+  }
+  #globe {
+    display: block;
+    margin: 0;
+    cursor: grab;
+    touch-action: none;
+  }
+  #globe.dragging { cursor: grabbing; }
+  .globe-hint {
+    margin: 0 0 6px;
+    font-size: 10px;
+    letter-spacing: 6px;
+    color: rgba(255, 255, 255, 0.22);
+    user-select: none;
+  }
+</style>
+</head>
+<body>
+  <div class="crt">
+    <h1 class="glitch" data-text="虚视跳转器">虚视跳转器</h1>
+
+    <div class="addr">
+      <input id="s0" class="oct" maxlength="16" autocomplete="off" spellcheck="false" placeholder="段 1">
+      <span class="dot">.</span>
+      <input id="s1" class="oct" maxlength="16" autocomplete="off" spellcheck="false" placeholder="段 2">
+      <span class="dot">.</span>
+      <input id="s2" class="oct" maxlength="16" autocomplete="off" spellcheck="false" placeholder="段 3">
+      <span class="dot">.</span>
+      <input id="s3" class="oct" maxlength="16" autocomplete="off" spellcheck="false" placeholder="段 4">
+    </div>
+
+    <button id="go" class="go">JUMP！</button>
+
+    <div id="progress" class="progress">
+      <div class="prog-row">
+        <span class="tag">// 虚视链路建立中</span>
+        <span id="progLabel">0%</span>
+      </div>
+      <div class="bar"><div id="barFill"></div></div>
+    </div>
+
+    <p id="status" class="status"></p>
+
+    <p class="foot">虚视跳转器 · VIRTUAL JUMP</p>
+  </div>
+
+  <div class="globe-wrap">
+    <p class="globe-hint">DRAG TO ROTATE // 拖动旋转</p>
+    <canvas id="globe"></canvas>
+  </div>
+
+<script src="globe.js"></script>
+
+<script>
+(function () {
+  "use strict";
+
+  var inputs = [0, 1, 2, 3].map(function (i) { return document.getElementById("s" + i); });
+  var goBtn = document.getElementById("go");
+  var statusEl = document.getElementById("status");
+  var progressEl = document.getElementById("progress");
+  var progLabel = document.getElementById("progLabel");
+  var barFill = document.getElementById("barFill");
+  var connecting = false;
+
+  inputs.forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); connect(); }
+    });
+  });
+
+  // 是否「现实地址」的一段：非负整数且 0..255
+  function isRealOctet(s) {
+    if (!/^\d+$/.test(s)) return false;
+    var n = parseInt(s, 10);
+    return n >= 0 && n <= 255;
+  }
+
+  // 暗网地址 → 本地页面 映射表。
+  // 后续搭建本地节点时，在这里加条目即可：
+  //   键 = 四段原样拼成的暗网地址（含负数/字母），值 = 本地 html 文件名。
+  // 例： "nyx.secret.0.1": "darknet_nyx_secret.html"
+  var ROUTES = {
+    "-240.120.-60.12a": "player_profile.html",
+    "glo.flea.88.7": "market.html"
+  };
+
+  function setStatus(msg, ok) {
+    statusEl.textContent = msg;
+    statusEl.className = "status " + (ok ? "ok" : "bad");
+  }
+
+  function connect() {
+    if (connecting) return;
+    var segs = inputs.map(function (el) { return el.value.trim(); });
+    var addr = segs.join(".");
+    if (segs.some(function (s) { return s === ""; })) {
+      setStatus("✗ 四个字段都要填写", false);
+      return;
+    }
+    var allReal = segs.every(isRealOctet);
+    var target;
+    if (allReal) {
+      target = { url: "http://" + addr, real: true };
+      setStatus("→ 正在跳转到现实网站：" + target.url, true);
+    } else {
+      if (Object.prototype.hasOwnProperty.call(ROUTES, addr)) {
+        target = { url: ROUTES[addr], real: false };
+        setStatus("→ 正在连接暗网节点：" + addr, true);
+      } else {
+        target = { url: "darknet_404.html?to=" + encodeURIComponent(addr), real: false };
+        setStatus("→ 暗网节点不存在：" + addr + "（转 404）", false);
+      }
+    }
+    startJump(target);
+  }
+
+  // 进度条：0 → 99% 动画，99% 处停顿 1–2s，随后到 100% 并跳转
+  function startJump(target) {
+    connecting = true;
+    goBtn.disabled = true;
+    progressEl.classList.add("show");
+    barFill.style.transition = "none";
+    barFill.style.width = "0%";
+
+    var pct = 0;
+    var counter = setInterval(function () {
+      pct += Math.random() * 6 + 4;   // 每次 +4..10
+      if (pct >= 99) {
+        pct = 99;
+        barFill.style.width = "99%";
+        progLabel.textContent = "99%";
+        clearInterval(counter);
+        // 在 99% 处停顿 1.5s（落在 1–2s 区间）
+        setTimeout(function () {
+          barFill.style.transition = "width 0.35s ease-out";
+          barFill.style.width = "100%";
+          progLabel.textContent = "100% · 跳转中…";
+          setTimeout(function () { doNavigate(target); }, 400);
+        }, 1500);
+        return;
+      }
+      barFill.style.width = pct + "%";
+      progLabel.textContent = Math.floor(pct) + "%";
+    }, 80);
+  }
+
+  function doNavigate(target) {
+    if (target.real) {
+      // 现实网站：新标签打开，当前页保留 → 复位 UI
+      window.open(target.url, "_blank");
+      connecting = false;
+      goBtn.disabled = false;
+      progressEl.classList.remove("show");
+    } else {
+      // 本地节点 / 404：直接跳转，当前页离开
+      window.location.href = target.url;
+    }
+  }
+
+  goBtn.addEventListener("click", connect);
+})();
+</script>
+</body>
+</html>

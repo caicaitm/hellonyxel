@@ -1,0 +1,32 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": -8,
+		"dock_if": [
+			"PCIe4x16",
+			"Thunderbolt"
+		],
+		"part_type": "dock",
+		"power_supply_w": 600,
+		"power_w": 10,
+		"provides_if": {
+			"gpu": "PCIe4x16"
+		},
+		"provides_limits": {
+			"max_gpu_len_mm": 0,
+			"max_psu_ff": "ATX"
+		},
+		"provides_slots": {
+			"gpu": 1,
+			"psu": 1
+		}
+	},
+	"description": "拓展设备（需 PCIe4x16/Thunderbolt，提供 显卡×1、电源×1）",
+	"id": "dock_egpu_600",
+	"name": "显卡坞 600W",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"dock"
+	]
+}

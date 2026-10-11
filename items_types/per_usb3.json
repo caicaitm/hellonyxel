@@ -1,0 +1,24 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": -1,
+		"external_ports": [
+			{
+				"count": 4,
+				"kind": "usb",
+				"speed_mbps": 5000
+			}
+		],
+		"part_type": "peripheral",
+		"peripheral_if": "PCIe",
+		"power_w": 5
+	},
+	"description": "外设卡 PCIe（提供 1 个对外接口）",
+	"id": "per_usb3",
+	"name": "USB 3.0 扩展卡",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"peripheral"
+	]
+}

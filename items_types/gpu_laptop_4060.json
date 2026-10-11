@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"compute_score": 180,
+		"cooling_score": -21,
+		"gpu_if": "SOL",
+		"part_type": "gpu",
+		"power_w": 80,
+		"size_mm": 0,
+		"vram_gb": 8
+	},
+	"description": "显卡 SOL 8GB（长0mm，算力180）",
+	"id": "gpu_laptop_4060",
+	"name": "笔记本显卡 RTX4060",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"gpu"
+	]
+}

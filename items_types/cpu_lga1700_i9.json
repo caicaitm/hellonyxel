@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"big_cores": 8,
+		"compute_score": 240,
+		"cooling_score": -36,
+		"part_type": "cpu",
+		"power_w": 150,
+		"small_cores": 16,
+		"socket": "LGA1700"
+	},
+	"description": "CPU LGA1700（大核8+小核16，算力240）",
+	"id": "cpu_lga1700_i9",
+	"name": "CPU i9-13900K",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"cpu"
+	]
+}

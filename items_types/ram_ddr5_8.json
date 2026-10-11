@@ -1,0 +1,18 @@
+{
+	"attrs": {
+		"compute_score": 10,
+		"cooling_score": -2,
+		"mem_type": "DDR5",
+		"memory_size_gb": 8,
+		"part_type": "ram",
+		"power_w": 5
+	},
+	"description": "内存条 DDR5 8GB（算力10）",
+	"id": "ram_ddr5_8",
+	"name": "DDR5 内存 8GB",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"ram"
+	]
+}

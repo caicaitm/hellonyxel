@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"compute_score": 450,
+		"cooling_score": -54,
+		"gpu_if": "PCIe4x16",
+		"part_type": "gpu",
+		"power_w": 450,
+		"size_mm": 336,
+		"vram_gb": 24
+	},
+	"description": "显卡 PCIe4x16 24GB（长336mm，算力450）",
+	"id": "gpu_pcie4x16_rtx4090",
+	"name": "显卡 RTX4090",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"gpu"
+	]
+}

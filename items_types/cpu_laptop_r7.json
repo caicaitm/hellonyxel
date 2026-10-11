@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"big_cores": 8,
+		"compute_score": 150,
+		"cooling_score": -22,
+		"part_type": "cpu",
+		"power_w": 45,
+		"small_cores": 0,
+		"socket": "BGA_LAPTOP"
+	},
+	"description": "CPU BGA_LAPTOP（大核8+小核0，算力150）",
+	"id": "cpu_laptop_r7",
+	"name": "笔记本 CPU R7-6800U",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"cpu"
+	]
+}

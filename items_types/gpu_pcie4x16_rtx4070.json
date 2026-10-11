@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"compute_score": 280,
+		"cooling_score": -33,
+		"gpu_if": "PCIe4x16",
+		"part_type": "gpu",
+		"power_w": 200,
+		"size_mm": 244,
+		"vram_gb": 12
+	},
+	"description": "显卡 PCIe4x16 12GB（长244mm，算力280）",
+	"id": "gpu_pcie4x16_rtx4070",
+	"name": "显卡 RTX4070",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"gpu"
+	]
+}

@@ -1,0 +1,54 @@
+{
+	"blocks": [
+		{
+			"height": 300.0,
+			"tags": [
+				"show",
+				"border",
+				"fill",
+				"text",
+				"collision",
+				"selectable",
+				"draggable",
+				"portal_exit_TestDoor1"
+			],
+			"width": 160.0,
+			"x": -85.0,
+			"y": 572.0
+		},
+		{
+			"height": 10.0,
+			"tags": [
+				"show",
+				"border",
+				"fill",
+				"text",
+				"collision",
+				"selectable",
+				"draggable"
+			],
+			"width": 1600.0,
+			"x": -51.0,
+			"y": 737.0
+		},
+		{
+			"height": 1000.0,
+			"tags": [
+				"show",
+				"border",
+				"fill",
+				"text",
+				"collision",
+				"selectable"
+			],
+			"width": 1600.0,
+			"x": -65.0,
+			"y": 301.0
+		}
+	],
+	"camera": {
+		"x": -37.0,
+		"y": 407.0
+	},
+	"name": "Home1"
+}

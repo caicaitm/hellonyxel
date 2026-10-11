@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": -3,
+		"part_type": "hdd",
+		"power_w": 12,
+		"storage_capacity_gb": 8192,
+		"storage_if": "SATA3",
+		"storage_type": "HDD"
+	},
+	"description": "机械硬盘 SATA3 8192GB",
+	"id": "hdd_sata_8t",
+	"name": "机械 8TB",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"hdd"
+	]
+}

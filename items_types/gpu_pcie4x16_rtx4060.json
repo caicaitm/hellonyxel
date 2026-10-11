@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"compute_score": 200,
+		"cooling_score": -24,
+		"gpu_if": "PCIe4x16",
+		"part_type": "gpu",
+		"power_w": 115,
+		"size_mm": 200,
+		"vram_gb": 8
+	},
+	"description": "显卡 PCIe4x16 8GB（长200mm，算力200）",
+	"id": "gpu_pcie4x16_rtx4060",
+	"name": "显卡 RTX4060",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"gpu"
+	]
+}

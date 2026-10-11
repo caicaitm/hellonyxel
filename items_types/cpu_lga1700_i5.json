@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"big_cores": 6,
+		"compute_score": 120,
+		"cooling_score": -18,
+		"part_type": "cpu",
+		"power_w": 125,
+		"small_cores": 8,
+		"socket": "LGA1700"
+	},
+	"description": "CPU LGA1700（大核6+小核8，算力120）",
+	"id": "cpu_lga1700_i5",
+	"name": "CPU i5-13600K",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"cpu"
+	]
+}

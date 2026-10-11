@@ -1,0 +1,15 @@
+﻿命令,说明
+/create_block,"创建一块积木。block_type 先克隆已登记类型，其后键覆盖它；重复键以最后为准；无 position 时落在桌面中心附近。｜用法：/create_block { string_id=""x"", block_type=""类型名"", tags={gravity,draggable}, position=(100,200), width=120, height=120 }"
+/remove_block,"删除满足条件的积木。{k=v,...}为并列相等判定；可叠加 if(<cond>)；条件里 this/self 指代当前积木。｜用法：/remove_block if ( this:tags has ""gravity"" and this:width > 100 )   或   /remove_block { string_id=""x"" }"
+/set_var,"设置变量（覆盖或 += -= *= /= 运算）。ref 见变量引用规则。｜用法：/set_var 123:width = 80    /set_var this:position += (50,0)    /set_var player.json:age = 18"
+/add_var,"新增变量/集合元素：Dictionary 加键，Array/Packed*Array 追加元素。｜用法：/add_var 123:tags = ""flag""    /add_var player.json:score = 100"
+/remove_var,"移除变量/集合元素。带 = 删集合中的某个元素；不带 = 删键/清空（全局变量置 null）。｜用法：/remove_var 123:tags = ""flag""    /remove_var player.json:score"
+/help,打印全部命令或某条命令的用法。｜用法：/help [<cmd>]
+/clear,清空控制台输出（仅 UI 生效）。｜用法：/clear
+/load_level,"按关卡名把该关卡投影到关卡面板（关卡用 JSON 存于 levels/，中文名请加引号）。｜用法：/load_level ""测试1"""
+/perf,自测量面板：省略参数=切换开关；on/off=打开/关闭；snapshot=导出一次性能快照 JSON 到 任务缓存/perf_snapshots/。｜用法：/perf [on|off|snapshot]
+/add_timeline,"把一条预定在未来执行的命令写进时间轴（立即落盘，不等待确认；到点由时间轴自己触发）。after 相对时间（""10m""/""2h""/""1d""，可拼 ""1h30m""；纯数字=秒）；time 绝对时刻（本地时间）；effect 时间轴效果（要执行的命令）；event 触发事件（事件链/事件名）；两者可同时给 → 同一预计时刻写两条，先效果后事件。可选属性 tag/ignore/delay/max_skip。｜用法：/add_timeline { after=""10m"", effect=""/set_var a = 1"", event=""链/事件名"", tag=""笔记"", ignore=1 }"
+/play_event,"运行一个事件链事件。省略事件链（或写 auto）= 用「当前正在运行的事件链」；事件名可加引号（中文名建议加）。｜用法：/play_event <事件名>      或   /play_event <事件链> <事件名>      或   /play_event { chain=""auto"", name=""事件名"" }"
+/add_tag,"给某个已注册状态的「字符串数组」字段加一条标签 —— 条件里的 has_tag(""状态"",""标签"") 判的就是它。field 省略时：该状态只有一个标签字段就自动用它，多个则报错要求写明；顶层还没有标签字段时新建 tags。状态 / 标签名可裸写中文（含空格才加引号）。｜用法：/add_tag 剧情状态 得到钥匙 tags      或   /add_tag { state=""剧情状态"", field=""tags"", tag=""得到钥匙"" }"
+/remove_tag,"从某个已注册状态移除一条标签（本来就没有 = 成功，不算错误）。参数与 /add_tag 完全一致。｜用法：/remove_tag 剧情状态 得到钥匙 tags"
+/clear_tags,"清空某个已注册状态某个标签字段的全部标签。field 的自动规则同 /add_tag（多候选时必须写明，避免误清）。｜用法：/clear_tags 荧惑日常状态 mood      或   /clear_tags { state=""剧情状态"", field=""tags"" }"

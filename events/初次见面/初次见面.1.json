@@ -1,0 +1,18 @@
+{
+	"buttons": [],
+	"chain": "初次见面",
+	"close": [],
+	"content": {
+		"effect": "/play_event \"初次见面.2\"; /add_var story_state.json = \"初次见面\"",
+		"image": "",
+		"panel_type": "bottom",
+		"text_file": "初次见面.1",
+		"title": "",
+		"voice": "auto"
+	},
+	"name": "初次见面.1",
+	"open": [
+		"auto"
+	],
+	"version": 1
+}

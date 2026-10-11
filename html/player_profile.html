@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>玩家画像 · 中奖登记</title>
+<style>
+  :root {
+    --gold: #ffd34d;
+    --red: #ff3b30;
+    --bg: #1b1030;
+    --panel: rgba(255, 255, 255, 0.06);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+    color: #fff;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #3a1d6e 0%, transparent 60%),
+      linear-gradient(160deg, #2a0d4a 0%, #120a26 100%);
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px 64px;
+  }
+  .wrap { width: 100%; max-width: 640px; }
+  .langbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    font-size: 14px;
+    color: #ffe9b0;
+  }
+  .langbar label { font-weight: 700; letter-spacing: 1px; }
+  .langbar select {
+    padding: 6px 10px;
+    font-size: 14px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .langbar select option { color: #111; background: #fff; }
+  .connbox {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #ffe9b0;
+  }
+  .connbtn {
+    padding: 9px 14px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #2a0d4a;
+    background: linear-gradient(90deg, var(--gold), #ff9a3c);
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+  }
+  .connbtn:hover { filter: brightness(1.06); }
+  .connstatus { font-weight: 700; }
+  .connstatus.ok { color: #9dffb0; }
+  .connstatus.no { color: #ffb0a8; }
+  h1 {
+    margin: 0 0 6px;
+    text-align: center;
+    font-size: clamp(40px, 9vw, 84px);
+    line-height: 1.05;
+    font-weight: 900;
+    letter-spacing: 2px;
+    background: linear-gradient(90deg, var(--gold), #ff7a18 40%, var(--red) 75%, var(--gold));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 24px rgba(255, 122, 24, 0.35);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); filter: brightness(1); }
+    50%      { transform: scale(1.03); filter: brightness(1.15); }
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 19px;
+    color: #ffe9b0;
+    margin: 0 0 28px;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
+    padding: 26px 24px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  }
+  .row { margin-bottom: 22px; }
+  .row > label {
+    display: block;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #ffd9a8;
+  }
+  .row > label .idx {
+    display: inline-block;
+    width: 26px; height: 26px;
+    line-height: 26px;
+    text-align: center;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: var(--red);
+    color: #fff;
+    font-size: 14px;
+  }
+  input[type="text"], input[type="date"] {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 16px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    outline: none;
+  }
+  input::placeholder { color: #b9a7d6; }
+  input[type="date"] { color-scheme: dark; }
+  select#genderSel {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 16px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--gold) 50%),
+      linear-gradient(135deg, var(--gold) 50%, transparent 50%);
+    background-position:
+      calc(100% - 20px) 50%,
+      calc(100% - 14px) 50%;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+  }
+  select#genderSel option { color: #111; background: #fff; }
+  .hint { font-size: 13px; color: #b9a7d6; margin-top: 6px; }
+  .checkbox-row { margin-bottom: 18px; }
+  .checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    color: #ffd9a8;
+    cursor: pointer;
+    user-select: none;
+  }
+  .checkbox input { width: 18px; height: 18px; accent-color: var(--red); }
+  button.submit {
+    width: 100%;
+    margin-top: 8px;
+    padding: 16px;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #2a0d4a;
+    background: linear-gradient(90deg, var(--gold), #ff9a3c);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(255, 154, 60, 0.4);
+  }
+  button.submit:hover { filter: brightness(1.06); }
+  #msg {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 15px;
+    min-height: 22px;
+    color: #9dffb0;
+  }
+  #msg.err { color: #ff8a80; }
+
+  /* ============================================================
+   * 「诈骗中奖网页」氛围层：滚动喜报 / 假倒计时 / 系统公告 /
+   * 奖品橱窗 / 假认证 / 访客计数 / 客服气泡 / 延时弹窗 / 撒花
+   * ============================================================ */
+  /* 顶部滚动喜报（marquee 风）*/
+  .ticker {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 60;
+    height: 34px;
+    overflow: hidden;
+    background: linear-gradient(90deg, #d00000, #ff6a00, #d00000);
+    border-bottom: 2px solid var(--gold);
+    box-shadow: 0 2px 12px rgba(255, 60, 0, 0.55);
+  }
+  .ticker-track {
+    display: inline-block;
+    white-space: nowrap;
+    padding-left: 100%;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 34px;
+    color: #fff6c9;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    animation: tick 22s linear infinite;
+  }
+  @keyframes tick { to { transform: translateX(-100%); } }
+
+  body { padding-top: 48px; }
+
+  /* 假倒计时条 */
+  .countbar {
+    margin: 0 0 14px;
+    padding: 10px 14px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: #fff;
+    background: repeating-linear-gradient(45deg, #c00 0 14px, #e33 14px 28px);
+    border: 2px dashed var(--gold);
+    border-radius: 10px;
+    animation: blink 1s step-start infinite;
+  }
+  .countbar b { font-size: 22px; color: var(--gold); font-family: Consolas, monospace; }
+  @keyframes blink { 50% { border-color: #fff; } }
+
+  /* 系统公告 */
+  .notice {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #7c2b00;
+    background: linear-gradient(180deg, #fff6cf, #ffe9a3);
+    border: 2px solid #ffb700;
+    border-radius: 10px;
+    box-shadow: 0 0 18px rgba(255, 183, 0, 0.4);
+  }
+  .notice .tag {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 1px 8px;
+    font-weight: 900;
+    color: #fff;
+    background: #e53935;
+    border-radius: 4px;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+
+  /* 奖品橱窗 */
+  .prizes { display: flex; gap: 10px; margin: 0 0 20px; }
+  .prize {
+    flex: 1;
+    text-align: center;
+    padding: 14px 6px 12px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 2px solid var(--gold);
+    border-radius: 12px;
+    box-shadow: 0 0 14px rgba(255, 211, 77, 0.35), inset 0 0 22px rgba(255, 211, 77, 0.12);
+  }
+  .prize .ico { display: block; font-size: 34px; line-height: 1.2; animation: bounce 1.4s ease-in-out infinite; }
+  .prize:nth-child(2) .ico { animation-delay: 0.2s; }
+  .prize:nth-child(3) .ico { animation-delay: 0.4s; }
+  .prize .nm { display: block; margin-top: 6px; font-size: 13px; font-weight: 800; color: var(--gold); }
+  .prize .hot {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 0 6px;
+    font-size: 11px;
+    color: #fff;
+    background: #e53935;
+    border-radius: 8px;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-7px); }
+  }
+
+  /* 彩虹闪烁标题 */
+  h1 { animation: pulse 1.6s ease-in-out infinite, rainbow 3s linear infinite; }
+  @keyframes rainbow {
+    0%, 100% { filter: hue-rotate(0deg) drop-shadow(0 0 12px rgba(255, 122, 24, 0.5)); }
+    50%      { filter: hue-rotate(40deg) drop-shadow(0 0 22px rgba(255, 40, 40, 0.7)); }
+  }
+
+  /* 表单：金色呼吸边框 + 必填红星 */
+  .card {
+    border: 3px solid var(--gold);
+    box-shadow: 0 0 26px rgba(255, 211, 77, 0.4), 0 18px 50px rgba(0, 0, 0, 0.45);
+    animation: cardglow 1.8s ease-in-out infinite;
+  }
+  @keyframes cardglow {
+    0%, 100% { box-shadow: 0 0 18px rgba(255, 211, 77, 0.35), 0 18px 50px rgba(0, 0, 0, 0.45); }
+    50%      { box-shadow: 0 0 34px rgba(255, 211, 77, 0.75), 0 18px 50px rgba(0, 0, 0, 0.45); }
+  }
+  .row > label .req { color: #ff5340; font-weight: 900; margin-left: 2px; }
+
+  /* 提交按钮：跳动 + 渐变流光 */
+  button.submit {
+    position: relative;
+    overflow: hidden;
+    animation: btnbounce 0.9s ease-in-out infinite;
+    background: linear-gradient(90deg, var(--gold), #ff9a3c, var(--red), #ff9a3c, var(--gold));
+    background-size: 300% 100%;
+    animation: btnbounce 0.9s ease-in-out infinite, shine 2.4s linear infinite;
+  }
+  @keyframes btnbounce {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.035); }
+  }
+  @keyframes shine { to { background-position: 300% 0; } }
+
+  /* 假认证徽章 + 访客计数 + 免责小字 */
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .badge {
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #0a5c1f;
+    background: linear-gradient(180deg, #d6ffd9, #9dffb0);
+    border: 1px solid #2ea44f;
+    border-radius: 999px;
+  }
+  .visitors {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 14px;
+    color: #ffe9b0;
+  }
+  .visitors b { color: var(--gold); font-family: Consolas, monospace; font-size: 17px; }
+  .fineprint {
+    margin-top: 10px;
+    text-align: center;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  /* 假「已中奖」印章 */
+  .seal {
+    position: fixed;
+    right: 26px;
+    top: 130px;
+    z-index: 55;
+    width: 118px; height: 118px;
+    border: 4px double #ff5340;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    color: #ff5340;
+    font-weight: 900;
+    text-align: center;
+    transform: rotate(14deg);
+    opacity: 0.92;
+    text-shadow: 0 0 8px rgba(255, 83, 64, 0.6);
+    animation: sealpulse 1.6s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .seal .big { font-size: 26px; letter-spacing: 2px; }
+  .seal .small { font-size: 11px; letter-spacing: 1px; }
+  @keyframes sealpulse {
+    0%, 100% { transform: rotate(14deg) scale(1); }
+    50%      { transform: rotate(14deg) scale(1.07); }
+  }
+
+  /* 漂浮客服气泡 */
+  .cs-bubble {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 70;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(90deg, #1f9d55, #34d07c);
+    border: 2px solid #fff;
+    border-radius: 999px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    animation: csfloat 2.2s ease-in-out infinite;
+  }
+  @keyframes csfloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-8px); }
+  }
+
+  /* 延时中奖弹窗 */
+  .popup {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.66);
+  }
+  .popup.show { display: flex; }
+  .popup-box {
+    position: relative;
+    width: min(420px, 92vw);
+    padding: 34px 26px 26px;
+    text-align: center;
+    background: linear-gradient(165deg, #fff3c4 0%, #ffd34d 45%, #ff9a3c 100%);
+    border: 4px solid #fff;
+    border-radius: 22px;
+    box-shadow: 0 0 60px rgba(255, 211, 77, 0.8);
+    color: #7c2b00;
+    animation: popin 0.35s ease-out;
+  }
+  @keyframes popin {
+    from { transform: scale(0.5); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  .popup-box .gift { font-size: 58px; animation: bounce 1s ease-in-out infinite; }
+  .popup-box .pt { margin: 8px 0 4px; font-size: 21px; font-weight: 900; }
+  .popup-box .ps { font-size: 13px; opacity: 0.8; }
+  .popup-box .pbtn {
+    display: block;
+    width: 100%;
+    margin-top: 18px;
+    padding: 14px;
+    font-size: 19px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #fff;
+    background: linear-gradient(90deg, #e53935, #ff6a00, #e53935);
+    background-size: 200% 100%;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    animation: shine 1.6s linear infinite, btnbounce 0.8s ease-in-out infinite;
+  }
+  .popup-box .pclose {
+    position: absolute;
+    top: 8px; right: 12px;
+    font-size: 22px;
+    font-weight: 900;
+    color: #7c2b00;
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+
+  /* 撒花（飘落的 emoji）*/
+  .confetti {
+    position: fixed;
+    top: -40px;
+    z-index: 50;
+    font-size: 22px;
+    pointer-events: none;
+    animation: fall linear infinite;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(360deg); }
+  }
+
+  /* 抽奖转盘 */
+  .wheel-wrap { text-align: center; margin: 0 0 24px; }
+  .wheel-title {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-shadow: 0 0 14px rgba(255, 211, 77, 0.7);
+    margin-bottom: 14px;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  .wheel-stage { position: relative; width: 240px; height: 240px; margin: 0 auto; }
+  .wheel-pointer {
+    position: absolute;
+    top: -8px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 6;
+    font-size: 26px;
+    line-height: 1;
+    color: #fff;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.6);
+  }
+  .wheel {
+    width: 240px; height: 240px;
+    border-radius: 50%;
+    border: 6px solid var(--gold);
+    box-shadow: 0 0 26px rgba(255, 211, 77, 0.55), inset 0 0 22px rgba(0, 0, 0, 0.35);
+    background: repeating-conic-gradient(#c00 0deg 45deg, #ffd34d 45deg 90deg);
+    position: relative;
+    overflow: hidden;
+    transition: transform 4.6s cubic-bezier(0.15, 0.9, 0.18, 1);
+  }
+  .wheel .seg {
+    position: absolute;
+    left: 50%; top: 50%;
+    font-size: 24px;
+    line-height: 1;
+  }
+  .wheel-hub {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 35%, #fff, #ffd34d);
+    color: #7c2b00;
+    font-weight: 900;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.45);
+  }
+  .wheel-btn {
+    margin-top: 16px;
+    padding: 12px 36px;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: #fff;
+    background: linear-gradient(90deg, #e53935, #ff6a00, #e53935);
+    background-size: 200% 100%;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(229, 57, 53, 0.5);
+    animation: shine 1.6s linear infinite, btnbounce 0.8s ease-in-out infinite;
+  }
+  .wheel-result {
+    margin-top: 12px;
+    min-height: 24px;
+    font-size: 17px;
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow: 0 0 10px rgba(255, 211, 77, 0.6);
+  }
+
+  /* 客服排队弹窗 */
+  .queue {
+    position: fixed;
+    inset: 0;
+    z-index: 95;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.72);
+  }
+  .queue.show { display: flex; }
+  .queue-box {
+    position: relative;
+    width: min(360px, 92vw);
+    padding: 30px 24px 26px;
+    text-align: center;
+    background: linear-gradient(165deg, #2a0d4a, #4a1d7e);
+    border: 3px solid var(--gold);
+    border-radius: 20px;
+    box-shadow: 0 0 50px rgba(255, 211, 77, 0.5);
+    color: #fff;
+    animation: popin 0.3s ease-out;
+  }
+  .qclose {
+    position: absolute;
+    top: 8px; right: 12px;
+    font-size: 22px;
+    font-weight: 900;
+    color: #ffe9b0;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  .qhead {
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--gold);
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+  .qspinner { font-size: 40px; animation: qspin 1.4s linear infinite; }
+  @keyframes qspin { to { transform: rotate(360deg); } }
+  .qnum {
+    font-size: 52px;
+    font-weight: 900;
+    font-family: Consolas, monospace;
+    color: #ff5340;
+    text-shadow: 0 0 16px rgba(255, 83, 64, 0.7);
+    margin: 4px 0;
+    animation: qpulse 1s ease-in-out infinite;
+  }
+  @keyframes qpulse { 50% { transform: scale(1.08); } }
+  .qtext { font-size: 16px; color: #ffe9b0; }
+  .qhint { margin-top: 10px; font-size: 12px; color: rgba(255, 255, 255, 0.55); }
+</style>
+</head>
+<body>
+  <!-- 顶部滚动喜报 -->
+  <div class="ticker"><span class="ticker-track" id="tickerTrack">🎉 🎉 </span></div>
+
+  <!-- 假「已中奖」印章 -->
+  <div class="seal" id="seal">
+    <span class="big" id="sealBig">已中奖</span>
+    <span class="small" id="sealSmall">官方认证 ✓</span>
+  </div>
+
+  <!-- 漂浮客服气泡 -->
+  <div class="cs-bubble" id="csBubble">💬 <span id="csText">在线咨询</span></div>
+
+  <!-- 客服排队弹窗 -->
+  <div class="queue" id="queue">
+    <div class="queue-box">
+      <button type="button" class="qclose" id="queueClose">✕</button>
+      <div class="qhead">🎧 <span id="qTitle">在线客服</span></div>
+      <div class="qspinner">⏳</div>
+      <div class="qnum" id="qNum">9999</div>
+      <div class="qtext" id="qText">还有 9999 名就排到您啦</div>
+      <div class="qhint" id="qHint">正在为您转接专属客服，请勿关闭页面…</div>
+    </div>
+  </div>
+
+  <!-- 延时中奖弹窗 -->
+  <div class="popup" id="popup">
+    <div class="popup-box">
+      <button type="button" class="pclose" id="popupClose">✕</button>
+      <div class="gift">🎁</div>
+      <p class="pt" id="popupTitle">恭喜！您有一台 lPhone 待领取</p>
+      <p class="ps" id="popupSub">奖品已为您保留 30 分钟，逾期作废</p>
+      <button type="button" class="pbtn" id="popupBtn">立即领取 ▶</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="langbar">
+      <label for="langSel">中/En</label>
+      <select id="langSel">
+        <option value="zh">简体中文</option>
+        <option value="zht">繁体中文</option>
+        <option value="en">English</option>
+        <option value="ja">日本語</option>
+        <option value="ru">Русский</option>
+        <option value="ko">한국어</option>
+        <option value="es">Español</option>
+        <option value="pt">Português</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+        <option value="it">Italiano</option>
+        <option value="tr">Türkçe</option>
+        <option value="pl">Polski</option>
+        <option value="th">ไทย</option>
+        <option value="vi">Tiếng Việt</option>
+      </select>
+    </div>
+
+    <div class="connbox">
+      <button type="button" class="connbtn" id="connBtn">连接游戏目录</button>
+      <span class="connstatus no" id="connStatus">未连接</span>
+    </div>
+
+    <h1 id="title">恭喜您，中大奖了！</h1>
+    <p class="subtitle" id="subtitle">请填写您的基本信息，我们会将奖品邮寄到您的所在地。</p>
+
+    <!-- 假倒计时 -->
+    <div class="countbar">⏰ <span id="countLbl">距兑奖结束仅剩</span> <b id="countdown">09:58:31</b> ⏰</div>
+
+    <!-- 系统公告 -->
+    <div class="notice"><span class="tag" id="noticeTag">系统公告</span><span id="noticeText">您已被抽中为今日幸运用户，奖品已锁定，请尽快登记领取！</span></div>
+
+    <!-- 奖品橱窗 -->
+    <div class="prizes">
+      <div class="prize"><span class="ico">💰</span><span class="nm" id="p1">一等奖 · 现金 88,888 元</span><span class="hot">🔥 火热发放中</span></div>
+      <div class="prize"><span class="ico">📱</span><span class="nm" id="p2">二等奖 · lPhone 15 Pro</span><span class="hot">🔥 仅剩 3 台</span></div>
+      <div class="prize"><span class="ico">🏝️</span><span class="nm" id="p3">三等奖 · 豪华双日游</span><span class="hot">🔥 名额紧张</span></div>
+    </div>
+
+    <!-- 抽奖转盘 -->
+    <div class="wheel-wrap">
+      <div class="wheel-title" id="wheelTitle">🎰 幸运大转盘 🎰</div>
+      <div class="wheel-stage">
+        <div class="wheel-pointer">▼</div>
+        <div class="wheel" id="wheel"></div>
+        <div class="wheel-hub">GO</div>
+      </div>
+      <button type="button" class="wheel-btn" id="wheelBtn">点击抽奖</button>
+      <div class="wheel-result" id="wheelResult"></div>
+    </div>
+
+    <form class="card" id="form" autocomplete="off">
+      <div class="row">
+        <label for="name"><span class="idx">1</span><span id="lblName">姓名</span><span class="req">*</span></label>
+        <input type="text" id="name" name="name" placeholder="请输入您的姓名" />
+      </div>
+
+      <div class="row">
+        <label for="birthday"><span class="idx">2</span><span id="lblBirthday">生日（含年份）</span><span class="req">*</span></label>
+        <input type="date" id="birthday" name="birthday" max="2100-12-31" lang="en" />
+        <div class="hint" id="ageHint"></div>
+      </div>
+
+      <div class="row">
+        <label for="genderSel"><span class="idx">3</span><span id="lblGender">性别</span><span class="req">*</span></label>
+        <select id="genderSel"></select>
+        <div class="hint" id="genderHint"></div>
+      </div>
+
+      <div class="row">
+        <label for="address"><span class="idx">4</span><span id="lblAddress">地址</span><span class="req">*</span></label>
+        <input type="text" id="address" name="address" placeholder="请输入您的收件地址" />
+      </div>
+
+      <div class="row">
+        <label for="contact"><span class="idx">5</span><span id="lblContact">联系方式</span></label>
+        <input type="text" id="contact" name="contact" placeholder="请留下您的联系方式" />
+      </div>
+
+      <div class="row checkbox-row">
+        <label class="checkbox">
+          <input type="checkbox" id="stopPoll" />
+          <span id="lblStopPoll">提交后关闭游戏轮询</span>
+        </label>
+      </div>
+
+      <button type="submit" class="submit" id="submitBtn">🎁 提交并保存玩家画像 🎁</button>
+      <div id="msg"></div>
+    </form>
+
+    <!-- 假认证徽章 + 访客计数 + 免责小字 -->
+    <div class="badges">
+      <span class="badge" id="b1">✅ 官方授权</span>
+      <span class="badge" id="b2">🛡️ 公证处认证</span>
+      <span class="badge" id="b3">🔒 SSL 加密</span>
+    </div>
+    <div class="visitors" id="visitors">
+      今日访问 <b>9,876,543</b> 人 · 您是第 <b>8,888,888</b> 位幸运用户
+    </div>
+    <p class="fineprint" id="finePrint">最终解释权归主办方所有 · 本页面为游戏内虚构内容，与任何真实机构无关</p>
+  </div>
+
+<script>
+  "use strict";
+
+  // 命令文件 / 标志文件 的约定名称（须与游戏侧 HtmlBridge 一致）
+  var CMD_FILE = "html_cmd.json";
+  var FLAG_FILE = "html_cmd.flag";
+
+  // ===== 多语言翻译表（语言清单参考 data/translations.tsv）=====
+  var I18N = {
+    zh: {
+      htmlLang: "zh-CN",
+      title: "恭喜您，中大奖了！",
+      subtitle: "请填写您的基本信息，我们会将奖品邮寄到您的所在地。",
+      lblName: "姓名", namePh: "请输入您的姓名",
+      lblBirthday: "生日（含年份）",
+      lblGender: "性别",
+      lblAddress: "地址", addrPh: "请输入您的收件地址",
+      lblContact: "联系方式", contactPh: "请留下您的联系方式",
+      contactHint: "（此项仅作登记，不会被保存）",
+      submit: "现在就领奖",
+      adultHint: "已成年（≥18 岁）：在「男 / 女」基础上新增更多选项。",
+      minorHint: "",
+      ageTpl: function (age, adult) { return "当前年龄：" + age + " 岁 → " + (adult ? "已成年" : "未成年"); },
+      docPath: "文档/HelloNyxel/temp",
+      errName: "请填写第 1 行：姓名。",
+      errBirthday: "请填写第 2 行：生日。",
+      errGender: "请选择第 3 行：性别。",
+      errAddress: "请填写第 4 行：地址。",
+      connect: "连接游戏目录",
+      connected: "已连接 ✓",
+      notConnected: "未连接",
+      connHint: "请选择「文档/HelloNyxel/Temp」文件夹",
+      stopPoll: "提交后关闭游戏轮询",
+      sending: "正在发送命令…",
+      sent: "已发送命令，等待游戏轮询执行。",
+      sentManual: "未连接目录：已下载 html_cmd.json，请放入 Temp 并新建同名 .flag 文件。",
+      genders: {
+        minor: ["男", "女"],
+        adultExtra: ["双性", "无性", "草履虫", "外星人", "机器人", "天使", "恶魔", "武装直升机", "沃尔玛购物袋", "克苏鲁（不可名状）", "薛定谔的猫（观测前未定）", "赛博坦人", "三体人", "尤达大师", "哥斯拉", "皮卡丘", "数码宝贝", "蒸汽机车", "冰箱", "沙发", "路由器", "插座", "乐高积木", "乐高积木（踩到过的那种）", "过期酸奶", "量子态", "薛定谔的另一种猫", "Wi-Fi信号", "蓝牙耳机", "空气炸锅", "鸭嘴兽", "水熊虫", "太空中的一粒尘埃", "404 Not Found", "加载中…", "用户已注销", "保密", "其他"]
+      }
+    },
+    zht: {
+      htmlLang: "zh-TW",
+      title: "恭喜您，中大奖了！",
+      subtitle: "請填寫您的基本資訊，我們會將獎品郵寄到您的所在地。",
+      lblName: "姓名", namePh: "請輸入您的姓名",
+      lblBirthday: "生日（含年份）",
+      lblGender: "性別",
+      lblAddress: "地址", addrPh: "請輸入您的收件地址",
+      lblContact: "聯絡方式", contactPh: "請留下您的聯絡方式",
+      contactHint: "（此項僅作登記，不會被儲存）",
+      submit: "現在就領獎",
+      adultHint: "已成年（≥18 歲）：在「男 / 女」基礎上新增更多選項。",
+      minorHint: "",
+      ageTpl: function (age, adult) { return "目前年齡：" + age + " 歲 → " + (adult ? "已成年" : "未成年"); },
+      docPath: "文件/HelloNyxel/temp",
+      errName: "請填寫第 1 行：姓名。",
+      errBirthday: "請填寫第 2 行：生日。",
+      errGender: "請選擇第 3 行：性別。",
+      errAddress: "請填寫第 4 行：地址。",
+      connect: "連接遊戲目錄",
+      connected: "已連接 ✓",
+      notConnected: "未連接",
+      connHint: "請選擇「文件/HelloNyxel/Temp」資料夾",
+      stopPoll: "送出後關閉遊戲輪詢",
+      sending: "正在傳送指令…",
+      sent: "已傳送指令，等待遊戲輪詢執行。",
+      sentManual: "未連接目錄：已下載 html_cmd.json，請放入 Temp 並新建同名 .flag 檔案。",
+      genders: {
+        minor: ["男", "女"],
+        adultExtra: ["雙性", "無性", "草履蟲", "外星人", "機器人", "天使", "惡魔", "武裝直升機", "沃爾瑪購物袋", "克蘇魯（不可名狀）", "薛丁格的貓（觀測前未定）", "賽博坦人", "三體人", "尤達大師", "哥斯拉", "皮卡丘", "數碼寶貝", "蒸汽機車", "冰箱", "沙發", "路由器", "插座", "樂高積木", "樂高積木（踩到過的那種）", "過期優格", "量子態", "薛丁格的另一隻貓", "Wi-Fi信號", "藍牙耳機", "空氣炸鍋", "鴨嘴獸", "水熊蟲", "太空中的一粒塵埃", "404 Not Found", "載入中…", "使用者已登出", "保密", "其他"]
+      }
+    },
+    en: {
+      htmlLang: "en",
+      title: "Congratulations, you won the grand prize!",
+      subtitle: "Please fill in your basic info and we'll mail your prize to your location.",
+      lblName: "Name", namePh: "Please enter your name",
+      lblBirthday: "Birthday (with year)",
+      lblGender: "Gender",
+      lblAddress: "Address", addrPh: "Please enter your mailing address",
+      lblContact: "Contact", contactPh: "Please leave your contact info",
+      contactHint: "(This field is for registration only; it will not be saved.)",
+      submit: "Claim My Prize Now!",
+      adultHint: "Adult (≥18): more options added on top of Male / Female.",
+      minorHint: "",
+      ageTpl: function (age, adult) { return "Current age: " + age + " → " + (adult ? "Adult" : "Minor"); },
+      docPath: "Documents/HelloNyxel/temp",
+      errName: "Please fill row 1: Name.",
+      errBirthday: "Please fill row 2: Birthday.",
+      errGender: "Please select row 3: Gender.",
+      errAddress: "Please fill row 4: Address.",
+      connect: "Connect game folder",
+      connected: "Connected ✓",
+      notConnected: "Not connected",
+      connHint: "Please select the «Documents/HelloNyxel/Temp» folder",
+      stopPoll: "Stop game polling after submit",
+      sending: "Sending command…",
+      sent: "Command sent. Waiting for the game to poll and execute.",
+      sentManual: "Not connected: html_cmd.json downloaded. Put it in Temp and create a same-named .flag file.",
+      genders: {
+        minor: ["Male", "Female"],
+        adultExtra: ["Intersex", "Asexual", "Paramecium", "Alien", "Robot", "Angel", "Demon", "Armed Helicopter", "Walmart Shopping Bag", "Cthulhu (ineffable)", "Schrödinger's Cat (pre-observation)", "Cybertronian", "Trisolaran", "Master Yoda", "Godzilla", "Pikachu", "Digimon", "Steam Locomotive", "Refrigerator", "Sofa", "Router", "Power Outlet", "LEGO Brick", "LEGO Brick (the kind you've stepped on)", "Expired Yogurt", "Quantum State", "Schrödinger's Other Cat", "Wi-Fi Signal", "Bluetooth Earbuds", "Air Fryer", "Platypus", "Tardigrade", "A Speck of Dust in Space", "404 Not Found", "Loading…", "User Logged Out", "Confidential", "Other"]
+      }
+    },
+    ja: {
+      htmlLang: "ja",
+      title: "おめでとうございます、大賞です！",
+      subtitle: "基本的な情報を入力してください。賞品をご指定の場所へ郵送します。",
+      lblName: "氏名", namePh: "お名前を入力してください",
+      lblBirthday: "誕生日（年含む）",
+      lblGender: "性別",
+      lblAddress: "住所", addrPh: "送付先住所を入力してください",
+      lblContact: "連絡先", contactPh: "連絡先を入力してください",
+      contactHint: "（この項目は記録のみで保存されません）",
+      submit: "今すぐ賞品をもらう",
+      adultHint: "成年（18歳以上）：「男 / 女」に加えてさらに多くの選択肢が追加されます。",
+      minorHint: "",
+      ageTpl: function (age, adult) { return "現在の年齢：" + age + " 歳 → " + (adult ? "成年" : "未成年"); },
+      docPath: "ドキュメント/HelloNyxel/temp",
+      errName: "1行目の氏名を入力してください。",
+      errBirthday: "2行目の誕生日を入力してください。",
+      errGender: "3行目の性別を選択してください。",
+      errAddress: "4行目の住所を入力してください。",
+      connect: "ゲームフォルダに接続",
+      connected: "接続済み ✓",
+      notConnected: "未接続",
+      connHint: "「ドキュメント/HelloNyxel/Temp」フォルダを選択してください",
+      stopPoll: "送信後にゲームのポーリングを停止",
+      sending: "コマンドを送信中…",
+      sent: "コマンドを送信しました。ゲームのポーリング実行を待っています。",
+      sentManual: "未接続：html_cmd.json をダウンロードしました。Temp に入れ、同名の .flag ファイルを作成してください。",
+      genders: {
+        minor: ["男", "女"],
+        adultExtra: ["インターセックス", "無性", "ゾウリムシ", "宇宙人", "ロボット", "天使", "悪魔", "武装ヘリコプター", "ウォルマートのショッピングバッグ", "クトゥルフ（不可名状）", "シュレディンガーの猫（観測前は未確定）", "サイバトロニアン", "三体星人", "マスター・ヨーダ", "ゴジラ", "ピカチュウ", "デジモン", "蒸気機関車", "冷蔵庫", "ソファ", "ルーター", "コンセント", "レゴブロック", "レゴブロック（踏んだことのあるやつ）", "期限切れのヨーグルト", "量子状態", "シュレディンガーのもう一匹の猫", "Wi-Fi信号", "Bluetoothイヤホン", "エアフライヤー", "カモノハシ", "クマムシ", "宇宙のちり一粒", "404 Not Found", "読み込み中…", "ユーザーはログアウトしました", "秘密", "その他"]
+      }
+    },
+    ru: {
+      htmlLang: "ru",
+      title: "Поздравляем, вы выиграли главный приз!",
+      subtitle: "Заполните свои основные данные, и мы отправим приз по вашему адресу.",
+      lblName: "Имя", namePh: "Введите ваше имя",
+      lblBirthday: "Дата рождения (с годом)",
+      lblGender: "Пол",
+      lblAddress: "Адрес", addrPh: "Введите почтовый адрес",
+      lblContact: "Контакты", contactPh: "Оставьте контактные данные",
+      contactHint: "（Это поле только для регистрации, оно не сохраняется）",
+      submit: "Забрать приз сейчас!",
+      adultHint: "Совершеннолетний (≥18): к «Мужской / Женский» добавляются дополнительные варианты.",
+      minorHint: "",
+      ageTpl: function (age, adult) { return "Текущий возраст: " + age + " → " + (adult ? "Совершеннолетний" : "Несовершеннолетний"); },
+      docPath: "Документы/HelloNyxel/temp",
+      errName: "Заполните строку 1: Имя.",
+      errBirthday: "Заполните строку 2: Дата рождения.",
+      errGender: "Выберите строку 3: Пол.",
+      errAddress: "Заполните строку 4: Адрес.",
+      connect: "Подключить папку игры",
+      connected: "Подключено ✓",
+      notConnected: "Не подключено",
+      connHint: "Выберите папку «Документы/HelloNyxel/Temp»",
+      stopPoll: "Остановить опрос игры после отправки",
+      sending: "Отправка команды…",
+      sent: "Команда отправлена. Ожидаем опрос и исполнение игрой.",
+      sentManual: "Не подключено: html_cmd.json загружен. Поместите его в Temp и создайте .flag-файл с тем же именем.",
+      genders: {
+        minor: ["Мужской", "Женский"],
+        adultExtra: ["Интерсекс", "Асексуал", "Инфузория-туфелька", "Пришелец", "Робот", "Ангел", "Демон", "Вооружённый вертолёт", "Пакет из Walmart", "Ктулху (неописуемый)", "Кот Шрёдингера (до наблюдения не определён)", "Кибертронец", "Трисолярианец", "Мастер Йода", "Годзилла", "Пикачу", "Дигимон", "Паровоз", "Холодильник", "Диван", "Маршрутизатор", "Розетка", "Деталь LEGO", "Деталь LEGO (та, на которую наступали)", "Просроченный йогурт", "Квантовое состояние", "Другой кот Шрёдингера", "Сигнал Wi-Fi", "Bluetooth-наушники", "Аэрогриль", "Утконос", "Тихоходка", "Пылинка в космосе", "404 Not Found", "Загрузка…", "Пользователь вышел", "Конфиденциально", "Другое"]
+      }
+    },
+    ko: {
+      htmlLang: "ko",
+      title: "축하합니다, 대상 당첨되셨습니다!",
+      subtitle: "기본 정보를 입력해 주시면 상품을 해당 지역으로 우편 발송해 드리겠습니다.",
+      lblName: "이름", namePh: "이름을 입력하세요",
+      lblBirthday: "생일 (연도 포함)",
+      lblGender: "성별",
+      lblAddress: "주소", addrPh: "받는 주소를 입력하세요",
+      lblContact: "연락처", contactPh: "연락처를 남겨 주세요",
+      contactHint: "（이 항목은 등록용이며 저장되지 않습니다）",
+      submit: "지금 경품 받기",
+      adultHint: "성인 (18세 이상): 「남 / 여」에 더 많은 선택지가 추가됩니다.",
+      minorHint: "",
+      ageTpl: function (age, adult) { return "현재 나이: " + age + "세 → " + (adult ? "성인" : "미성년"); },
+      docPath: "문서/HelloNyxel/temp",
+      errName: "1행: 이름을 입력하세요.",
+      errBirthday: "2행: 생일을 입력하세요.",
+      errGender: "3행: 성별을 선택하세요.",
+      errAddress: "4행: 주소를 입력하세요.",
+      connect: "게임 폴더 연결",
+      connected: "연결됨 ✓",
+      notConnected: "연결 안 됨",
+      connHint: "「문서/HelloNyxel/Temp」 폴더를 선택하세요",
+      stopPoll: "제출 후 게임 폴링 중지",
+      sending: "명령 전송 중…",
+      sent: "명령을 보냈습니다. 게임이 폴링하여 실행하기를 기다립니다.",
+      sentManual: "연결 안 됨: html_cmd.json을 다운로드했습니다. Temp에 넣고 같은 이름의 .flag 파일을 만드세요.",
+      genders: {
+        minor: ["남", "여"],
+        adultExtra: ["인터섹스", "무성", "짚신벌레", "외계인", "로봇", "천사", "악마", "무장 헬리콥터", "월마트 쇼핑백", "크툴루 (형언 불가)", "슈뢰딩거의 고양이 (관측 전 미정)", "사이버트로니아인", "삼체인", "요다 마스터", "고질라", "피카츄", "디지몬", "증기 기관차", "냉장고", "소파", "라우터", "콘센트", "레고 블록", "레고 블록 (밟아본 적 있는 것)", "유통기한 지난 요거트", "양자 상태", "슈뢰딩거의 다른 고양이", "Wi-Fi 신호", "블루투스 이어버드", "에어프라이어", "오리너구리", "물곰", "우주 속 먼지 한 알", "404 Not Found", "불러오는 중…", "사용자 로그아웃됨", "기밀", "기타"]
+      }
+    },
+    es: {
+      htmlLang: "es",
+      title: "¡Felicidades, ha ganado el gran premio!",
+      subtitle: "Rellene su información básica y le enviaremos el premio a su ubicación.",
+      lblName: "Nombre", namePh: "Introduzca su nombre",
+      lblBirthday: "Cumpleaños (con año)",
+      lblGender: "Género",
+      lblAddress: "Dirección", addrPh: "Introduzca su dirección de envío",
+      lblContact: "Contacto", contactPh: "Deje su información de contacto",
+      contactHint: "（Este campo es solo para registro; no se guardará.）",
+      submit: "¡Reclamar mi premio ya!",
+      adultHint: "Adulto (≥18): se añaden más opciones además de «Masculino / Femenino».",
+      minorHint: "",
+      ageTpl: function (age, adult) { return "Edad actual: " + age + " → " + (adult ? "Adulto" : "Menor"); },
+      docPath: "Documentos/HelloNyxel/temp",
+      errName: "Rellene la fila 1: Nombre.",
+      errBirthday: "Rellene la fila 2: Cumpleaños.",
+      errGender: "Seleccione la fila 3: Género.",
+      errAddress: "Rellene la fila 4: Dirección.",
+      connect: "Conectar carpeta del juego",
+      connected: "Conectado ✓",
+      notConnected: "No conectado",
+      connHint: "Selecciona la carpeta «Documentos/HelloNyxel/Temp»",
+      stopPoll: "Detener el sondeo del juego tras enviar",
+      sending: "Enviando comando…",
+      sent: "Comando enviado. Esperando a que el juego sondee y ejecute.",
+      sentManual: "No conectado: html_cmd.json descargado. Ponlo en Temp y crea un archivo .flag con el mismo nombre.",
+      genders: {
+        minor: ["Masculino", "Femenino"],
+        adultExtra: ["Intersexual", "Asexual", "Paramecio", "Extraterrestre", "Robot", "Ángel", "Demonio", "Helicóptero armado", "Bolsa de la compra de Walmart", "Cthulhu (inefable)", "Gato de Schrödinger (antes de la observación)", "Cybertroniano", "Trisolariano", "Maestro Yoda", "Godzilla", "Pikachu", "Digimon", "Locomotora de vapor", "Refrigerador", "Sofá", "Router", "Enchufe", "Ladrillo LEGO", "Ladrillo LEGO (el que has pisado)", "Yogur caducado", "Estado cuántico", "Otro gato de Schrödinger", "Señal Wi-Fi", "Auriculares Bluetooth", "Freidora de aire", "Ornitorrinco", "Tardígrado", "Un grano de polvo en el espacio", "404 Not Found", "Cargando…", "Usuario desconectado", "Confidencial", "Otro"]
+      }
+    },
+    pt: {
+      htmlLang: "pt",
+      title: "Parabéns, você ganhou o grande prêmio!",
+      subtitle: "Preencha suas informações básicas e enviaremos o prêmio para o seu local.",
+      lblName: "Nome", namePh: "Digite seu nome",
+      lblBirthday: "Aniversário (com ano)",
+      lblGender: "Gênero",
+      lblAddress: "Endereço", addrPh: "Digite seu endereço de entrega",
+      lblContact: "Contato", contactPh: "Deixe suas informações de contato",
+      contactHint: "（Este campo serve apenas para registro; não será salvo.）",
+      submit: "Resgatar meu prêmio agora!",
+      adultHint: "Adulto (≥18): mais opções são adicionadas além de «Masculino / Feminino».",
+      minorHint: "",
+      ageTpl: function (age, adult) { return "Idade atual: " + age + " → " + (adult ? "Adulto" : "Menor"); },
+      docPath: "Documentos/HelloNyxel/temp",
+      errName: "Preencha a linha 1: Nome.",
+      errBirthday: "Preencha a linha 2: Aniversário.",
+      errGender: "Selecione a linha 3: Gênero.",
+      errAddress: "Preencha a linha 4: Endereço.",
+      connect: "Conectar pasta do jogo",
+      connected: "Conectado ✓",
+      notConnected: "Não conectado",
+      connHint: "Selecione a pasta «Documentos/HelloNyxel/Temp»",
+      stopPoll: "Parar a sondagem do jogo após enviar",
+      sending: "Enviando comando…",
+      sent: "Comando enviado. Aguardando o jogo sondar e executar.",
+      sentManual: "Não conectado: html_cmd.json baixado. Coloque-o em Temp e crie um arquivo .flag com o mesmo nome.",
+      genders: {
+        minor: ["Masculino", "Feminino"],
+        adultExtra: ["Intersexo", "Assexual", "Paramecia", "Alienígena", "Robô", "Anjo", "Demônio", "Helicóptero armado", "Sacola de compras do Walmart", "Cthulhu (indescritível)", "Gato de Schrödinger (antes da observação)", "Cybertroniano", "Trisolariano", "Mestre Yoda", "Godzilla", "Pikachu", "Digimon", "Locomotiva a vapor", "Geladeira", "Sofá", "Roteador", "Tomada", "Tijolo LEGO", "Tijolo LEGO (o que você pisou)", "Iogurte vencido", "Estado quântico", "Outro gato de Schrödinger", "Sinal Wi-Fi", "Fones Bluetooth", "Fritadeira de ar", "Ornitorrinco", "Tardígrado", "Um grão de poeira no espaço", "404 Not Found", "Carregando…", "Usuário desconectado", "Confidencial", "Outro"]
+      }
+    },
+    fr: {
+      htmlLang: "fr",
+      title: "Félicitations, vous avez gagné le grand prix !",
+      subtitle: "Remplissez vos informations de base et nous enverrons le prix à votre adresse.",
+      lblName: "Nom", namePh: "Saisissez votre nom",
+      lblBirthday: "Anniversaire (avec année)",
+      lblGender: "Genre",
+      lblAddress: "Adresse", addrPh: "Saisissez votre adresse de livraison",
+      lblContact: "Contact", contactPh: "Laissez vos coordonnées",
+      contactHint: "（Ce champ est uniquement pour l'enregistrement ; il ne sera pas enregistré.）",
+      submit: "Réclamer mon prix maintenant !",
+      adultHint: "Adulte (≥18) : des options supplémentaires sont ajoutées en plus de « Masculin / Féminin ».",
+      minorHint: "",
+      ageTpl: function (age, adult) { return "Âge actuel : " + age + " → " + (adult ? "Adulte" : "Mineur"); },
+      docPath: "Documents/HelloNyxel/temp",
+      errName: "Remplissez la ligne 1 : Nom.",
+      errBirthday: "Remplissez la ligne 2 : Anniversaire.",
+      errGender: "Sélectionnez la ligne 3 : Genre.",
+      errAddress: "Remplissez la ligne 4 : Adresse.",
+      connect: "Connecter le dossier du jeu",
+      connected: "Connecté ✓",
+      notConnected: "Non connecté",
+      connHint: "Sélectionnez le dossier « Documents/HelloNyxel/Temp »",
+      stopPoll: "Arrêter l'interrogation du jeu après l'envoi",
+      sending: "Envoi de la commande…",
+      sent: "Commande envoyée. En attente que le jeu interroge et exécute.",
+      sentManual: "Non connecté : html_cmd.json téléchargé. Placez-le dans Temp et créez un fichier .flag du même nom.",
+      genders: {
+        minor: ["Masculin", "Féminin"],
+        adultExtra: ["Intersexe", "Asexuel", "Paramécie", "Extraterrestre", "Robot", "Ange", "Démon", "Hélicoptère armé", "Sac de courses Walmart", "Cthulhu (indicible)", "Chat de Schrödinger (avant observation)", "Cybertronien", "Trisolarien", "Maître Yoda", "Godzilla", "Pikachu", "Digimon", "Locomotive à vapeur", "Réfrigérateur", "Canapé", "Routeur", "Prise électrique", "Brique LEGO", "Brique LEGO (celle sur laquelle on a marché)", "Yaourt périmé", "État quantique", "Un autre chat de Schrödinger", "Signal Wi-Fi", "Écouteurs Bluetooth", "Friteuse à air", "Ornithorynque", "Tardigrade", "Un grain de poussière dans l'espace", "404 Not Found", "Chargement…", "Utilisateur déconnecté", "Confidentiel", "Autre"]
+      }
+    },
+    de: {
+      htmlLang: "de",
+      title: "Herzlichen Glückwunsch, Sie haben den Hauptpreis gewonnen!",
+      subtitle: "Füllen Sie Ihre Basisdaten aus, und wir senden den Preis an Ihren Ort.",
+      lblName: "Name", namePh: "Bitte geben Sie Ihren Namen ein",
+      lblBirthday: "Geburtstag (mit Jahr)",
+      lblGender: "Geschlecht",
+      lblAddress: "Adresse", addrPh: "Bitte geben Sie Ihre Versandadresse ein",
+      lblContact: "Kontakt", contactPh: "Hinterlassen Sie Ihre Kontaktdaten",
+      contactHint: "（Dieses Feld dient nur der Registrierung und wird nicht gespeichert.）",
+      submit: "Jetzt Preis abholen!",
+      adultHint: "Erwachsen (≥18): zusätzlich zu «Männlich / Weiblich» werden weitere Optionen hinzugefügt.",
+      minorHint: "",
+      ageTpl: function (age, adult) { return "Aktuelles Alter: " + age + " → " + (adult ? "Erwachsen" : "Minderjährig"); },
+      docPath: "Dokumente/HelloNyxel/temp",
+      errName: "Bitte Zeile 1 ausfüllen: Name.",
+      errBirthday: "Bitte Zeile 2 ausfüllen: Geburtstag.",
+      errGender: "Bitte Zeile 3 auswählen: Geschlecht.",
+      errAddress: "Bitte Zeile 4 ausfüllen: Adresse.",
+      connect: "Spielordner verbinden",
+      connected: "Verbunden ✓",
+      notConnected: "Nicht verbunden",
+      connHint: "Wähle den Ordner «Dokumente/HelloNyxel/Temp»",
+      stopPoll: "Spielabfrage nach dem Senden stoppen",
+      sending: "Befehl wird gesendet…",
+      sent: "Befehl gesendet. Warte auf die Abfrage und Ausführung durch das Spiel.",
+      sentManual: "Nicht verbunden: html_cmd.json heruntergeladen. Lege ihn in Temp ab und erstelle eine .flag-Datei mit demselben Namen.",
+      genders: {
+        minor: ["Männlich", "Weiblich"],
+        adultExtra: ["Intersexuell", "Asexuell", "Pantoffeltierchen", "Außerirdischer", "Roboter", "Engel", "Dämon", "Bewaffneter Hubschrauber", "Walmart-Einkaufstüte", "Cthulhu (unaussprechlich)", "Schrödingers Katze (vor der Beobachtung)", "Cybertronianer", "Trisolarier", "Meister Yoda", "Godzilla", "Pikachu", "Digimon", "Dampflokomotive", "Kühlschrank", "Sofa", "Router", "Steckdose", "LEGO-Stein", "LEGO-Stein (der, auf den man getreten ist)", "Abgelaufener Joghurt", "Quantenzustand", "Schrödingers andere Katze", "Wi-Fi-Signal", "Bluetooth-Kopfhörer", "Heißluftfritteuse", "Schnabeltier", "Bärtierchen", "Ein Staubkorn im Weltraum", "404 Not Found", "Wird geladen…", "Benutzer abgemeldet", "Vertraulich", "Sonstiges"]
+      }
+    },
+    it: {
+      htmlLang: "it",
+      title: "Congratulazioni, hai vinto il premio principale!",
+      subtitle: "Compila le tue informazioni di base e spediremo il premio alla tua posizione.",
+      lblName: "Nome", namePh: "Inserisci il tuo nome",
+      lblBirthday: "Compleanno (con anno)",
+      lblGender: "Genere",
+      lblAddress: "Indirizzo", addrPh: "Inserisci il tuo indirizzo di spedizione",
+      lblContact: "Contatto", contactPh: "Lascia i tuoi recapiti",
+      contactHint: "（Questo campo serve solo alla registrazione e non verrà salvato.）",
+      submit: "Ritira il mio premio ora!",
+      adultHint: "Adulto (≥18): oltre a «Maschio / Femmina» vengono aggiunte altre opzioni.",
+      minorHint: "",
+      ageTpl: function (age, adult) { return "Età attuale: " + age + " → " + (adult ? "Adulto" : "Minorenne"); },
+      docPath: "Documenti/HelloNyxel/temp",
+      errName: "Compila la riga 1: Nome.",
+      errBirthday: "Compila la riga 2: Compleanno.",
+      errGender: "Seleziona la riga 3: Genere.",
+      errAddress: "Compila la riga 4: Indirizzo.",
+      connect: "Connetti cartella di gioco",
+      connected: "Connesso ✓",
+      notConnected: "Non connesso",
+      connHint: "Seleziona la cartella «Documenti/HelloNyxel/Temp»",
+      stopPoll: "Ferma il polling del gioco dopo l'invio",
+      sending: "Invio comando…",
+      sent: "Comando inviato. In attesa che il gioco esegua il polling.",
+      sentManual: "Non connesso: html_cmd.json scaricato. Mettilo in Temp e crea un file .flag con lo stesso nome.",
+      genders: {
+        minor: ["Maschio", "Femmina"],
+        adultExtra: ["Intersex", "Asessuale", "Paramecio", "Alieno", "Robot", "Angelo", "Demone", "Elicottero armato", "Borsa della spesa Walmart", "Cthulhu (indicibile)", "Gatto di Schrödinger (prima dell'osservazione)", "Cybertroniano", "Trisolare", "Maestro Yoda", "Godzilla", "Pikachu", "Digimon", "Locomotiva a vapore", "Frigorifero", "Divano", "Router", "Presa elettrica", "Mattone LEGO", "Mattone LEGO (quello su cui hai camminato)", "Yogurt scaduto", "Stato quantistico", "Un altro gatto di Schrödinger", "Segnale Wi-Fi", "Auricolari Bluetooth", "Friggitrice ad aria", "Ornitorinco", "Tardigrado", "Un granello di polvere nello spazio", "404 Not Found", "Caricamento…", "Utente disconnesso", "Riservato", "Altro"]
+      }
+    },
+    tr: {
+      htmlLang: "tr",
+      title: "Tebrikler, büyük ödülü kazandınız!",
+      subtitle: "Temel bilgilerinizi doldurun, ödülü bulunduğunuz yere gönderelim.",
+      lblName: "İsim", namePh: "İsminizi girin",
+      lblBirthday: "Doğum günü (yıl dahil)",
+      lblGender: "Cinsiyet",
+      lblAddress: "Adres", addrPh: "Gönderim adresinizi girin",
+      lblContact: "İletişim", contactPh: "İletişim bilgilerinizi bırakın",
+      contactHint: "（Bu alan yalnızca kayıt içindir; kaydedilmez.）",
+      submit: "Ödülümü şimdi al!",
+      adultHint: "Yetişkin (≥18): «Erkek / Kadın» üzerine daha fazla seçenek eklenir.",
+      minorHint: "",
+      ageTpl: function (age, adult) { return "Şu anki yaş: " + age + " → " + (adult ? "Yetişkin" : "Reşit değil"); },
+      docPath: "Belgeler/HelloNyxel/temp",
+      errName: "1. satırı doldurun: İsim.",
+      errBirthday: "2. satırı doldurun: Doğum günü.",
+      errGender: "3. satırı seçin: Cinsiyet.",
+      errAddress: "4. satırı doldurun: Adres.",
+      connect: "Oyun klasörüne bağlan",
+      connected: "Bağlandı ✓",
+      notConnected: "Bağlı değil",
+      connHint: "«Belgeler/HelloNyxel/Temp» klasörünü seçin",
+      stopPoll: "Gönderdikten sonra oyun yoklamasını durdur",
+      sending: "Komut gönderiliyor…",
+      sent: "Komut gönderildi. Oyunun yoklayıp yürütmesi bekleniyor.",
+      sentManual: "Bağlı değil: html_cmd.json indirildi. Temp'e koyun ve aynı adlı bir .flag dosyası oluşturun.",
+      genders: {
+        minor: ["Erkek", "Dişi"],
+        adultExtra: ["İnterseks", "Aseksüel", "Paramesyum", "Uzaylı", "Robot", "Melek", "Şeytan", "Silahlı helikopter", "Walmart alışveriş çantası", "Cthulhu (tanımlanamaz)", "Schrödinger'in kedisi (gözlemlerden önce)", "Cybertronlu", "Trisolarisli", "Usta Yoda", "Godzilla", "Pikachu", "Digimon", "Buharlı lokomotif", "Buzdolabı", "Kanepe", "Yönlendirici", "Priz", "LEGO tuğlası", "LEGO tuğlası (üzerine bastığın)", "Süresi dolmuş yoğurt", "Kuantum durumu", "Schrödinger'in diğer kedisi", "Wi-Fi sinyali", "Bluetooth kulaklık", "Hava fritözü", "Ornitorenk", "Su ayısı", "Uzaydaki bir toz tanesi", "404 Not Found", "Yükleniyor…", "Kullanıcı çıkış yaptı", "Gizli", "Diğer"]
+      }
+    },
+    pl: {
+      htmlLang: "pl",
+      title: "Gratulujemy, wygrałeś główną nagrodę!",
+      subtitle: "Wypełnij swoje podstawowe dane, a wyślemy nagrodę pod Twój adres.",
+      lblName: "Imię", namePh: "Wpisz swoje imię",
+      lblBirthday: "Data urodzenia (z rokiem)",
+      lblGender: "Płeć",
+      lblAddress: "Adres", addrPh: "Wpisz adres dostawy",
+      lblContact: "Kontakt", contactPh: "Zostaw dane kontaktowe",
+      contactHint: "（To pole służy tylko do rejestracji i nie jest zapisywane.）",
+      submit: "Odbierz nagrodę teraz!",
+      adultHint: "Dorosły (≥18): oprócz «Mężczyzna / Kobieta» dodawane są kolejne opcje.",
+      minorHint: "",
+      ageTpl: function (age, adult) { return "Aktualny wiek: " + age + " → " + (adult ? "Dorosły" : "Nieletni"); },
+      docPath: "Dokumenty/HelloNyxel/temp",
+      errName: "Wypełnij wiersz 1: Imię.",
+      errBirthday: "Wypełnij wiersz 2: Data urodzenia.",
+      errGender: "Wybierz wiersz 3: Płeć.",
+      errAddress: "Wypełnij wiersz 4: Adres.",
+      connect: "Połącz folder gry",
+      connected: "Połączono ✓",
+      notConnected: "Nie połączono",
+      connHint: "Wybierz folder «Dokumenty/HelloNyxel/Temp»",
+      stopPoll: "Zatrzymaj odpytywanie gry po wysłaniu",
+      sending: "Wysyłanie polecenia…",
+      sent: "Polecenie wysłane. Oczekiwanie na odpytanie i wykonanie przez grę.",
+      sentManual: "Nie połączono: pobrano html_cmd.json. Umieść go w Temp i utwórz plik .flag o tej samej nazwie.",
+      genders: {
+        minor: ["Mężczyzna", "Kobieta"],
+        adultExtra: ["Interpłciowy", "Aseksualny", "Pantofelek", "Obcy", "Robot", "Anioł", "Demon", "Uzbrojony śmigłowiec", "Torba zakupowa Walmart", "Cthulhu (niewysłowiony)", "Kot Schrödingera (przed obserwacją)", "Cybertronianin", "Trisolarianin", "Mistrz Yoda", "Godzilla", "Pikachu", "Digimon", "Lokomotywa parowa", "Lodówka", "Kanapa", "Router", "Gniazdko", "Klocek LEGO", "Klocek LEGO (ten, na którym stanąłeś)", "Przeterminowany jogurt", "Stan kwantowy", "Inny kot Schrödingera", "Sygnał Wi-Fi", "Słuchawki Bluetooth", "Frytkownica powietrzna", "Dziobak", "Niedźwiedź wodny", "Ziarenko pyłu w kosmosie", "404 Not Found", "Ładowanie…", "Użytkownik wylogował się", "Poufne", "Inne"]
+      }
+    },
+    th: {
+      htmlLang: "th",
+      title: "ยินดีด้วย คุณถูกรางวัลที่หนึ่ง!",
+      subtitle: "กรุณากรอกข้อมูลพื้นฐานของคุณ เราจะจัดส่งรางวัลไปตามที่อยู่ของคุณ",
+      lblName: "ชื่อ", namePh: "กรุณากรอกชื่อของคุณ",
+      lblBirthday: "วันเกิด (รวมปี)",
+      lblGender: "เพศ",
+      lblAddress: "ที่อยู่", addrPh: "กรุณากรอกที่อยู่จัดส่ง",
+      lblContact: "ช่องทางติดต่อ", contactPh: "กรุณาระบุช่องทางติดต่อ",
+      contactHint: "（ช่องนี้ใช้ลงทะเบียนเท่านั้น จะไม่ถูกบันทึก）",
+      submit: "รับรางวัลเลย",
+      adultHint: "ผู้ใหญ่ (≥18): มีตัวเลือกเพิ่มเติมนอกเหนือจาก «ชาย / หญิง»",
+      minorHint: "",
+      ageTpl: function (age, adult) { return "อายุปัจจุบัน: " + age + " ปี → " + (adult ? "ผู้ใหญ่" : "เยาว์"); },
+      docPath: "เอกสาร/HelloNyxel/temp",
+      errName: "กรุณากรอกแถวที่ 1: ชื่อ",
+      errBirthday: "กรุณากรอกแถวที่ 2: วันเกิด",
+      errGender: "กรุณาเลือกแถวที่ 3: เพศ",
+      errAddress: "กรุณากรอกแถวที่ 4: ที่อยู่",
+      connect: "เชื่อมต่อโฟลเดอร์เกม",
+      connected: "เชื่อมต่อแล้ว ✓",
+      notConnected: "ยังไม่ได้เชื่อมต่อ",
+      connHint: "เลือกโฟลเดอร์ «เอกสาร/HelloNyxel/Temp»",
+      stopPoll: "หยุดการโพลลิงเกมหลังส่ง",
+      sending: "กำลังส่งคำสั่ง…",
+      sent: "ส่งคำสั่งแล้ว รอให้เกมโพลลิงและดำเนินการ",
+      sentManual: "ไม่ได้เชื่อมต่อ: ดาวน์โหลด html_cmd.json แล้ว วางใน Temp และสร้างไฟล์ .flag ชื่อเดียวกัน",
+      genders: {
+        minor: ["ชาย", "หญิง"],
+        adultExtra: ["อินเทอร์เซ็กซ์", "ไม่มีเพศ", "ปรามีเซียม", "มนุษย์ต่างดาว", "หุ่นยนต์", "นางฟ้า", "ปีศาจ", "เฮลิคอปเตอร์ติดอาวุธ", "ถุงช้อปปิ้งวอลมาร์ต", "คธูลู (ไม่สามารถบรรยายได้)", "แมวของชเรดีงเงอร์ (ก่อนการสังเกต)", "ไซเบอร์โทรเนียน", "ทริซโซลาเรียน", "มาสเตอร์โยดา", "ก็อตซิลลา", "พิคาชู", "ดิจิมอน", "รถจักรไอน้ำ", "ตู้เย็น", "โซฟา", "เราเตอร์", "ปลั๊กไฟ", "อิฐเลโก้", "อิฐเลโก้ (อันที่คุณเหยียบมาแล้ว)", "โยเกิร์ตหมดอายุ", "สถานะควอนตัม", "แมวอีกตัวของชเรดีงเงอร์", "สัญญาณ Wi-Fi", "หูฟังบลูทูธ", "หม้อทอดไร้น้ำมัน", "หมอนกปัก", "หมีน้ำ", "เม็ดฝุ่นในอวกาศ", "404 Not Found", "กำลังโหลด…", "ผู้ใช้ออกจากระบบแล้ว", "เป็นความลับ", "อื่น ๆ"]
+      }
+    },
+    vi: {
+      htmlLang: "vi",
+      title: "Chúc mừng, bạn đã trúng giải đặc biệt!",
+      subtitle: "Vui lòng điền thông tin cơ bản, chúng tôi sẽ gửi giải thưởng đến nơi của bạn.",
+      lblName: "Tên", namePh: "Vui lòng nhập tên của bạn",
+      lblBirthday: "Ngày sinh (bao gồm năm)",
+      lblGender: "Giới tính",
+      lblAddress: "Địa chỉ", addrPh: "Vui lòng nhập địa chỉ nhận hàng",
+      lblContact: "Liên hệ", contactPh: "Vui lòng để lại thông tin liên hệ",
+      contactHint: "（Trường này chỉ để đăng ký; sẽ không được lưu.）",
+      submit: "Nhận thưởng ngay",
+      adultHint: "Người lớn (≥18): thêm nhiều tùy chọn ngoài «Nam / Nữ».",
+      minorHint: "",
+      ageTpl: function (age, adult) { return "Tuổi hiện tại: " + age + " → " + (adult ? "Người lớn" : "Chưa thành niên"); },
+      docPath: "Tài liệu/HelloNyxel/temp",
+      errName: "Vui lòng điền dòng 1: Tên.",
+      errBirthday: "Vui lòng điền dòng 2: Ngày sinh.",
+      errGender: "Vui lòng chọn dòng 3: Giới tính.",
+      errAddress: "Vui lòng điền dòng 4: Địa chỉ.",
+      connect: "Kết nối thư mục trò chơi",
+      connected: "Đã kết nối ✓",
+      notConnected: "Chưa kết nối",
+      connHint: "Chọn thư mục «Tài liệu/HelloNyxel/Temp»",
+      stopPoll: "Dừng polling trò chơi sau khi gửi",
+      sending: "Đang gửi lệnh…",
+      sent: "Đã gửi lệnh. Đợi trò chơi polling và thực thi.",
+      sentManual: "Chưa kết nối: đã tải html_cmd.json. Hãy bỏ vào Temp và tạo tệp .flag cùng tên.",
+      genders: {
+        minor: ["Nam", "Nữ"],
+        adultExtra: ["Liên giới tính", "Vô tính", "Trùng giày", "Người ngoài hành tinh", "Rô-bốt", "Thiên thần", "Ác quỷ", "Trực thăng vũ trang", "Túi mua sắm Walmart", "Cthulhu (không thể diễn tả)", "Mèo của Schrödinger (trước khi quan sát)", "Người Cybertron", "Người Trisolaris", "Bậc thầy Yoda", "Godzilla", "Pikachu", "Digimon", "Đầu máy hơi nước", "Tủ lạnh", "Ghế sofa", "Bộ định tuyến", "Ổ cắm điện", "Gạch LEGO", "Gạch LEGO (loại bạn đã giẫm phải)", "Sữa chua hết hạn", "Trạng thái lượng tử", "Con mèo khác của Schrödinger", "Tín hiệu Wi-Fi", "Tai nghe Bluetooth", "Nồi chiên không dầu", "Thú mỏ vịt", "Gấu nước", "Hạt bụi trong không gian", "404 Not Found", "Đang tải…", "Người dùng đã đăng xuất", "Bảo mật", "Khác"]
+      }
+    }
+  };
+
+  // ===== 「诈骗网页」氛围文案（15 语言；缺失自动回退中文）=====
+  var SCAM = {
+    zh: { countLbl: "距兑奖结束仅剩", noticeTag: "系统公告", notice: "您已被抽中为今日幸运用户，奖品已锁定，请尽快登记领取！",
+      p1: "一等奖 · 现金 88.888 ", p2: "二等奖 · lPhone 15 Pro", p3: "三等奖 · 豪华双日游",
+      hot1: "🔥 火热发放中", hot2: "🔥 仅剩 3 台", hot3: "🔥 名额紧张",
+      b1: "✅ 官方授权", b2: "🛡️ 公证处认证", b3: "🔒 SSL 加密",
+      vis: "今日访问 {a} 人 · 您是第 {b} 位幸运用户",
+      fine: "最终解释权归主办方所有 · 本页面为游戏内虚构内容，与任何真实机构无关",
+      sealBig: "已中奖", sealSmall: "官方认证 ✓", cs: "在线咨询",
+      popTitle: "恭喜！您有一台 lPhone 待领取", popSub: "奖品已为您保留 30 分钟，逾期作废", popBtn: "立即领取 ▶" },
+    zht: { countLbl: "距兌獎結束僅剩", noticeTag: "系統公告", notice: "您已被抽中為今日幸運用戶，獎品已鎖定，請盡快登記領取！",
+      p1: "一等獎 · 現金 88.888 ", p2: "二等獎 · lPhone 15 Pro", p3: "三等獎 · 豪華兩日遊",
+      hot1: "🔥 火熱發放中", hot2: "🔥 僅剩 3 台", hot3: "🔥 名額緊張",
+      b1: "✅ 官方授權", b2: "🛡️ 公證處認證", b3: "🔒 SSL 加密",
+      vis: "今日訪問 {a} 人 · 您是第 {b} 位幸運用戶",
+      fine: "最終解釋權歸主辦方所有 · 本頁面為遊戲內虛構內容，與任何真實機構無關",
+      sealBig: "已中獎", sealSmall: "官方認證 ✓", cs: "線上諮詢",
+      popTitle: "恭喜！您有一台 lPhone 待領取", popSub: "獎品已為您保留 30 分鐘，逾期作廢", popBtn: "立即領取 ▶" },
+    en: { countLbl: "Prize claim ends in", noticeTag: "NOTICE", notice: "You have been drawn as today's lucky user! Your prize is locked — register now to claim it!",
+      p1: "1st Prize · Cash 88.888 ", p2: "2nd Prize · lPhone 15 Pro", p3: "3rd Prize · Luxury 2-Day Tour",
+      hot1: "🔥 Giving away now", hot2: "🔥 Only 3 left", hot3: "🔥 Few slots left",
+      b1: "✅ Officially Licensed", b2: "🛡️ Notary Certified", b3: "🔒 SSL Encrypted",
+      vis: "{a} visitors today · You are lucky visitor No. {b}",
+      fine: "Final interpretation rights belong to the organizer · This page is fictional in-game content, unrelated to any real organization",
+      sealBig: "WINNER", sealSmall: "Certified ✓", cs: "Live Chat",
+      popTitle: "Congrats! An lPhone is waiting for you", popSub: "Your prize is reserved for 30 minutes, then forfeited", popBtn: "Claim Now ▶" },
+    ja: { countLbl: "賞品受付終了まで", noticeTag: "お知らせ", notice: "あなたは本日のラッキーユーザーに当選しました！賞品は確保済み、今すぐ登録して受け取ろう！",
+      p1: "一等賞 · 現金 88.888 ", p2: "二等賞 · lPhone 15 Pro", p3: "三等賞 · 豪華2日間ツアー",
+      hot1: "🔥 配布中", hot2: "🔥 残り3台", hot3: "🔥 枠わずか",
+      b1: "✅ 公式認可", b2: "🛡️ 公証済み", b3: "🔒 SSL暗号化",
+      vis: "本日訪問 {a} 人 · あなたは {b} 番目のラッキーユーザー",
+      fine: "最終解釈権は主催者に帰属 · 本ページはゲーム内の架空コンテンツです",
+      sealBig: "当選", sealSmall: "公式認証 ✓", cs: "オンライン相談",
+      popTitle: "おめでとう！lPhone が届くのを待っています", popSub: "賞品は30分間確保されます。期限切れは無効", popBtn: "今すぐ受け取る ▶" },
+    ru: { countLbl: "До конца выдачи приза", noticeTag: "ОБЪЯВЛЕНИЕ", notice: "Вы выбраны везунчиком дня! Ваш приз зарезервирован — зарегистрируйтесь, чтобы забрать!",
+      p1: "1-я премия · наличные 88.888 ", p2: "2-я премия · lPhone 15 Pro", p3: "3-я премия · роскошный тур на 2 дня",
+      hot1: "🔥 Раздаём сейчас", hot2: "🔥 Осталось 3", hot3: "🔥 Мест мало",
+      b1: "✅ Официальная лицензия", b2: "🛡️ Заверено нотариусом", b3: "🔒 SSL-шифрование",
+      vis: "Сегодня {a} посетителей · Вы счастливчик № {b}",
+      fine: "Право окончательной интерпретации принадлежит организатору · Это вымышленная игровая страница",
+      sealBig: "ВЫИГРЫШ", sealSmall: "Проверено ✓", cs: "Онлайн-чат",
+      popTitle: "Поздравляем! Вас ждёт lPhone", popSub: "Приз зарезервирован на 30 минут, затем аннулируется", popBtn: "Забрать ▶" },
+    ko: { countLbl: "경품 종료까지", noticeTag: "공지", notice: "오늘의 행운 사용자가 되었습니다! 경품이 예약되었습니다. 지금 등록하고 수령하세요!",
+      p1: "1등 · 현금 88.888 ", p2: "2등 · lPhone 15 Pro", p3: "3등 · 럭셔리 2일 여행",
+      hot1: "🔥 배포 중", hot2: "🔥 3대 남음", hot3: "🔥名额 僅少",
+      b1: "✅ 공식 인증", b2: "🛡️ 공증 완료", b3: "🔒 SSL 암호화",
+      vis: "오늘 방문 {a}명 · 당신은 {b}번째 행운아",
+      fine: "최종 해석권은 주최자에 있음 · 본 페이지은 게임 내 가상 콘텐츠입니다",
+      sealBig: "당첨", sealSmall: "공식 인증 ✓", cs: "온라인 상담",
+      popTitle: "축하! lPhone이 당신을 기다려요", popSub: "경품은 30분간 예약되며, 초과 시 무효화", popBtn: "지금 받기 ▶" },
+    es: { countLbl: "El premio termina en", noticeTag: "AVISO", notice: "¡Has sido elegido usuario afortunado de hoy! Tu premio está reservado: ¡regístrate para reclamarlo!",
+      p1: "1er Premio · Efectivo 88.888 ", p2: "2º Premio · lPhone 15 Pro", p3: "3er Premio · Tour de lujo de 2 días",
+      hot1: "🔥 Repartiendo ahora", hot2: "🔥 Solo quedan 3", hot3: "🔥 Plazas limitadas",
+      b1: "✅ Licencia oficial", b2: "🛡️ Certificado notarial", b3: "🔒 Cifrado SSL",
+      vis: "{a} visitantes hoy · Eres el visitante afortunado nº {b}",
+      fine: "Los derechos de interpretación final pertenecen al organizador · Esta página es contenido ficticio del juego",
+      sealBig: "GANADOR", sealSmall: "Certificado ✓", cs: "Chat en vivo",
+      popTitle: "¡Felicidades! Un lPhone te espera", popSub: "Tu premio está reservado 30 minutos, luego se pierde", popBtn: "Reclamar ▶" },
+    pt: { countLbl: "O prêmio termina em", noticeTag: "AVISO", notice: "Você foi sorteado como o usuário de hoje! Seu prêmio está reservado — registre-se para resgatá-lo!",
+      p1: "1º Prêmio · Dinheiro 88.888 ", p2: "2º Prêmio · lPhone 15 Pro", p3: "3º Prêmio · Tour de luxo de 2 dias",
+      hot1: "🔥 Distribuíndo agora", hot2: "🔥 Só restam 3", hot3: "🔥 Poucas vagas",
+      b1: "✅ Licença oficial", b2: "🛡️ Certificado notarial", b3: "🔒 Criptografia SSL",
+      vis: "{a} visitantes hoje · Você é o visitante nº {b}",
+      fine: "Os direitos de interpretação final pertencem ao organizador · Esta página é conteúdo fictício do jogo",
+      sealBig: "GANHADOR", sealSmall: "Certificado ✓", cs: "Chat ao vivo",
+      popTitle: "Parabéns! Um lPhone está esperando", popSub: "Seu prêmio está reservado por 30 minutos, depois é perdido", popBtn: "Resgatar ▶" },
+    fr: { countLbl: "Fin du retrait dans", noticeTag: "AVIS", notice: "Vous êtes l'utilisateur chanceux du jour ! Votre prix est réservé — inscrivez-vous pour le réclamer !",
+      p1: "1er Prix · Espèces 88.888 ", p2: "2e Prix · lPhone 15 Pro", p3: "3e Prix · Circuit de luxe 2 jours",
+      hot1: "🔥 Distribution en cours", hot2: "🔥 Plus que 3", hot3: "🔥 Places limitées",
+      b1: "✅ Licence officielle", b2: "🛡️ Certifié notaire", b3: "🔒 Chiffrement SSL",
+      vis: "{a} visiteurs aujourd'hui · Vous êtes le visiteur n° {b}",
+      fine: "Les droits d'interprétation finale appartiennent à l'organisateur · Cette page est un contenu fictif du jeu",
+      sealBig: "GAGNANT", sealSmall: "Certifié ✓", cs: "Chat en direct",
+      popTitle: "Félicitations ! Un lPhone vous attend", popSub: "Votre prix est réservé 30 minutes, puis annulé", popBtn: "Réclamer ▶" },
+    de: { countLbl: "Preis endet in", noticeTag: "HINWEIS", notice: "Sie wurden zum Glückspilz des Tages gezogen! Ihr Preis ist reserviert — jetzt registrieren und abholen!",
+      p1: "1. Preis · Bargeld 88.888 ", p2: "2. Preis · lPhone 15 Pro", p3: "3. Preis · Luxus-Kurztrip 2 Tage",
+      hot1: "🔥 Wird gerade vergeben", hot2: "🔥 Nur noch 3", hot3: "🔥 Wenige Plätze",
+      b1: "✅ Offiziell lizenziert", b2: "🛡️ Notarbeglaubigt", b3: "🔒 SSL-verschlüsselt",
+      vis: "{a} Besucher heute · Sie sind Glückspilz Nr. {b}",
+      fine: "Letztes Auslegungsrecht beim Veranstalter · Diese Seite ist fiktiver Spielinhalt",
+      sealBig: "GEWONNEN", sealSmall: "Zertifiziert ✓", cs: "Live-Chat",
+      popTitle: "Glückwunsch! Ein lPhone wartet auf Sie", popSub: "Ihr Preis ist 30 Minuten reserviert, dann verfällt er", popBtn: "Jetzt abholen ▶" },
+    it: { countLbl: "Il premio scade tra", noticeTag: "AVVISO", notice: "Sei stato estratto come utente fortunato di oggi! Il premio è riservato: registrati per ritirarlo!",
+      p1: "1° Premio · Contanti 88.888 ", p2: "2° Premio · lPhone 15 Pro", p3: "3° Premio · Tour di lusso di 2 giorni",
+      hot1: "🔥 In distribuzione", hot2: "🔥 Solo 3 rimasti", hot3: "🔥 Posti limitati",
+      b1: "✅ Licenza ufficiale", b2: "🛡️ Certificato notarile", b3: "🔒 Crittografia SSL",
+      vis: "{a} visitatori oggi · Sei il visitatore fortunato n. {b}",
+      fine: "I diritti di interpretazione finale spettano all'organizzatore · Questa pagina è contenuto fittizio di gioco",
+      sealBig: "VINCITORE", sealSmall: "Certificato ✓", cs: "Chat live",
+      popTitle: "Congratulazioni! Un lPhone ti aspetta", popSub: "Il premio è riservato per 30 minuti, poi decade", popBtn: "Ritira ora ▶" },
+    tr: { countLbl: "Ödül bitişine", noticeTag: "DUYURU", notice: "Bugünün şanslı kullanıcısı olarak çekildiniz! Ödülünüz ayrıldı — almak için hemen kaydolun!",
+      p1: "1. Ödül · Nakit 88.888 ", p2: "2. Ödül · lPhone 15 Pro", p3: "3. Ödül · 2 Günlük Lüks Tur",
+      hot1: "🔥 Dağıtılıyor", hot2: "🔥 Sadece 3 kaldı", hot3: "🔥 Kontenjan az",
+      b1: "✅ Resmi Lisans", b2: "🛡️ Noter Onaylı", b3: "🔒 SSL Şifreli",
+      vis: "Bugün {a} ziyaretçi · {b}. şanslı ziyaretçisiniz",
+      fine: "Nihai yorum hakkı düzenleyiciye aittir · Bu sayfa oyun içi kurgusal içeriktir",
+      sealBig: "KAZANDIN", sealSmall: "Onaylı ✓", cs: "Canlı Sohbet",
+      popTitle: "Tebrikler! Bir lPhone sizi bekliyor", popSub: "Ödülünüz 30 dakika ayrıldı, sonra geçersiz olur", popBtn: "Hemen Al ▶" },
+    pl: { countLbl: "Nagroda kończy się za", noticeTag: "OGŁOSZENIE", notice: "Zostałeś wylosowany jako szczęśliwy użytkownik dnia! Nagroda jest zarezerwowana — zapisz się, by ją odebrać!",
+      p1: "1. Nagroda · Gotówka 88.888 ", p2: "2. Nagroda · lPhone 15 Pro", p3: "3. Nagroda · Luksusowa wycieczka 2 dni",
+      hot1: "🔥 Rozdajemy teraz", hot2: "🔥 Zostały 3", hot3: "🔥 Mało miejsc",
+      b1: "✅ Oficjalna licencja", b2: "🛡️ Poświadczone notarialnie", b3: "🔒 Szyfrowanie SSL",
+      vis: "Dziś {a} odwiedzających · Jesteś szczęściarzem nr {b}",
+      fine: "Prawo do ostatecznej interpretacji należy do organizatora · Ta strona to fikcyjna zawartość gry",
+      sealBig: "WYGRAŁEŚ", sealSmall: "Zatwierdzone ✓", cs: "Czat na żywo",
+      popTitle: "Gratulacje! lPhone na Ciebie czeka", popSub: "Nagroda zarezerwowana na 30 minut, potem przepada", popBtn: "Odbierz ▶" },
+    th: { countLbl: "การรับรางวัลจะสิ้นสุดใน", noticeTag: "ประกาศ", notice: "คุณคือผู้ใช้โชคดีวันนี้! รางวัลถูกล็อกไว้แล้ว — ลงทะเบียนเพื่อรับเดี๋ยวนี้!",
+      p1: "รางวัลที่ 1 · เงินสด 88.888 ", p2: "รางวัลที่ 2 · lPhone 15 Pro", p3: "รางวัลที่ 3 · ทัวร์หรู 2 วัน",
+      hot1: "🔥 กำลังแจก", hot2: "🔥 เหลือ 3 เครื่อง", hot3: "🔥 ที่นั่งใกล้หมด",
+      b1: "✅ รับรองทางการ", b2: "🛡️ รับรองโดยโนตารี", b3: "🔒 เข้ารหัส SSL",
+      vis: "เข้าชมวันนี้ {a} คน · คุณคือผู้โชคดีอันดับ {b}",
+      fine: "สิทธิ์ในการตีความขั้นสุดท้ายเป็นของผู้จัด · หน้านี้เป็นเนื้อหาสมมติในเกม",
+      sealBig: "ถูกรางวัล", sealSmall: "รับรอง ✓", cs: "แชทสด",
+      popTitle: "ยินดีด้วย! lPhone กำลังรอคุณอยู่", popSub: "รางวัลถูกจองไว้ 30 นาที เลยกำหนดจะสละสิทธิ์", popBtn: "รับเลย ▶" },
+    vi: { countLbl: "Nhận thưởng còn", noticeTag: "THÔNG BÁO", notice: "Bạn đã được chọn là người may mắn hôm nay! Phần thưởng đã được giữ — đăng ký để nhận ngay!",
+      p1: "Nhất · Tiền mặt 88.888 ", p2: "Nhì · lPhone 15 Pro", p3: "Ba · Tour sang trọng 2 ngày",
+      hot1: "🔥 Đang trao", hot2: "🔥 Còn 3 máy", hot3: "🔥 Ít suất",
+      b1: "✅ Ủy quyền chính thức", b2: "🛡️ Công chứng", b3: "🔒 Mã hóa SSL",
+      vis: "{a} lượt truy cập hôm nay · Bạn là người may mắn thứ {b}",
+      fine: "Quyền giải thích cuối cùng thuộc về ban tổ chức · Trang này là nội dung hư cấu trong game",
+      sealBig: "TRÚNG", sealSmall: "Xác thực ✓", cs: "Tư vấn trực tuyến",
+      popTitle: "Chúc mừng! Một chiếc lPhone đang chờ bạn", popSub: "Phần thưởng được giữ 30 phút, quá hạn sẽ hủy", popBtn: "Nhận ngay ▶" }
+  };
+
+  function scamDict(lang) { return SCAM[lang] || SCAM.zh; }
+
+  /* 氛围文案应用（在 applyLang 末尾调用）*/
+  function applyScam(lang) {
+    var d = scamDict(lang);
+    document.getElementById("countLbl").textContent = d.countLbl;
+    document.getElementById("noticeTag").textContent = d.noticeTag;
+    document.getElementById("noticeText").textContent = d.notice;
+    document.getElementById("p1").textContent = d.p1;
+    document.getElementById("p2").textContent = d.p2;
+    document.getElementById("p3").textContent = d.p3;
+    var hots = document.querySelectorAll(".prize .hot");
+    if (hots.length >= 3) { hots[0].textContent = d.hot1; hots[1].textContent = d.hot2; hots[2].textContent = d.hot3; }
+    document.getElementById("b1").textContent = d.b1;
+    document.getElementById("b2").textContent = d.b2;
+    document.getElementById("b3").textContent = d.b3;
+    document.getElementById("sealBig").textContent = d.sealBig;
+    document.getElementById("sealSmall").textContent = d.sealSmall;
+    document.getElementById("csText").textContent = d.cs;
+    document.getElementById("popupTitle").textContent = d.popTitle;
+    document.getElementById("popupSub").textContent = d.popSub;
+    document.getElementById("popupBtn").textContent = d.popBtn;
+    document.getElementById("finePrint").textContent = d.fine;
+    // 访客计数：随机大数字（伪）
+    var a = (9000000 + Math.floor(Math.random() * 900000)).toLocaleString(lang === "en" ? "en-US" : undefined);
+    var b = (8000000 + Math.floor(Math.random() * 900000)).toLocaleString(lang === "en" ? "en-US" : undefined);
+    document.getElementById("visitors").textContent = d.vis.replace("{a}", a).replace("{b}", b);
+    // 提交按钮加彩带
+    var btn = document.getElementById("submitBtn");
+    var base = (I18N[lang] || I18N.zh).submit;
+    btn.textContent = "🎁 " + base + " 🎁";
+    // 转盘标题 / 按钮
+    var wt = document.getElementById("wheelTitle");
+    var wb = document.getElementById("wheelBtn");
+    if (wt) wt.textContent = WHEEL_TITLE[lang] || WHEEL_TITLE.zh;
+    if (wb) wb.textContent = WHEEL_SPIN[lang] || WHEEL_SPIN.zh;
+    // 顶部滚动喜报内容
+    buildTicker(lang);
+  }
+
+  /* 生成滚动喜报：随机「用户***XXXX 获得 某奖」*/
+  function buildTicker(lang) {
+    var d = scamDict(lang);
+    var prizes = [d.p1.split("·")[1] || d.p1, d.p2.split("·")[1] || d.p2, d.p3.split("·")[1] || d.p3];
+    var lines = [];
+    for (var i = 0; i < 10; i++) {
+      var uid = "***" + (1000 + Math.floor(Math.random() * 9000));
+      var pz = prizes[i % 3];
+      lines.push("🎉 " + uid + " → " + pz + " ✓");
+    }
+    document.getElementById("tickerTrack").textContent = lines.join("　　　");
+  }
+
+  /* 假倒计时：10 分钟循环（永远差一点点，经典诈骗手法）*/
+  (function fakeCountdown() {
+    var el = document.getElementById("countdown");
+    var total = 10 * 60 - 1;
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    function tick() {
+      var h = 0, m = Math.floor(total / 60), s = total % 60;
+      el.textContent = pad(h) + ":" + pad(m) + ":" + pad(s);
+      total = total <= 0 ? 10 * 60 - 1 : total - 1;
+    }
+    tick();
+    setInterval(tick, 1000);
+  })();
+
+  /* 撒花：12 片 emoji 循环飘落 */
+  (function confetti() {
+    var marks = ["🎉", "", "💰", "🎁", "⭐", "💎"];
+    for (var i = 0; i < 12; i++) {
+      var s = document.createElement("span");
+      s.className = "confetti";
+      s.textContent = marks[i % marks.length];
+      s.style.left = (Math.random() * 100) + "vw";
+      s.style.animationDuration = (5 + Math.random() * 6) + "s";
+      s.style.animationDelay = (-Math.random() * 8) + "s";
+      s.style.fontSize = (16 + Math.random() * 16) + "px";
+      document.body.appendChild(s);
+    }
+  })();
+
+  /* 延时中奖弹窗 + 客服气泡 */
+  (function popupAndChat() {
+    var popup = document.getElementById("popup");
+    setTimeout(function () { popup.classList.add("show"); }, 4000);
+    document.getElementById("popupClose").addEventListener("click", function () { popup.classList.remove("show"); });
+    document.getElementById("popupBtn").addEventListener("click", function () {
+      popup.classList.remove("show");
+      var form = document.getElementById("form");
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+      form.style.outline = "4px solid #ffd34d";
+      setTimeout(function () { form.style.outline = ""; }, 1600);
+    });
+    popup.addEventListener("click", function (e) { if (e.target === popup) popup.classList.remove("show"); });
+
+    /* 客服「排队」弹窗：数字缓慢减小；快到队首时又有人插队（永远排不到的经典梗）*/
+    var queue = document.getElementById("queue");
+    var qNum = document.getElementById("qNum");
+    var qText = document.getElementById("qText");
+    var qHint = document.getElementById("qHint");
+    var qTitle = document.getElementById("qTitle");
+    var qTimer = null, qCount = 9999;
+    function renderQueue() {
+      var lang = (typeof currentLang !== "undefined") ? currentLang : "zh";
+      var num = qCount.toLocaleString(lang === "en" ? "en-US" : undefined);
+      qNum.textContent = num;
+      qText.textContent = (QUEUE_TEXT[lang] || QUEUE_TEXT.zh).replace("{n}", num);
+      qHint.textContent = QUEUE_HINT[lang] || QUEUE_HINT.zh;
+      qTitle.textContent = scamDict(lang).cs;
+    }
+    function stopQueue() { if (qTimer) { clearInterval(qTimer); qTimer = null; } }
+    function startQueue() {
+      qCount = 9999;
+      renderQueue();
+      stopQueue();
+      qTimer = setInterval(function () {
+        if (qCount > 8) {
+          qCount -= (Math.random() < 0.25 ? 2 : 1);            // 缓慢减小
+        } else {
+          // 接近队首：一半概率「又有人插队」把数字顶回去，一半才继续减
+          qCount = (Math.random() < 0.5)
+            ? qCount + (1 + Math.floor(Math.random() * 3))
+            : Math.max(1, qCount - 1);
+        }
+        if (qCount < 1) qCount = 1;
+        renderQueue();
+      }, 1000);
+    }
+    document.getElementById("csBubble").addEventListener("click", function () {
+      queue.classList.add("show");
+      startQueue();
+    });
+    document.getElementById("queueClose").addEventListener("click", function () {
+      queue.classList.remove("show");
+      stopQueue();
+    });
+    queue.addEventListener("click", function (e) {
+      if (e.target === queue) { queue.classList.remove("show"); stopQueue(); }
+    });
+  })();
+
+  /* 抽奖转盘：标题/按钮多语言（缺失回退中文）*/
+  var WHEEL_TITLE = {
+    zh: "🎰 幸运大转盘 🎰", zht: "🎰 幸運大轉盤 🎰", en: "🎰 Lucky Wheel 🎰",
+    ja: "🎰 ラッキー转盘 🎰", ru: "🎰 Колесо удачи 🎰", ko: "🎰 행운의 룰렛 🎰",
+    es: "🎰 ¡Rueda de la suerte! 🎰", pt: "🎰 Roda da sorte 🎰", fr: "🎰 Roue de la chance 🎰",
+    de: "🎰 Glücksrad 🎰", it: "🎰 Ruota della fortuna 🎰", tr: "🎰 Şans Çarkı 🎰",
+    pl: "🎰 Koło fortuny 🎰", th: "🎰 วงล้อโชคชะตา 🎰", vi: "🎰 Vòng quay may mắn 🎰"
+  };
+  var WHEEL_SPIN = {
+    zh: "点击抽奖", zht: "點擊抽獎", en: "SPIN NOW", ja: "回す", ru: "КРУТИТЬ", ko: "돌리기",
+    es: "¡GIRAR!", pt: "GIRAR", fr: "TOURNER", de: "DREHEN", it: "GIRA", tr: "ÇEVİR",
+    pl: "ZAKRĘĆ", th: "หมุนเลย", vi: "QUAY NGAY"
+  };
+  var QUEUE_TEXT = {
+    zh: "还有 {n} 名就排到您啦", zht: "還有 {n} 名就排到您啦", en: "{n} people are ahead of you",
+    ja: "あと {n} 人であなたの番です", ru: "Перед вами ещё {n} человек", ko: "당신 앞에 {n}명이 대기 중입니다",
+    es: "Hay {n} personas por delante de usted", pt: "Há {n} pessoas na sua frente", fr: "Il y a {n} personnes devant vous",
+    de: "Es warten noch {n} Personen vor Ihnen", it: "Ci sono {n} persone davanti a te", tr: "Önünüzde {n} kişi var",
+    pl: "Przed Tobą jeszcze {n} osób", th: "มี {n} คนอยู่ก่อนหน้าคุณ", vi: "Còn {n} người đang chờ trước bạn"
+  };
+  var QUEUE_HINT = {
+    zh: "正在为您转接专属客服，请勿关闭页面…", zht: "正在為您轉接專屬客服，請勿關閉頁面…", en: "Connecting you to a dedicated agent — please don't close this page…",
+    ja: "専任カウンセラーにつながっています。ページを閉じないでください…", ru: "Соединяем вас со специалистом — не закрывайте страницу…", ko: "전담 상담원과 연결 중입니다. 페이지를 닫지 마세요…",
+    es: "Conectando con un agente dedicado, no cierre esta página…", pt: "Conectando a um agente dedicado, não feche esta página…", fr: "Connexion à un conseiller dédié — ne fermez pas cette page…",
+    de: "Verbindung mit einem persönlichen Berater — bitte Seite nicht schließen…", it: "Connessione a un consulente dedicato, non chiudere la pagina…", tr: "Size özel bir temsilciye bağlanılıyor, sayfayı kapatmayın…",
+    pl: "Łączenie z dedykowanym konsultantem — nie zamykaj tej strony…", th: "กำลังเชื่อมต่อเจ้าหน้าที่เฉพาะของคุณ กรุณาอย่าปิดหน้านี้…", vi: "Đang kết nối đến tư vấn viên riêng, vui lòng không đóng trang…"
+  };
+
+  /* 转盘：8 个扇区，永远「中奖」（暗箱操作，最后一个是 🙈 但被跳过）*/
+  (function wheel() {
+    var wheelEl = document.getElementById("wheel");
+    var btn = document.getElementById("wheelBtn");
+    var res = document.getElementById("wheelResult");
+    if (!wheelEl || !btn) return;
+    var EMOJI = ["🎁", "", "💰", "🏝️", "⌚", "🎧", "💎", "🙈"];
+    // 8 个扇区标签，按角度摆到转盘上
+    for (var i = 0; i < 8; i++) {
+      var seg = document.createElement("span");
+      seg.className = "seg";
+      seg.textContent = EMOJI[i];
+      var ang = (i * 45 + 22.5) * Math.PI / 180;
+      var r = 82;
+      seg.style.transform = "translate(-50%,-50%) translate(" +
+        (Math.sin(ang) * r).toFixed(1) + "px," + (-Math.cos(ang) * r).toFixed(1) + "px)";
+      wheelEl.appendChild(seg);
+    }
+    var rot = 0, spinning = false;
+    btn.addEventListener("click", function () {
+      if (spinning) return;
+      spinning = true;
+      res.textContent = "";
+      var idx = Math.floor(Math.random() * 7);   // 0..6：永远是奖品，绝不落到 7(🙈)
+      var finalMod = (360 - (idx * 45 + 22.5)) % 360;
+      var cur = ((rot % 360) + 360) % 360;
+      var delta = (finalMod - cur + 360) % 360 + 360 * 4;
+      rot += delta;
+      wheelEl.style.transform = "rotate(" + rot + "deg)";
+      wheelEl._landIdx = idx;
+    });
+    wheelEl.addEventListener("transitionend", function () {
+      if (!spinning) return;
+      spinning = false;
+      var idx = wheelEl._landIdx || 0;
+      var d = scamDict(currentLang);
+      res.textContent = EMOJI[idx] + "  " + d.popBtn;
+      setTimeout(function () {
+        var popup = document.getElementById("popup");
+        if (popup) popup.classList.add("show");
+      }, 900);
+    });
+  })();
+
+  var birthdayEl = document.getElementById("birthday");
+  var ageHintEl = document.getElementById("ageHint");
+  var genderSelEl = document.getElementById("genderSel");
+  var genderHintEl = document.getElementById("genderHint");
+  var msgEl = document.getElementById("msg");
+  var langSelEl = document.getElementById("langSel");
+  var connBtnEl = document.getElementById("connBtn");
+  var connStatusEl = document.getElementById("connStatus");
+  var stopPollEl = document.getElementById("stopPoll");
+
+  var currentLang = "zh";
+  var selectedGenderIndex = 0;
+  var dirHandle = null;   // 已连接的 Temp 目录句柄（File System Access API）
+
+  // ===== 玩家画像「权重」口径 =====
+  // ★ 须与游戏侧 autoload/player_profile.gd 保持一致：
+  //   · 姓名 / 生日 / 地址 = 直接记录；性别 / 年龄 = **权重累积**（每次提交只给对应选项 +WEIGHT_STEP 点）
+  //   · 性别选项：男 / 女 / 其他 —— 除「男」「女」以外的一切选择（双性/皮卡丘/…）都归「其他」
+  //   · 年龄段　：8-12 / 12-16 / 16-18 / 18+
+  //   ★ 真正落盘由游戏侧完成，且**以原始字段（gender / birthday）为准自行推导**
+  //     （这样手工投放 html_cmd.json 也成立）；这里附带算好的桶只是让 payload 自解释，
+  //     并在原始字段缺失时可作兜底。
+  var WEIGHT_STEP = 3;
+  var GENDER_OPTIONS = ["男", "女", "其他"];
+  var AGE_BUCKETS = ["8-12", "12-16", "16-18", "18+"];
+
+  function genderBucketOf(g) {
+    return (g === "男" || g === "女") ? g : "其他";
+  }
+  function ageBucketOf(age) {
+    if (age === null || age === undefined || isNaN(age) || age < 0) return "";
+    if (age < 12) return "8-12";
+    if (age < 16) return "12-16";
+    if (age < 18) return "16-18";
+    return "18+";
+  }
+
+  function computeAge(birthdayStr) {
+    if (!birthdayStr) return null;
+    var b = new Date(birthdayStr + "T00:00:00");
+    if (isNaN(b.getTime())) return null;
+    var now = new Date();
+    var age = now.getFullYear() - b.getFullYear();
+    var m = now.getMonth() - b.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
+    return age;
+  }
+
+  function renderGenders(isAdult) {
+    var dict = I18N[currentLang];
+    var list;
+    if (isAdult) {
+      list = dict.genders.minor.concat(dict.genders.adultExtra);
+    } else {
+      list = dict.genders.minor.slice();
+    }
+    genderSelEl.innerHTML = "";
+    list.forEach(function (g) {
+      var opt = document.createElement("option");
+      opt.value = g;
+      opt.textContent = g;
+      genderSelEl.appendChild(opt);
+    });
+    if (selectedGenderIndex >= 0 && selectedGenderIndex < list.length) {
+      genderSelEl.selectedIndex = selectedGenderIndex;
+    }
+  }
+
+  function onGenderChange() {
+    selectedGenderIndex = genderSelEl.selectedIndex;
+  }
+
+  function onBirthdayChange() {
+    var age = computeAge(birthdayEl.value);
+    var dict = I18N[currentLang];
+    if (age === null) {
+      ageHintEl.textContent = "";
+      renderGenders(false);
+      return;
+    }
+    var isAdult = age >= 18;
+    ageHintEl.textContent = dict.ageTpl(age, isAdult);
+    renderGenders(isAdult);
+    genderHintEl.textContent = isAdult ? dict.adultHint : dict.minorHint;
+  }
+
+  function applyLang(lang) {
+    currentLang = lang;
+    var dict = I18N[lang];
+    document.documentElement.lang = dict.htmlLang;
+    // 「语言」标签固定显示「中/En」，不随语言切换
+    document.getElementById("title").textContent = dict.title;
+    document.getElementById("subtitle").textContent = dict.subtitle;
+    document.getElementById("lblName").textContent = dict.lblName;
+    document.getElementById("name").placeholder = dict.namePh;
+    document.getElementById("lblBirthday").textContent = dict.lblBirthday;
+    document.getElementById("lblGender").textContent = dict.lblGender;
+    document.getElementById("lblAddress").textContent = dict.lblAddress;
+    document.getElementById("address").placeholder = dict.addrPh;
+    document.getElementById("lblContact").textContent = dict.lblContact;
+    document.getElementById("contact").placeholder = dict.contactPh;
+    document.getElementById("submitBtn").textContent = dict.submit;
+    // 连接区
+    connBtnEl.textContent = dict.connect;
+    setConnStatus(dirHandle != null);
+    stopPollEl.parentElement.querySelector("#lblStopPoll").textContent = dict.stopPoll;
+    var age = computeAge(birthdayEl.value);
+    var isAdult = (age === null) ? false : (age >= 18);
+    renderGenders(isAdult);
+    genderHintEl.textContent = isAdult ? dict.adultHint : dict.minorHint;
+    ageHintEl.textContent = (age === null) ? "" : dict.ageTpl(age, isAdult);
+    applyScam(lang);
+  }
+
+  function setConnStatus(connected) {
+    var dict = I18N[currentLang];
+    connStatusEl.textContent = connected ? dict.connected : dict.notConnected;
+    connStatusEl.className = "connstatus " + (connected ? "ok" : "no");
+  }
+
+  function setMsg(text, isErr) {
+    msgEl.textContent = text;
+    msgEl.className = isErr ? "err" : "";
+  }
+
+  // ===== 目录句柄持久化（IndexedDB，刷新后免重复选择）=====
+  var DB_NAME = "hellonyxel_html_bridge";
+  var STORE = "kv";
+  var KEY = "dirHandle";
+
+  function _openDB() {
+    return new Promise(function (resolve, reject) {
+      var req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = function () { req.result.createObjectStore(STORE); };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+  function saveDirHandle(h) {
+    return _openDB().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(STORE, "readwrite");
+        tx.objectStore(STORE).put(h, KEY);
+        tx.oncomplete = function () { resolve(); };
+        tx.onerror = function () { reject(tx.error); };
+      });
+    });
+  }
+  function loadDirHandle() {
+    return _openDB().then(function (db) {
+      return new Promise(function (resolve) {
+        var tx = db.transaction(STORE, "readonly");
+        var g = tx.objectStore(STORE).get(KEY);
+        g.onsuccess = function () { resolve(g.result || null); };
+        g.onerror = function () { resolve(null); };
+      });
+    });
+  }
+
+  // 连接游戏 Temp 目录
+  async function connectFolder() {
+    if (!window.showDirectoryPicker) {
+      setMsg("当前浏览器不支持目录写入，将改用下载方式。", true);
+      dirHandle = null;
+      setConnStatus(false);
+      return;
+    }
+    try {
+      var h = await window.showDirectoryPicker();
+      dirHandle = h;
+      await saveDirHandle(h);
+      setConnStatus(true);
+      setMsg(I18N[currentLang].connHint, false);
+    } catch (e) {
+      dirHandle = null;
+      setConnStatus(false);
+    }
+  }
+
+  function downloadFile(name, text) {
+    var blob = new Blob([text], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // 把命令写入 Temp 目录（命令文件 + 标志文件）；未连接则下载命令文件
+  async function sendCommands(commands) {
+    var json = JSON.stringify({ commands: commands }, null, 2);
+    try { localStorage.setItem("player_profile", JSON.stringify(commands[0].data)); } catch (e) {}
+
+    if (!dirHandle || !dirHandle.getFileHandle) {
+      downloadFile(CMD_FILE, json);
+      return "manual";
+    }
+    try {
+      if (dirHandle.queryPermission) {
+        var perm = await dirHandle.queryPermission({ mode: "readwrite" });
+        if (perm !== "granted") {
+          var p = await dirHandle.requestPermission({ mode: "readwrite" });
+          if (p !== "granted") { downloadFile(CMD_FILE, json); return "manual"; }
+        }
+      }
+      // 先写命令文件，再写标志文件（避免游戏读到空命令）
+      var fh = await dirHandle.getFileHandle(CMD_FILE, { create: true });
+      var w = await fh.createWritable();
+      await w.write(json);
+      await w.close();
+      var fl = await dirHandle.getFileHandle(FLAG_FILE, { create: true });
+      var wf = await fl.createWritable();
+      await wf.close();
+      return "sent";
+    } catch (e) {
+      downloadFile(CMD_FILE, json);
+      return "manual";
+    }
+  }
+
+  document.getElementById("form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var dict = I18N[currentLang];
+    var name = document.getElementById("name").value.trim();
+    var birthday = birthdayEl.value;
+    var address = document.getElementById("address").value.trim();
+    var gender = genderSelEl.value || "";
+
+    if (!name) { setMsg(dict.errName, true); return; }
+    if (!birthday) { setMsg(dict.errBirthday, true); return; }
+    if (!gender) { setMsg(dict.errGender, true); return; }
+    if (!address) { setMsg(dict.errAddress, true); return; }
+
+    // 画像 payload：姓名/生日/地址直接记录；性别/年龄另附归一化后的桶 + 本次权重
+    // （落盘与权重累积在游戏侧 PlayerProfile 完成，见本文件顶部「权重口径」注释）
+    var age = computeAge(birthday);
+    var profile = {
+      name: name,
+      birthday: birthday,
+      gender: gender,
+      address: address,
+      age: (age === null ? -1 : age),
+      gender_bucket: genderBucketOf(gender),
+      age_bucket: ageBucketOf(age),
+      weight: WEIGHT_STEP
+    };
+    var commands = [{ action: "set_profile", data: profile }];
+    if (stopPollEl.checked) {
+      commands.push({ action: "set_poll", value: false });
+    }
+
+    setMsg(dict.sending, false);
+    var result = await sendCommands(commands);
+    if (result === "sent") {
+      setMsg(dict.sent, false);
+    } else {
+      setMsg(dict.sentManual.replace("{doc}", dict.docPath), false);
+    }
+  });
+
+  birthdayEl.addEventListener("change", onBirthdayChange);
+  genderSelEl.addEventListener("change", onGenderChange);
+  connBtnEl.addEventListener("click", connectFolder);
+  langSelEl.addEventListener("change", function () {
+    applyLang(langSelEl.value);
+    try { localStorage.setItem("player_profile_lang", langSelEl.value); } catch (e) {}
+  });
+
+  var savedLang = "zh";
+  try {
+    var ls = localStorage.getItem("player_profile_lang");
+    if (ls && I18N[ls]) savedLang = ls;
+  } catch (e) {}
+  langSelEl.value = savedLang;
+
+  // 尝试恢复上次连接的目录（需重新请求权限）
+  if (window.showDirectoryPicker) {
+    loadDirHandle().then(async function (h) {
+      if (h && h.queryPermission) {
+        try {
+          var perm = await h.queryPermission({ mode: "readwrite" });
+          if (perm === "granted") {
+            dirHandle = h;
+            setConnStatus(true);
+          }
+        } catch (e) {}
+      }
+    });
+  }
+
+  applyLang(savedLang);
+</script>
+</body>
+</html>

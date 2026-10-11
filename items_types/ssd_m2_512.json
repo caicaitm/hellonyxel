@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"compute_score": 15,
+		"cooling_score": -1,
+		"part_type": "ssd",
+		"power_w": 4,
+		"storage_capacity_gb": 512,
+		"storage_if": "M.2_NVMe",
+		"storage_type": "SSD"
+	},
+	"description": "固态硬盘 M.2_NVMe 512GB",
+	"id": "ssd_m2_512",
+	"name": "固态 512GB M.2",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"ssd"
+	]
+}

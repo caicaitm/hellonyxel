@@ -1,0 +1,16 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": 55,
+		"part_type": "cooler",
+		"power_w": 4
+	},
+	"description": "散热器（散热55）",
+	"id": "cooler_tower",
+	"name": "塔式风冷",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"cooler"
+	]
+}

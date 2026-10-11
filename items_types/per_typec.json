@@ -1,0 +1,29 @@
+{
+	"attrs": {
+		"compute_score": 5,
+		"cooling_score": -1,
+		"external_ports": [
+			{
+				"count": 2,
+				"kind": "typec",
+				"speed_mbps": 10000
+			},
+			{
+				"count": 2,
+				"kind": "usb",
+				"speed_mbps": 480
+			}
+		],
+		"part_type": "peripheral",
+		"peripheral_if": "PCIe",
+		"power_w": 5
+	},
+	"description": "外设卡 PCIe（提供 2 个对外接口）",
+	"id": "per_typec",
+	"name": "Type-C 扩展卡",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"peripheral"
+	]
+}

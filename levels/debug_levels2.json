@@ -1,0 +1,18 @@
+{
+	"name": "debug_levels2",
+	"brief": "调试关卡2：8 个空积木围成一圈 + 一组传送门（入口→出口），最下方块带 teleportable_test2",
+	"layout": "circle",
+	"radius": 140.0,
+	"blocks": [
+		{ "x": 140.0, "y": 0.0, "width": 80.0, "height": 80.0 },
+		{ "x": 98.99, "y": 98.99, "width": 80.0, "height": 80.0 },
+		{ "x": 0.0, "y": 140.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "collision", "teleportable_test2"] },
+		{ "x": -98.99, "y": 98.99, "width": 80.0, "height": 80.0 },
+		{ "x": -140.0, "y": 0.0, "width": 80.0, "height": 80.0 },
+		{ "x": -98.99, "y": -98.99, "width": 80.0, "height": 80.0 },
+		{ "x": 0.0, "y": -140.0, "width": 80.0, "height": 80.0 },
+		{ "x": 98.99, "y": -98.99, "width": 80.0, "height": 80.0 },
+		{ "x": -215.0, "y": 0.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "portal_entrance_test2"] },
+		{ "x": 215.0, "y": 0.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "portal_exit_test2"] }
+	]
+}

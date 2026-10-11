@@ -1,0 +1,29 @@
+{
+	"attrs": {
+		"compute_score": 8,
+		"cooling_score": 0,
+		"external_ports": [
+			{
+				"count": 1,
+				"kind": "eth",
+				"speed_mbps": 2500
+			},
+			{
+				"count": 2,
+				"kind": "usb",
+				"speed_mbps": 480
+			}
+		],
+		"part_type": "peripheral",
+		"peripheral_if": "PCIe",
+		"power_w": 4
+	},
+	"description": "外设卡 PCIe（提供 2 个对外接口）",
+	"id": "per_lan_2_5g",
+	"name": "2.5G 网口卡",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"peripheral"
+	]
+}

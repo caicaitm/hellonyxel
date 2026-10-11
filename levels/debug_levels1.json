@@ -1,0 +1,13 @@
+{
+	"name": "debug_levels1",
+	"brief": "调试关卡1：4 个空积木并排 + 一组传送门（入口→出口），最左块带 teleportable_test1",
+	"layout": "row",
+	"blocks": [
+		{ "x": -150.0, "y": 0.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "collision", "teleportable_test1"] },
+		{ "x": -50.0, "y": 0.0, "width": 80.0, "height": 80.0 },
+		{ "x": 50.0, "y": 0.0, "width": 80.0, "height": 80.0 },
+		{ "x": 150.0, "y": 0.0, "width": 80.0, "height": 80.0 },
+		{ "x": 0.0, "y": 150.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "portal_entrance_test1"] },
+		{ "x": 0.0, "y": -150.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "portal_exit_test1"] }
+	]
+}

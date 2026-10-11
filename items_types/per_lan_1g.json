@@ -1,0 +1,24 @@
+{
+	"attrs": {
+		"compute_score": 5,
+		"cooling_score": 0,
+		"external_ports": [
+			{
+				"count": 2,
+				"kind": "eth",
+				"speed_mbps": 1000
+			}
+		],
+		"part_type": "peripheral",
+		"peripheral_if": "PCIe",
+		"power_w": 3
+	},
+	"description": "外设卡 PCIe（提供 1 个对外接口）",
+	"id": "per_lan_1g",
+	"name": "千兆网口卡",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"peripheral"
+	]
+}

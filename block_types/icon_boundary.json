@@ -1,0 +1,25 @@
+{
+	"border_color": "#00000000",
+	"border_width": 1.0,
+	"child_ids": [],
+	"collision_layer": [
+		"desktop_icon"
+	],
+	"display_layer": 0,
+	"fill_anim": 0,
+	"fill_color": "ff666600",
+	"fill_mode": 0,
+	"fill_path": "",
+	"name": "icon_boundary",
+	"parent_id": 0,
+	"rotation_deg": 0.0,
+	"save_location": "本体",
+	"tags": [
+		"show",
+		"fill",
+		"collision",
+		"desktop_icon_boundary",
+		"auto_generated"
+	],
+	"text_boxes": []
+}

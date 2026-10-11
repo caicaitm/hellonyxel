@@ -1,0 +1,51 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": -2,
+		"cpu_slots": 1,
+		"cpu_socket": "AM5",
+		"external_ports": [
+			{
+				"count": 1,
+				"kind": "eth",
+				"speed_mbps": 10000
+			},
+			{
+				"count": 4,
+				"kind": "usb",
+				"speed_mbps": 480
+			},
+			{
+				"count": 4,
+				"kind": "usb",
+				"speed_mbps": 5000
+			},
+			{
+				"count": 2,
+				"kind": "typec",
+				"speed_mbps": 10000
+			}
+		],
+		"form_factor": "EATX",
+		"gpu_if": "PCIe5x16",
+		"gpu_slots": 2,
+		"mem_slots": 8,
+		"mem_type": "DDR5",
+		"nic_if": "PCIe",
+		"nic_slots": 2,
+		"part_type": "motherboard",
+		"peripheral_if": "PCIe4x1",
+		"peripheral_slots": 3,
+		"power_w": 15,
+		"storage_if": "M.2_NVMe",
+		"storage_slots": 8
+	},
+	"description": "主板 EATX（DDR5 内存 / PCIe5x16 显卡）",
+	"id": "mb_eatx_am5_ddr5",
+	"name": "EATX 工作站主板 AM5/DDR5",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"motherboard"
+	]
+}

@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"compute_score": 600,
+		"cooling_score": -72,
+		"gpu_if": "PCIe5x16",
+		"part_type": "gpu",
+		"power_w": 575,
+		"size_mm": 360,
+		"vram_gb": 32
+	},
+	"description": "显卡 PCIe5x16 32GB（长360mm，算力600）",
+	"id": "gpu_pcie5x16_rtx5090",
+	"name": "显卡 RTX5090",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"gpu"
+	]
+}

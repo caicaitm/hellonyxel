@@ -1,0 +1,26 @@
+{
+	"border_color": "#00000000",
+	"border_width": 1.0,
+	"child_ids": [],
+	"collision_layer": [
+		"default",
+		"program_page_border"
+	],
+	"display_layer": 90.0,
+	"fill_anim": 0.0,
+	"fill_color": "#33E6FF00",
+	"fill_mode": 0.0,
+	"fill_path": "",
+	"name": "page_frame",
+	"parent_id": 0.0,
+	"rotation_deg": 0.0,
+	"save_location": "本体",
+	"tags": [
+		"show",
+		"fill",
+		"collision",
+		"program_page_border",
+		"auto_generated"
+	],
+	"text_boxes": []
+}

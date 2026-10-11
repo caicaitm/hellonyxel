@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"big_cores": 8,
+		"compute_score": 190,
+		"cooling_score": -28,
+		"part_type": "cpu",
+		"power_w": 105,
+		"small_cores": 0,
+		"socket": "AM5"
+	},
+	"description": "CPU AM5（大核8+小核0，算力190）",
+	"id": "cpu_am5_r7",
+	"name": "CPU R7-7700",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"cpu"
+	]
+}

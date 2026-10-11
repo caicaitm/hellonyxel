@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"compute_score": 25,
+		"cooling_score": -1,
+		"part_type": "ssd",
+		"power_w": 5,
+		"storage_capacity_gb": 1024,
+		"storage_if": "M.2_NVMe",
+		"storage_type": "SSD"
+	},
+	"description": "固态硬盘 M.2_NVMe 1024GB",
+	"id": "ssd_m2_1t",
+	"name": "固态 1TB M.2",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"ssd"
+	]
+}

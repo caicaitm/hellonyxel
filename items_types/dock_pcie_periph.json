@@ -1,0 +1,23 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": -4,
+		"dock_if": "PCIe4x1",
+		"part_type": "dock",
+		"power_supply_w": 0,
+		"power_w": 3,
+		"provides_if": {},
+		"provides_limits": {},
+		"provides_slots": {
+			"peripheral": 2
+		}
+	},
+	"description": "拓展设备（需 PCIe4x1，提供 外设×2）",
+	"id": "dock_pcie_periph",
+	"name": "PCIe 外设拓展卡",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"dock"
+	]
+}

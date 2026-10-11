@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": -3,
+		"part_type": "hdd",
+		"power_w": 8,
+		"storage_capacity_gb": 2048,
+		"storage_if": "SATA3",
+		"storage_type": "HDD"
+	},
+	"description": "机械硬盘 SATA3 2048GB",
+	"id": "hdd_sata_2t",
+	"name": "机械 2TB",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"hdd"
+	]
+}

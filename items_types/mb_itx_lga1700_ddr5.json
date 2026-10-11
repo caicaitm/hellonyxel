@@ -1,0 +1,46 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": -2,
+		"cpu_slots": 1,
+		"cpu_socket": "LGA1700",
+		"external_ports": [
+			{
+				"count": 1,
+				"kind": "eth",
+				"speed_mbps": 2500
+			},
+			{
+				"count": 4,
+				"kind": "usb",
+				"speed_mbps": 480
+			},
+			{
+				"count": 1,
+				"kind": "typec",
+				"speed_mbps": 5000
+			}
+		],
+		"form_factor": "ITX",
+		"gpu_if": "PCIe4x16",
+		"gpu_slots": 1,
+		"mem_slots": 2,
+		"mem_type": "DDR5",
+		"nic_if": "M.2",
+		"nic_slots": 1,
+		"part_type": "motherboard",
+		"peripheral_if": "PCIe4x1",
+		"peripheral_slots": 1,
+		"power_w": 15,
+		"storage_if": "M.2_NVMe",
+		"storage_slots": 2
+	},
+	"description": "主板 ITX（DDR5 内存 / PCIe4x16 显卡）",
+	"id": "mb_itx_lga1700_ddr5",
+	"name": "ITX 主板 LGA1700/DDR5",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"motherboard"
+	]
+}

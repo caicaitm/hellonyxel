@@ -1,0 +1,71 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="HelloNyxel"
+run/main_scene="res://desktop/main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[autoload]
+
+SingleInstance="*res://autoload/single_instance.gd"
+SysInfoRunner="*res://autoload/SysInfoRunner.gd"
+DesktopShell="*res://autoload/DesktopShell.gd"
+TranslationManager="*res://autoload/translation_manager.gd"
+TaskScheduler="*res://autoload/task_scheduler.gd"
+MousePassRunner="*res://autoload/MousePassRunner.gd"
+TrayRunner="*res://autoload/TrayRunner.gd"
+BlockManager="*res://blocks/block_manager.gd"
+BlockTypes="*res://blocks/block_type_registry.gd"
+SignalBus="*res://autoload/signal_bus.gd"
+GlobalVars="*res://autoload/global_vars.gd"
+Inventory="*res://autoload/inventory.gd"
+Debug="*res://debug/debug_manager.gd"
+PerfMonitor="*res://autoload/perf_monitor.gd"
+DialogueManager="*res://dialogue/dialogue_manager.gd"
+NotificationManager="*res://autoload/notification_manager.gd"
+EventChainRunner="*res://autoload/event_chain_runner.gd"
+SaveManager="*res://autoload/save_manager.gd"
+DialogueLog="*res://autoload/dialogue_log.gd"
+PlayerProfile="*res://autoload/player_profile.gd"
+NyxelDailyState="*res://autoload/nyxel_daily_state.gd"
+TimelineManager="*res://autoload/timeline_manager.gd"
+LevelManager="*res://autoload/level_manager.gd"
+PortalManager="*res://autoload/portal_manager.gd"
+HtmlBridge="*res://autoload/html_bridge.gd"
+BusyState="*res://autoload/busy_state.gd"
+LocalWeather="*res://autoload/local_weather.gd"
+CalendarInfo="*res://autoload/calendar_info.gd"
+CalendarNotes="*res://autoload/calendar_notes.gd"
+Devices="*res://autoload/devices.gd"
+GlobalNet="*res://autoload/global_net.gd"
+FrameLimiter="*res://autoload/frame_limiter.gd"
+ButtonSfx="*res://autoload/button_sfx.gd"
+StateRegistry="*res://autoload/state_registry.gd"
+GlassTheme="*res://autoload/glass_theme.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=800
+window/size/transparent=true
+window/per_pixel_transparency/allowed=true
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+rendering_device/driver.windows="d3d12"
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

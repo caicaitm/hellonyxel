@@ -1,0 +1,24 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": -6,
+		"dock_if": "PCIe4x4",
+		"part_type": "dock",
+		"power_supply_w": 0,
+		"power_w": 4,
+		"provides_if": {},
+		"provides_limits": {},
+		"provides_slots": {
+			"nic": 1,
+			"storage": 1
+		}
+	},
+	"description": "拓展设备（需 PCIe4x4，提供 存储×1、网卡×1）",
+	"id": "dock_pcie_m2",
+	"name": "PCIe 拓展坞(存储+网卡)",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"dock"
+	]
+}

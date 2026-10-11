@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": 0,
+		"data_speed_mbps": 2500,
+		"nic_if": "M.2",
+		"part_type": "nic",
+		"power_w": 1,
+		"provides_online": true
+	},
+	"description": "网卡 M.2 2500Mbps",
+	"id": "nic_laptop_m2",
+	"name": "笔记本网卡 M.2",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"nic"
+	]
+}

@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": 0,
+		"data_speed_mbps": 10000,
+		"nic_if": "PCIe",
+		"part_type": "nic",
+		"power_w": 5,
+		"provides_online": true
+	},
+	"description": "网卡 PCIe 10000Mbps",
+	"id": "nic_pcie_10g",
+	"name": "网卡 10GbE PCIe",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"nic"
+	]
+}

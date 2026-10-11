@@ -1,0 +1,29 @@
+{
+	"attrs": {
+		"compute_score": 10,
+		"cooling_score": -1,
+		"external_ports": [
+			{
+				"count": 2,
+				"kind": "typec",
+				"speed_mbps": 40000
+			},
+			{
+				"count": 3,
+				"kind": "usb",
+				"speed_mbps": 10000
+			}
+		],
+		"part_type": "peripheral",
+		"peripheral_if": "Thunderbolt",
+		"power_w": 6
+	},
+	"description": "外设卡 Thunderbolt（提供 2 个对外接口）",
+	"id": "per_tb_hub",
+	"name": "Thunderbolt 扩展坞",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"peripheral"
+	]
+}

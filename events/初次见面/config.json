@@ -1,0 +1,7 @@
+{
+	"chain": "初次见面",
+	"trigger_condition": "!has_tag(\"剧情状态\",\"初次见面\")",
+	"trigger_event": "初次见面.1",
+	"version": 1,
+	"weight": 1.0
+}

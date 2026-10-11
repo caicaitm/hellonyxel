@@ -1,0 +1,19 @@
+{
+	"attrs": {
+		"big_cores": 6,
+		"compute_score": 130,
+		"cooling_score": -19,
+		"part_type": "cpu",
+		"power_w": 65,
+		"small_cores": 0,
+		"socket": "AM5"
+	},
+	"description": "CPU AM5（大核6+小核0，算力130）",
+	"id": "cpu_am5_r5",
+	"name": "CPU R5-7600",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"cpu"
+	]
+}

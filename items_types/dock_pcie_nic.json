@@ -1,0 +1,25 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": -5,
+		"dock_if": "PCIe4x1",
+		"part_type": "dock",
+		"power_supply_w": 0,
+		"power_w": 3,
+		"provides_if": {
+			"nic": "PCIe"
+		},
+		"provides_limits": {},
+		"provides_slots": {
+			"nic": 1
+		}
+	},
+	"description": "拓展设备（需 PCIe4x1，提供 网卡×1）",
+	"id": "dock_pcie_nic",
+	"name": "PCIe 转接卡(网卡)",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"dock"
+	]
+}

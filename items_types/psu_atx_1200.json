@@ -1,0 +1,18 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": -2,
+		"form_factor": "ATX",
+		"part_type": "psu",
+		"power_supply_w": 1200,
+		"power_w": 8
+	},
+	"description": "电源 额定1200W（ATX）",
+	"id": "psu_atx_1200",
+	"name": "电源 1200W ATX",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"psu"
+	]
+}

@@ -1,0 +1,23 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": -3,
+		"dock_if": "M.2_NVMe",
+		"part_type": "dock",
+		"power_supply_w": 0,
+		"power_w": 2,
+		"provides_if": {},
+		"provides_limits": {},
+		"provides_slots": {
+			"storage": 2
+		}
+	},
+	"description": "拓展设备（需 M.2_NVMe，提供 存储×2）",
+	"id": "dock_m2_sata",
+	"name": "M.2 转接卡(2×SATA)",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"dock"
+	]
+}

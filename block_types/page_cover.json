@@ -1,0 +1,26 @@
+{
+	"border_color": "#00000000",
+	"border_width": 1.0,
+	"child_ids": [],
+	"collision_layer": [
+		"program_page_cover"
+	],
+	"display_layer": 32.0,
+	"fill_anim": 0,
+	"fill_color": "#9EA3BF00",
+	"fill_mode": 0,
+	"fill_path": "",
+	"name": "page_cover",
+	"parent_id": 0,
+	"rotation_deg": 0.0,
+	"save_location": "本体",
+	"tags": [
+		"show",
+		"fill",
+		"program_page_cover",
+		"auto_generated",
+		"always_unselectable",
+		"cutout"
+	],
+	"text_boxes": []
+}

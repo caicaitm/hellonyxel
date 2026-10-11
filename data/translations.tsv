@@ -1,0 +1,448 @@
+简体中文	繁体中文	English	日本語	Русский	한국어	Español	Português	Français	Deutsch	Italiano	Türkçe	Polski	ไทย	Tiếng Việt
+
+设置	設定	Settings	設定	Настройки	설정	Configuración	Configurações	Paramètres	Einstellungen	Impostazioni	Ayarlar	Ustawienia	การตั้งค่า	Cài đặt
+
+语言	語言	Language	言語	Язык	언어	Idioma	Idioma	Langue	Sprache	Lingua	Dil	Język	ภาษา	Ngôn ngữ
+
+主音量	主音量	Master volume	マスター音量	Общая громкость	마스터 볼륨	Volumen principal	Volume principal	Volume principal	Hauptlautstärke	Volume principale	Ana ses	Głośność główna	เสียงหลัก	Âm lượng chính
+
+音乐音量	音樂音量	Music volume	音楽音量	Громкость музыки	음악 볼륨	Volumen de música	Volume da música	Volume musique	Musik-Lautstärke	Volume musica	Müzik sesi	Głośność muzyki	เสียงดนตรี	Âm lượng nhạc
+
+音效音量	音效音量	SFX volume	効果音音量	Громкость эффектов	효과음 볼륨	Volumen de efectos	Volume de efeitos	Volume des effets	Soundeffekt-Lautstärke	Volume effetti	Efekt sesi	Głośność efektów	เสียงเอฟเฟกต์	Âm lượng hiệu ứng
+
+环境音量	環境音量	Ambience volume	環境音量	Громкость окружения	환경 볼륨	Volumen ambiental	Volume ambiente	Volume d'ambiance	Umgebungs-Lautstärke	Volume ambiente	Ortam sesi	Głośność otoczenia	เสียงบรรยากาศ	Âm lượng môi trường
+
+语音音量	語音音量	Voice volume	音声音量	Громкость речи	음성 볼륨	Volumen de voz	Volume de voz	Volume voix	Sprach-Lautstärke	Volume voce	Ses düzeyi	Głośność głosu	เสียงพากย์	Âm lượng giọng nói
+
+UI 缩放	UI 縮放	UI scale	UIスケール	Масштаб UI	UI 배율	Escala de UI	Escala de UI	Échelle de l'UI	UI-Skalierung	Scala UI	Arayüz ölçeği	Skala UI	สเกล UI	Tỷ lệ giao diện
+
+关闭	關閉	Close	閉じる	Закрыть	닫기	Cerrar	Fechar	Fermer	Schließen	Chiudi	Kapat	Zamknij	ปิด	Đóng
+最小化	最小化	Minimize	最小化	Свернуть	최소화	Minimizar	Minimizar	Réduire	Minimieren	Riduci	Simge Durum	Pminimalizuj	ย่อขนาด	Thu nhỏ
+退出调试	退出除錯	Exit Debug	デバッグを終了	Выйти из отладки	디버그 종료	Salir de depuración	Sair da depuração	Quitter le débogage	Debugging beenden	Esci dal debug	Debugdan çık	Wyjdź z trybów debugowania	ออกจากโหมดดีบัก	Thoát gỡ lỗi
+
+确定修改	確定修改	Apply	変更を確定	Применить	적용	Aplicar	Aplicar	Appliquer	Übernehmen	Applica	Uygula	Zastosuj	ใช้	Áp dụng
+
+确定	確定	OK	OK	ОК	확인	Aceptar	OK	OK	OK	OK	Tamam	OK	ตกลง	OK
+
+取消	取消	Cancel	キャンセル	Отмена	취소	Cancelar	Cancelar	Annuler	Abbrechen	Annulla	İptal	Anuluj	ยกเลิก	Hủy
+
+背包	背包	Backpack	バックパック	Рюкзак	배낭	Mochila	Mochila	Sac à dos	Rucksack	Zaino	Sırt çantası	Plecak	กระเป๋าเป้	Ba lô
+
+筛选	篩選	Filter	フィルター	Фильтр	필터	Filtrar	Filtrar	Filtrer	Filtern	Filtra	Filtrele	Filtr	กรอง	Lọc
+
+上一页	上一頁	Previous	前へ	Назад	이전	Anterior	Anterior	Précédent	Zurück	Precedente	Önceki	Poprzedni	ก่อนหน้า	Trước
+
+下一页	下一頁	Next	次へ	Вперёд	다음	Siguiente	Próximo	Suivant	Weiter	Successivo	Sonraki	Następny	ถัดไป	Tiếp
+
+存档列表	存檔列表	Save list	セーブ一覧	Список сохранений	저장 목록	Lista de guardados	Lista de saves	Liste de sauvegardes	Speicherliste	Elenco salvataggi	Kayıt listesi	Lista zapisów	รายการเซฟ	Danh sách lưu
+
+存档名	存檔名	Save name	セーブ名	Название сохранения	저장 이름	Nombre del guardado	Nome do save	Nom de sauvegarde	Speichername	Nome salvataggio	Kayıt adı	Nazwa zapisu	ชื่อเซฟ	Tên lưu
+
+保存	保存	Save	保存	Сохранить	저장	Guardar	Salvar	Sauvegarder	Speichern	Salva	Kaydet	Zapisz	บันทึก	Lưu
+
+读取	讀取	Load	読み込む	Загрузить	불러오기	Cargar	Carregar	Charger	Laden	Carica	Yükle	Wczytaj	โหลด	Tải
+
+删除	刪除	Delete	削除	Удалить	삭제	Eliminar	Excluir	Supprimer	Löschen	Elimina	Sil	Usuń	ลบ	Xóa
+
+没有存档	沒有存檔	No saves	セーブがありません	Сохранений нет	저장 없음	Sin guardados	Sem saves	Aucune sauvegarde	Keine Speicher	Nessun salvataggio	Kayıt yok	Brak zapisów	ไม่มีเซฟ	Chưa có lưu
+手动存档	手動存檔	Manual save	手動セーブ	Ручное сохранение	수동 저장	Guardado manual	Salvamento manual	Sauvegarde manuelle	Manueller Speicher	Salvataggio manuale	Elle kayıt	Ręczny zapis	บันทึกแบบแมนนวล	Lưu thủ công
+自动存档	自動存檔	Auto save	自動セーブ	Автосохранение	자동 저장	Guardado automático	Salvamento automático	Sauvegarde auto	Automatischer Speicher	Salvataggio automatico	Otomatik kayıt	Automatyczny zapis	บันทึกอัตโนมัติ	Lưu tự động
+桌面存档	桌面存檔	Desktop save	デスクトップセーブ	Сохранение рабочего стола	데스크톱 저장	Guardado de escritorio	Salvamento da área de trabalho	Sauvegarde du bureau	Desktop-Speicher	Salvataggio desktop	Masaüstü kaydı	Zapis pulpitu	ไม่มีเซฟเดสก์ท็อป	Lưu màn hình chính
+世界存档	世界存檔	World save	ワールドセーブ	Сохранение мира	월드 저장	Guardado de mundo	Salvamento de mundo	Sauvegarde du monde	Welt-Speicher	Salvataggio mondo	Dünya kaydı	Zapis świata	ไม่มีเซฟโลก	Lưu thế giới
+手动	手動	Manual	手動	Вручную	수동	Manual	Manual	Manuel	Manuell	Manuale	Elle	Ręcznie	แมนนวล	Thủ công
+自动	自動	Auto	自動	Авто	자동	Automático	Automático	Auto	Auto	Automatico	Otomatik	Automatycznie	อัตโนมัติ	Tự động
+
+桌面自动存档间隔	桌面自動存檔間隔	Desktop auto-save interval	デスクトップ自動保存間隔	Интервал автосохранения рабочего стола	데스크톱 자동 저장 간격	Intervalo de autoguardado de escritorio	Intervalo de autosave de desktop	Intervalle de sauvegarde auto du bureau	Desktop-Auto-Speicherintervall	Intervallo autosalvataggio desktop	Masaüstü otomatik kayıt aralığı	Przerwa autozapisu pulpitu	ช่วงเวลาเซฟอัตโนมัติของเดสก์ท็อป	Khoảng thời gian tự lưu màn hình
+
+世界自动存档间隔	世界自動存檔間隔	World auto-save interval	ワールド自動保存間隔	Интервал автосохранения мира	월드 자동 저장 간격	Intervalo de autoguardado de mundo	Intervalo de autosave de mundo	Intervalle de sauvegarde auto du monde	Welt-Auto-Speicherintervall	Intervallo autosalvataggio mondo	Dünya otomatik kayıt aralığı	Przerwa autozapisu świata	ช่วงเวลาเซฟอัตโนมัติของโลก	Khoảng thời gian tự lưu thế giới
+
+不自动存档	不自動存檔	Do not auto-save	自動保存しない	Без автосохранения	자동 저장 안 함	No autoguardar	Não autosavar	Ne pas sauvegarder auto	Nicht autospeichern	Non autosalvare	Otomatik kaydetme	Bez autozapisu	ไม่เซฟอัตโนมัติ	Không tự lưu
+
+分钟	分鐘	minutes	分	минут	분	minutos	minutos	minutes	Minuten	minuti	dakika	minuty	นาที	phút
+
+小时	小時	hours	時間	часов	시간	horas	horas	heures	Stunden	ore	saat	godziny	ชั่วโมง	giờ
+
+时间轴同时触发上限	時間軸同時觸發上限	Timeline simultaneous trigger limit	タイムライン同時トリガー上限	Лимит одновременных срабатываний таймлайна	타임라인 동시 트리거 상한	Límite de disparos simultáneos de la línea de tiempo	Limite de disparos simultâneos da linha do tempo	Limite de déclenchements simultanés de la chronologie	Limit für gleichzeitige Zeitstrahl-Auslöser	Limite di attivazioni simultanee della timeline	Zaman çizelgesi eşzamanlı tetikleme limiti	Limit jednoczesnych wyzwoleń osi czasu	ขีดจำกัดการทริกเกอร์พร้อมกันของไทม์ไลน์	Giới hạn kích hoạt đồng thời của dòng thời gian
+
+退出自动存档	退出自動存檔	Auto-save on exit	終了時自動保存	Автосохранение при выходе	종료 시 자동 저장	Autoguardar al salir	Autosave ao sair	Sauvegarde auto à la fermeture	Autospeichern beim Beenden	Autosalvataggio all'uscita	Çıkışta otomatik kaydet	Autozapis przy wyjściu	เซฟอัตโนมัติเมื่อออก	Tự lưu khi thoát
+
+积木属性	積木屬性	Block properties	ブロックプロパティ	Свойства блока	블록 속성	Propiedades del bloque	Propriedades do bloco	Propriétés du bloc	Block-Eigenschaften	Proprietà blocco	Blok özellikleri	Właściwości bloku	คุณสมบัติบล็อก	Thuộc tính khối
+
+类型名(留空=不入库)	類型名(留空=不入庫)	Type name (empty = not saved)	型名（空＝未登録）	Имя типа (пусто = не сохранять)	타입명(비우면 미등록)	Nombre de tipo (vacío = no guardar)	Nome do tipo (vazio = não salvar)	Nom du type (vide = non enregistré)	Typname (leer = nicht speichern)	Nome tipo (vuoto = non salvare)	Tip adı (boş = kaydedilmez)	Nazwa typu (puste = nie zapisuj)	ชื่อประเภท (เว้นว่าง = ไม่บันทึก)	Tên loại (để trống = không lưu)
+
+宽(width,像素)	寬(width,像素)	Width (px)	幅（ピクセル）	Ширина (px)	너비(픽셀)	Ancho (px)	Largura (px)	Largeur (px)	Breite (px)	Larghezza (px)	Genişlik (px)	Szerokość (px)	ความกว้าง (px)	Chiều rộng (px)
+
+高(height,像素)	高(height,像素)	Height (px)	高さ（ピクセル）	Высота (px)	높이(픽셀)	Alto (px)	Altura (px)	Hauteur (px)	Höhe (px)	Altezza (px)	Yükseklik (px)	Wysokość (px)	ความสูง (px)	Chiều cao (px)
+
+显示图层	顯示圖層	Display layer	表示レイヤー	Слой отображения	표시 레이어	Capa de visualización	Camada de exibição	Calque d'affichage	Anzeige-Ebene	Livello visualizzazione	Görüntü katmanı	Warstwa wyświetlania	เลเยอร์แสดงผล	Lớp hiển thị
+
+碰撞图层(逗号分隔)	碰撞圖層(逗號分隔)	Collision layers (comma-separated)	衝突レイヤー（カンマ区切り）	Слои столкновений (через запятую)	충돌 레이어(쉼표 구분)	Capas de colisión (separadas por coma)	Camadas de colisão (separadas por vírgula)	Calques de collision (séparés par des virgules)	Kollisionsebenen (durch Komma getrennt)	Livelli di collisione (separati da virgole)	Çarpışma katmanları (virgülle ayrılmış)	Warstwy kolizji (oddzielone przecinkami)	เลเยอร์ชนกัน (คั่นด้วยคอมม่า)	Lớp va chạm (phân tách bằng dấu phẩy)
+
+边框宽度	邊框寬度	Border width	枠の幅	Ширина рамки	테두리 두께	Ancho de borde	Largura da borda	Largeur de bordure	Rahmenbreite	Larghezza bordo	Kenarlık kalınlığı	Grubość obramowania	ความหนากรอบ	Độ dày viền
+
+边框色(#RRGGBBAA)	邊框色(#RRGGBBAA)	Border color (#RRGGBBAA)	枠の色（#RRGGBBAA）	Цвет рамки (#RRGGBBAA)	테두리 색(#RRGGBBAA)	Color de borde (#RRGGBBAA)	Cor da borda (#RRGGBBAA)	Couleur de bordure (#RRGGBBAA)	Rahmenfarbe (#RRGGBBAA)	Colore bordo (#RRGGBBAA)	Kenarlık rengi (#RRGGBBAA)	Kolor obramowania (#RRGGBBAA)	สีกรอบ (#RRGGBBAA)	Màu viền (#RRGGBBAA)
+
+填充色(#RRGGBBAA)	填充色(#RRGGBBAA)	Fill color (#RRGGBBAA)	塗りつぶし色（#RRGGBBAA）	Цвет заливки (#RRGGBBAA)	채우기 색(#RRGGBBAA)	Color de relleno (#RRGGBBAA)	Cor de preenchimento (#RRGGBBAA)	Couleur de remplissage (#RRGGBBAA)	Füllfarbe (#RRGGBBAA)	Colore riempimento (#RRGGBBAA)	Dolgu rengi (#RRGGBBAA)	Kolor wypełnienia (#RRGGBBAA)	สีเติม (#RRGGBBAA)	Màu tô (#RRGGBBAA)
+
+标签(逗号分隔)	標籤(逗號分隔)	Tags (comma-separated)	タグ（カンマ区切り）	Теги (через запятую)	태그(쉼표 구분)	Etiquetas (separadas por coma)	Tags (separados por vírgula)	Tags (séparés par des virgules)	Tags (durch Komma getrennt)	Tag (separati da virgole)	Etiketler (virgülle ayrılmış)	Tagi (oddzielone przecinkami)	แท็ก (คั่นด้วยคอมม่า)	Thẻ (phân tách bằng dấu phẩy)
+
+旋转角度(度)	旋轉角度(度)	Rotation (degrees)	回転角度（度）	Угол поворота (градусы)	회전 각도(도)	Ángulo de rotación (grados)	Ângulo de rotação (graus)	Angle de rotation (degrés)	Rotationswinkel (Grad)	Angolo di rotazione (gradi)	Dönüş açısı (derece)	Kąt obrotu (stopnie)	มุมหมุน (องศา)	Góc xoay (độ)
+
+朝向(1右/-1左)	朝向(1右/-1左)	Facing (1 right / -1 left)	向き（1右/-1左）	Направление (1 вправо / -1 влево)	방향(1 오른쪽/-1 왼쪽)	Orientación (1 derecha / -1 izquierda)	Orientação (1 direita / -1 esquerda)	Orientation (1 droite / -1 gauche)	Blickrichtung (1 rechts / -1 links)	Orientamento (1 destra / -1 sinistra)	Yön (1 sağ / -1 sol)	Kierunek (1 prawo / -1 lewo)	ทิศทาง (1 ขวา / -1 ซ้าย)	Hướng (1 phải / -1 trái)
+
+基础攻击力	基礎攻擊力	Base attack	基礎攻撃力	Базовая атака	기본 공격력	Ataque base	Ataque básico	Attaque de base	Basisangriff	Attacco base	Temel saldırı	Podstawowy atak	โจมตีพื้นฐาน	Sát thương cơ bản
+
+积木ID	積木ID	Block ID	ブロックID	ID блока	블록 ID	ID de bloque	ID do bloco	ID de bloc	Block-ID	ID blocco	Blok kimliği	ID bloku	ID บล็อก	ID khối
+
+字符串ID(可空)	字串ID(可空)	String ID (optional)	文字列ID（任意）	Строковый ID (необязательно)	문자열 ID(선택)	ID de texto (opcional)	ID de string (opcional)	ID de chaîne (optionnel)	String-ID (optional)	ID stringa (opzionale)	Metin kimliği (isteğe bağlı)	ID tekstowy (opcjonalny)	ID สตริง (ไม่บังคับ)	ID chuỗi (tùy chọn)
+
+父级ID(0=无)	父級ID(0=無)	Parent ID (0 = none)	親ID（0＝なし）	ID родителя (0 = нет)	부모 ID(0=없음)	ID de padre (0 = ninguno)	ID do pai (0 = nenhum)	ID parent (0 = aucun)	Eltern-ID (0 = keine)	ID genitore (0 = nessuno)	Üst kimliği (0 = yok)	ID rodzica (0 = brak)	ID แม่ (0 = ไม่มี)	ID cha (0 = không có)
+
+子级ID(逗号分隔)	子級ID(逗號分隔)	Child IDs (comma-separated)	子ID（カンマ区切り）	ID дочерних (через запятую)	자식 ID(쉼표 구분)	IDs de hijos (separados por coma)	IDs dos filhos (separados por vírgula)	IDs enfants (séparés par des virgules)	Kinder-IDs (durch Komma getrennt)	ID figli (separati da virgole)	Alt kimlikler (virgülle ayrılmış)	ID dzieci (oddzielone przecinkami)	ID ลูก (คั่นด้วยคอมม่า)	ID con (phân tách bằng dấu phẩy)
+
+填充图片路径	填充圖片路徑	Fill image path	画像パス	Путь к картинке заливки	채우기 이미지 경로	Ruta de la imagen de relleno	Caminho da imagem de preenchimento	Chemin de l'image de remplissage	Füllbildpfad	Percorso immagine riempimento	Dolgu görseli yolu	Ścieżka obrazu wypełnienia	เส้นทางรูปภาพเติม	Đường dẫn ảnh tô
+
+填充模式	填充模式	Fill mode	塗りつぶしモード	Режим заливки	채우기 모드	Modo de relleno	Modo de preenchimento	Mode de remplissage	Füllmodus	Modalità riempimento	Dolgu modu	Tryb wypełnienia	โหมดเติม	Chế độ tô
+
+最大原比例	最大原比例	Max original ratio	最大原寸比率	Максимальное исходное соотношение	최대 원본 비율	Proporción original máxima	Proporção original máxima	Proportion maximale	Max. Originalverhältnis	Proporzione originale massima	Maksimum orijinal oran	Maksymalna oryginalna proporcja	อัตราส่วนต้นฉบับสูงสุด	Tỷ lệ gốc tối đa
+
+拉伸铺满	拉伸鋪滿	Stretch to fill	引き伸ばして敷き詰め	Растянуть	늘려서 채우기	Estirar para llenar	Esticar para preencher	Étirer pour remplir	Strecken zum Füllen	Allunga per riempire	Doldurarak uzat	Rozciągnij, aby wypełnić	ยืดให้เต็ม	Kéo giãn lấp đầy
+
+居中	置中	Center	中央揃え	По центру	중앙	Centrar	Centralizar	Centrer	Zentrieren	Centra	Ortala	Wyśrodkuj	จัดกึ่งกลาง	Căn giữa
+
+平铺	平鋪	Tile	タイル	Плитка	바둑판	Mosaico	Tile	Mosaïque	Kacheln	Affianca	Döşe	Kafelek	เรียงแผ่น	Lát
+
+原尺寸	原尺寸	Original size	原寸サイズ	Исходный размер	원본 크기	Tamaño original	Tamanho original	Taille d'origine	Originalgröße	Dimensione originale	Orijinal boyut	Oryginalny rozmiar	ขนาดต้นฉบับ	Kích thước gốc
+
+动画类型	動畫類型	Animation type	アニメーションタイプ	Тип анимации	애니메이션 유형	Tipo de animación	Tipo de animação	Type d'animation	Animationstyp	Tipo di animazione	Animasyon türü	Typ animacji	ประเภทแอนิเมชัน	Loại hoạt ảnh
+
+静态图	靜態圖	Static image	静止画	Статичное изображение	정적 이미지	Imagen estática	Imagem estática	Image statique	Statisches Bild	Immagine statica	Statik görsel	Obraz statyczny	รูปภาพนิ่ง	Hình tĩnh
+
+动图(预留)	動圖(預留)	Animated (reserved)	動画（予約）	Анимация (зарезервировано)	동적 이미지(예약)	Animado (reservado)	Animado (reservado)	Animé (réservé)	Animiert (reserviert)	Animato (riservato)	Hareketli (ayrılmış)	Animowany (zarezerwowany)	ภาพเคลื่อนไหว (สำรอง)	Hoạt hình (dự trữ)
+
+骨骼(预留)	骨骼(預留)	Skeleton (reserved)	スケルトン（予約）	Скелет (зарезервировано)	골격(예약)	Esqueleto (reservado)	Esqueleto (reservado)	Squelette (réservé)	Skelett (reserviert)	Scheletro (riservato)	İskelet (ayrılmış)	Szkielet (zarezerwowany)	โครงกระดูก (สำรอง)	Bộ xương (dự trữ)
+
+文本框列表	文字框列表	Text box list	テキストボックス一覧	Список текстовых полей	텍스트 상자 목록	Lista de cajas de texto	Lista de caixas de texto	Liste des zones de texte	Textfeld-Liste	Elenco caselle di testo	Metin kutusu listesi	Lista pól tekstowych	รายการกล่องข้อความ	Danh sách ô văn bản
+
+空（全空文本框）	空（全空文字框）	Empty (blank text box)	空（完全な空テキストボックス）	Пустое (пустое текстовое поле)	비어 있음(완전 빈 텍스트 상자)	Vacío (caja de texto vacía)	Vazio (caixa de texto em branco)	Vide (zone de texte vide)	Leer (leeres Textfeld)	Vuoto (casella di testo vuota)	Boş (boş metin kutusu)	Puste (puste pole tekstowe)	ว่าง (กล่องข้อความเปล่า)	Trống (ô văn bản trống)
+
+内部显示框	內部顯示框	Internal display box	内部表示枠	Внутренняя рамка отображения	내부 표시 상자	Caja de visualización interna	Caixa de exibição interna	Zone d'affichage interne	Internes Anzeigefeld	Casella di visualizzazione interna	İç görüntü kutusu	Wewnętrzne pole wyświetlania	กล่องแสดงผลภายใน	Ô hiển thị bên trong
+
+顶部显示框	頂部顯示框	Top display box	上部表示枠	Верхняя рамка отображения	상단 표시 상자	Caja de visualización superior	Caixa de exibição superior	Zone d'affichage supérieure	Oberes Anzeigefeld	Casella di visualizzazione superiore	Üst görüntü kutusu	Górne pole wyświetlania	กล่องแสดงผลด้านบน	Ô hiển thị trên
+
+底部显示框	底部顯示框	Bottom display box	下部表示枠	Нижняя рамка отображения	하단 표시 상자	Caja de visualización inferior	Caixa de exibição inferior	Zone d'affichage inférieure	Unteres Anzeigefeld	Casella di visualizzazione inferiore	Alt görüntü kutusu	Dolne pole wyświetlania	กล่องแสดงผลด้านล่าง	Ô hiển thị dưới
+
+冒泡对话框	冒泡對話框	Bubble dialog	吹き出しダイアログ	Пузырьковый диалог	말풍선 대화	Diálogo de burbuja	Diálogo de balão	Dialogue en bulle	Sprechblasen-Dialog	Dialogo a fumetto	Balon diyalog	Dialog dymkowy	กล่องสนทนาลูกโป่ง	Hộp thoại bong bóng
+
+添加文本框	新增文字框	Add text box	テキストボックスを追加	Добавить текстовое поле	텍스트 상자 추가	Añadir caja de texto	Adicionar caixa de texto	Ajouter une zone de texte	Textfeld hinzufügen	Aggiungi casella di testo	Metin kutusu ekle	Dodaj pole tekstowe	เพิ่มกล่องข้อความ	Thêm ô văn bản
+
+文本框名	文字框名稱	Text box name	テキストボックス名	Название текстового поля	텍스트 상자 이름	Nombre de la caja de texto	Nome da caixa de texto	Nom de la zone de texte	Textfeldname	Nome casella di testo	Metin kutusu adı	Nazwa pola tekstowego	ชื่อกล่องข้อความ	Tên ô văn bản
+
+宽	寬	Width	幅	Ширина	너비	Ancho	Largura	Largeur	Breite	Larghezza	Genişlik	Szerokość	ความกว้าง	Chiều rộng
+
+高	高	Height	高さ	Высота	높이	Alto	Altura	Hauteur	Höhe	Altezza	Yükseklik	Wysokość	ความสูง	Chiều cao
+
+中心X	中心X	Center X	中心X	Центр X	중심 X	Centro X	Centro X	Centre X	Mitte X	Centro X	Merkez X	Środek X	กลาง X	Tâm X
+
+中心Y	中心Y	Center Y	中心Y	Центр Y	중심 Y	Centro Y	Centro Y	Centre Y	Mitte Y	Centro Y	Merkez Y	Środek Y	กลาง Y	Tâm Y
+
+旋转	旋轉	Rotation	回転	Поворот	회전	Rotación	Rotação	Rotation	Drehung	Rotazione	Dönüş	Obrót	หมุน	Xoay
+
+随积木旋转	隨積木旋轉	Rotate with block	ブロックと一緒に回転	Поворачивать с блоком	블록과 함께 회전	Girar con el bloque	Girar com o bloco	Rotation avec le bloc	Mit Block drehen	Ruota con il blocco	Blokla dön	Obracaj z blokiem	หมุนตามบล็อก	Xoay theo khối
+
+边框色	邊框色	Border color	枠の色	Цвет рамки	테두리 색	Color de borde	Cor da borda	Couleur de bordure	Rahmenfarbe	Colore bordo	Kenarlık rengi	Kolor obramowania	สีกรอบ	Màu viền
+
+填充色	填充色	Fill color	塗りつぶし色	Цвет заливки	채우기 색	Color de relleno	Cor de preenchimento	Couleur de remplissage	Füllfarbe	Colore riempimento	Dolgu rengi	Kolor wypełnienia	สีเติม	Màu tô
+
+填充来源	填充來源	Fill source	塗りつぶし元	Источник заливки	채우기 원본	Fuente de relleno	Fonte de preenchimento	Source de remplissage	Füllquelle	Origine riempimento	Dolgu kaynağı	Źródło wypełnienia	แหล่งเติม	Nguồn tô
+
+纯色	純色	Solid	単色	Сплошной	단색	Sólido	Sólido	Uni	Einfarbig	Tinta unita	Düz renk	Jednolity	สีทึบ	Màu đặc
+
+图片	圖片	Image	画像	Изображение	이미지	Imagen	Imagem	Image	Bild	Immagine	Görsel	Obraz	รูปภาพ	Ảnh
+
+图片路径	圖片路徑	Image path	画像パス	Путь к изображению	이미지 경로	Ruta de la imagen	Caminho da imagem	Chemin de l'image	Bildpfad	Percorso immagine	Görsel yolu	Ścieżka obrazu	เส้นทางรูปภาพ	Đường dẫn ảnh
+
+文本(修饰)[内容]	文本(修飾)[內容]	Text (format)[content]	テキスト（書式）[内容]	Текст (формат)[содержимое]	텍스트(서식)[내용]	Texto (formato)[contenido]	Texto (formato)[conteúdo]	Texte (format)[contenu]	Text (Format)[Inhalt]	Testo (formato)[contenuto]	Metin (biçim)[içerik]	Tekst (format)[treść]	ข้อความ (รูปแบบ)[เนื้อหา]	Văn bản (định dạng)[nội dung]
+
+内容为空时隐藏(无文本且无图片)	內容為空時隱藏(無文字且無圖片)	Hide when content is empty (no text and image)	内容が空のとき非表示（テキストも画像もない）	Скрывать, когда содержимое пусто (нет текста и картинки)	내용이 비면 숨기기(텍스트도 이미지도 없음)	Ocultar cuando el contenido esté vacío (sin texto e imagen)	Ocultar quando o conteúdo estiver vazio (sem texto e imagem)	Masquer quand le contenu est vide (pas de texte ni d'image)	Verbergen wenn leer (kein Text und kein Bild)	Nascondi quando il contenuto è vuoto (niente testo né immagine)	İçerik boşken gizle (metin ve görsel yok)	Ukryj, gdy zawartość pusta (bez tekstu i obrazu)	ซ่อนเมื่อเนื้อหาว่าง (ไม่มีข้อความและภาพ)	Ẩn khi nội dung trống (không có văn bản và ảnh)
+
+删除此文本框	刪除此文字框	Delete this text box	このテキストボックスを削除	Удалить это текстовое поле	이 텍스트 상자 삭제	Eliminar esta caja de texto	Excluir esta caixa de texto	Supprimer cette zone de texte	Dieses Textfeld löschen	Elimina questa casella di testo	Bu metin kutusunu sil	Usuń to pole tekstowe	ลบกล่องข้อความนี้	Xóa ô văn bản này
+
+攻击判定框列表（近战）	攻擊判定框列表（近戰）	Attack box list (melee)	攻撃判定枠一覧（近接）	Список областей атаки (ближний бой)	공격 판정 상자 목록(근접)	Lista de cajas de ataque (cuerpo a cuerpo)	Lista de caixas de ataque (corpo a corpo)	Liste des zones d'attaque (mêlée)	Angriffsbereich-Liste (Nahkampf)	Elenco aree d'attacco (mischia)	Saldırı alanı listesi (yakın dövüş)	Lista pól ataku (walka wręcz)	รายการกล่องโจมตี (ประชิด)	Danh sách vùng tấn công (cận chiến)
+
+空（全空判定框）	空（全空判定框）	Empty (blank attack box)	空（完全な空の判定枠）	Пустое (пустое поле атаки)	비어 있음(완전 빈 판정 상자)	Vacío (caja de ataque vacía)	Vazio (caixa de ataque em branco)	Vide (zone d'attaque vide)	Leer (leerer Angriffsbereich)	Vuoto (area d'attacco vuota)	Boş (boş saldırı alanı)	Puste (puste pole ataku)	ว่าง (กล่องโจมตีเปล่า)	Trống (vùng tấn công trống)
+
+水平普攻	水平普攻	Horizontal normal attack	水平通常攻撃	Горизонтальный обычный удар	수평 일반 공격	Ataque normal horizontal	Ataque normal horizontal	Attaque normale horizontale	Horizontale Normalattacke	Attacco normale orizzontale	Yatay normal saldırı	Poziomy zwykły atak	โจมตีปกติแนวนอน	Tấn công thường ngang
+
+下落攻击框	下落攻擊框	Falling attack box	落下攻撃枠	Падающее поле атаки	낙하 공격 상자	Caja de ataque en caída	Caixa de ataque em queda	Zone d'attaque en chute	Fallender Angriffsbereich	Area d'attacco in caduta	Düşen saldırı alanı	Pole ataku opadającego	กล่องโจมตีร่วงหล่น	Vùng tấn công rơi
+
+添加判定框	新增判定框	Add attack box	判定枠を追加	Добавить область атаки	판정 상자 추가	Añadir caja de ataque	Adicionar caixa de ataque	Ajouter une zone d'attaque	Angriffsbereich hinzufügen	Aggiungi area d'attacco	Saldırı alanı ekle	Dodaj pole ataku	เพิ่มกล่องโจมตี	Thêm vùng tấn công
+
+框名	框名	Box name	枠名	Название области	상자 이름	Nombre de la caja	Nome da caixa	Nom de la zone	Bereichsname	Nome area	Alan adı	Nazwa pola	ชื่อกล่อง	Tên vùng
+
+启用条件	啟用條件	Enable condition	有効条件	Условие включения	활성 조건	Condición de activación	Condição de ativação	Condition d'activation	Aktivierungsbedingung	Condizione di attivazione	Etkinleştirme koşulu	Warunek aktywacji	เงื่อนไขเปิดใช้	Điều kiện kích hoạt
+
+攻击力函数	攻擊力函數	Attack power function	攻撃力関数	Функция силы атаки	공격력 함수	Funkción de poder de ataque	Função de poder de ataque	Fonction de puissance d'attaque	Angriffsstärkefunktion	Funzione potenza attacco	Saldırı gücü fonksiyonu	Funkcja siły ataku	ฟังก์ชันพลังโจมตี	Hàm sát thương
+
+删除此判定框	刪除此判定框	Delete this attack box	この判定枠を削除	Удалить эту область	이 판정 상자 삭제	Eliminar esta caja de ataque	Excluir esta caixa de ataque	Supprimer cette zone d'attaque	Diesen Angriffsbereich löschen	Elimina questa area d'attacco	Bu saldırı alanını sil	Usuń to pole ataku	ลบกล่องโจมตีนี้	Xóa vùng tấn công này
+
+积木ID(正整数)	積木ID(正整數)	Block ID (positive integer)	ブロックID（正の整数）	ID блока (положительное целое)	블록 ID(양의 정수)	ID de bloque (entero positivo)	ID do bloco (inteiro positivo)	ID de bloc (entier positif)	Block-ID (positive Ganzzahl)	ID blocco (intero positivo)	Blok kimliği (pozitif tam sayı)	ID bloku (liczba dodatnia)	ID บล็อก (จำนวนเต็มบวก)	ID khối (số nguyên dương)
+
+（仅单块编辑可改）	（僅單塊編輯可改）	(editable only for single block)	（単一ブロック編集のみ変更可）	(только для одного блока)	(단일 블록 편집만 변경 가능)	(solo editable en un solo bloque)	(editável apenas para um bloco)	(modifiable uniquement pour un seul bloc)	(nur bei Einzelblock änderbar)	(modificabile solo per un blocco)	(yalnızca tek blokta değiştirilebilir)	(tylko dla pojedynczego bloku)	(แก้ไขได้เฉพาะบล็อกเดียว)	(chỉ chỉnh sửa được cho một khối)
+
+字符串ID(可空,仅单块可改)	字串ID(可空,僅單塊可改)	String ID (optional, single block only)	文字列ID（任意、単一ブロックのみ）	Строковый ID (необязательно, только для одного блока)	문자열 ID(선택, 단일 블록만)	ID de texto (opcional, solo un bloque)	ID de string (opcional, apenas um bloco)	ID de chaîne (optionnel, un bloc uniquement)	String-ID (optional, nur Einzelblock)	ID stringa (opzionale, solo un blocco)	Metin kimliği (isteğe bağlı, yalnızca tek blok)	ID tekstowy (opcjonalny, tylko jeden blok)	ID สตริง (ไม่บังคับ เฉพาะบล็อกเดียว)	ID chuỗi (tùy chọn, chỉ một khối)
+
+长文本	長文本	Long text	長文	Длинный текст	긴 텍스트	Texto largo	Texto longo	Texte long	Langtext	Testo lungo	Uzun metin	Długi tekst	ข้อความยาว	Văn bản dài
+
+调整标签	調整標籤	Adjust tags	タグを調整	Настроить теги	태그 조정	Ajustar etiquetas	Ajustar tags	Régler les tags	Tags anpassen	Regola tag	Etiketleri ayarla	Dostosuj tagi	ปรับแท็ก	Điều chỉnh thẻ
+
+另存为新类型	另存為新類型	Save as new type	新規タイプとして保存	Сохранить как новый тип	새 유형으로 저장	Guardar como nuevo tipo	Salvar como novo tipo	Enregistrer comme nouveau type	Als neuen Typ speichern	Salva come nuovo tipo	Yeni tür olarak kaydet	Zapisz jako nowy typ	บันทึกเป็นประเภทใหม่	Lưu thành loại mới
+
+复制为命令	複製為指令	Copy as command	コマンドとしてコピー	Копировать как команду	명령으로 복사	Copiar como comando	Copiar como comando	Copier en commande	Als Befehl kopieren	Copia come comando	Komut olarak kopyala	Kopiuj jako polecenie	คัดลอกเป็นคำสั่ง	Sao chép thành lệnh
+
+把当前属性生成 /create_block { ... } 文本并复制到剪贴板，可在控制台粘贴回放	把當前屬性生成 /create_block { ... } 文本並複製到剪貼簿，可在主控台貼上播放	Generate /create_block { ... } from current properties and copy to clipboard, paste in console to replay	現在のプロパティから /create_block { ... } を生成してクリップボードにコピー、コンソールに貼り付けて再生できます	Создать /create_block { ... } из текущих свойств и скопировать в буфер обмена, можно вставить в консоль	현재 속성에서 /create_block { ... }를 생성하여 클립보드에 복사, 콘솔에 붙여넣어 재생 가능	Genera /create_block { ... } a partir de las propiedades actuales y cópialo al portapapeles, pégalo en la consola para reproducir	Gera /create_block { ... } a partir das propriedades atuais e copia para a área de transferência, cole no console para reproduzir	Génère /create_block { ... } à partir des propriétés actuelles et copie dans le presse-papiers, colle dans la console pour rejouer	Erzeugt /create_block { ... } aus den aktuellen Eigenschaften und kopiert in die Zwischenablage, zum Wiedergeben in der Konsole einfügen	Genera /create_block { ... } dalle proprietà attuali e copia negli appunti, incollabile nella console per riprodurre	Mevcut özelliklerden /create_block { ... } üret ve panoya kopyala, konsola yapıştırarak oynatabilirsin	Generuj /create_block { ... } z bieżących właściwości i skopiuj do schowka, wklej w konsoli, aby odtworzyć	สร้าง /create_block { ... } จากคุณสมบัติปัจจุบันและคัดลอกไปยังคลิปบอร์ด วางในคอนโซลเพื่อเล่นซ้ำ	Tạo /create_block { ... } từ thuộc tính hiện tại và sao chép vào clipboard, dán vào console để phát lại
+
+宽必须在 1..4096 之间	寬必須在 1..4096 之間	Width must be between 1 and 4096	幅は 1..4096 の範囲で	Ширина должна быть от 1 до 4096	너비는 1..4096 사이여야 합니다	El ancho debe estar entre 1 y 4096	A largura deve estar entre 1 e 4096	La largeur doit être entre 1 et 4096	Die Breite muss zwischen 1 und 4096 liegen	La larghezza deve essere tra 1 e 4096	Genişlik 1 ile 4096 arasında olmalı	Szerokość musi wynosić od 1 do 4096	ความกว้างต้องอยู่ระหว่าง 1 ถึง 4096	Chiều rộng phải từ 1 đến 4096
+
+高必须在 1..4096 之间	高必須在 1..4096 之間	Height must be between 1 and 4096	高さは 1..4096 の範囲で	Высота должна быть от 1 до 4096	높이는 1..4096 사이여야 합니다	El alto debe estar entre 1 y 4096	A altura deve estar entre 1 e 4096	La hauteur doit être entre 1 et 4096	Die Höhe muss zwischen 1 und 4096 liegen	L'altezza deve essere tra 1 e 4096	Yükseklik 1 ile 4096 arasında olmalı	Wysokość musi wynosić od 1 do 4096	ความสูงต้องอยู่ระหว่าง 1 ถึง 4096	Chiều cao phải từ 1 đến 4096
+
+边框色必须是 #RRGGBB 或 #RRGGBBAA	邊框色必須是 #RRGGBB 或 #RRGGBBAA	Border color must be #RRGGBB or #RRGGBBAA	枠の色は #RRGGBB か #RRGGBBAA でなければなりません	Цвет рамки должен быть #RRGGBB или #RRGGBBAA	테두리 색은 #RRGGBB 또는 #RRGGBBAA여야 합니다	El color de borde debe ser #RRGGBB o #RRGGBBAA	A cor da borda deve ser #RRGGBB ou #RRGGBBAA	La couleur de bordure doit être #RRGGBB ou #RRGGBBAA	Die Rahmenfarbe muss #RRGGBB oder #RRGGBBAA sein	Il colore del bordo deve essere #RRGGBB o #RRGGBBAA	Kenarlık rengi #RRGGBB veya #RRGGBBAA olmalı	Kolor obramowania musi być #RRGGBB lub #RRGGBBAA	สีกรอบต้องเป็น #RRGGBB หรือ #RRGGBBAA	Màu viền phải là #RRGGBB hoặc #RRGGBBAA
+
+填充色必须是 #RRGGBB 或 #RRGGBBAA	填充色必須是 #RRGGBB 或 #RRGGBBAA	Fill color must be #RRGGBB or #RRGGBBAA	塗りつぶし色は #RRGGBB か #RRGGBBAA でなければなりません	Цвет заливки должен быть #RRGGBB или #RRGGBBAA	채우기 색은 #RRGGBB 또는 #RRGGBBAA여야 합니다	El color de relleno debe ser #RRGGBB o #RRGGBBAA	A cor de preenchimento deve ser #RRGGBB ou #RRGGBBAA	La couleur de remplissage doit être #RRGGBB ou #RRGGBBAA	Die Füllfarbe muss #RRGGBB oder #RRGGBBAA sein	Il colore di riempimento deve essere #RRGGBB o #RRGGBBAA	Dolgu rengi #RRGGBB veya #RRGGBBAA olmalı	Kolor wypełnienia musi być #RRGGBB lub #RRGGBBAA	สีเติมต้องเป็น #RRGGBB หรือ #RRGGBBAA	Màu tô phải là #RRGGBB hoặc #RRGGBBAA
+
+朝向必须是 1(右) 或 -1(左)	朝向必須是 1(右) 或 -1(左)	Facing must be 1 (right) or -1 (left)	向きは 1（右）か -1（左）でなければなりません	Направление должно быть 1 (вправо) или -1 (влево)	방향은 1(오른쪽) 또는 -1(왼쪽)이어야 합니다	La orientación debe ser 1 (derecha) o -1 (izquierda)	A orientação deve ser 1 (direita) ou -1 (esquerda)	L'orientation doit être 1 (droite) ou -1 (gauche)	Die Blickrichtung muss 1 (rechts) oder -1 (links) sein	L'orientamento deve essere 1 (destra) o -1 (sinistra)	Yön 1 (sağ) veya -1 (sol) olmalı	Kierunek musi wynosić 1 (prawo) lub -1 (lewo)	ทิศทางต้องเป็น 1 (ขวา) หรือ -1 (ซ้าย)	Hướng phải là 1 (phải) hoặc -1 (trái)
+
+父级不能是自己	父級不能是自己	Parent cannot be itself	親は自分自身にできません	Родитель не может быть самим собой	부모는 자신일 수 없습니다	El padre no puede ser él mismo	O pai não pode ser ele mesmo	Le parent ne peut pas être lui-même	Das Elternteil kann nicht sich selbst sein	Il genitore non può essere se stesso	Üst kendisi olamaz	Rodzic nie może być sobą	แม่เป็นตัวเองไม่ได้	Cha không thể là chính nó
+
+积木ID必须为正整数	積木ID必須為正整數	Block ID must be a positive integer	ブロックIDは正の整数でなければなりません	ID блока должен быть положительным целым	블록 ID는 양의 정수여야 합니다	El ID de bloque debe ser un entero positivo	O ID do bloco deve ser um inteiro positivo	L'ID de bloc doit être un entier positif	Die Block-ID muss eine positive Ganzzahl sein	L'ID blocco deve essere un intero positivo	Blok kimliği pozitif tam sayı olmalı	ID bloku musi być liczbą dodatnią	ID บล็อกต้องเป็นจำนวนเต็มบวก	ID khối phải là số nguyên dương
+
+积木ID %d 已被其它积木占用	積木ID %d 已被其他積木佔用	Block ID %d is already used by another block	ブロックID %d は他のブロックで使用されています	ID блока %d уже занят другим блоком	블록 ID %d는 다른 블록에 사용 중입니다	El ID de bloque %d ya lo usa otro bloque	O ID do bloco %d já é usado por outro bloco	L'ID de bloc %d est déjà utilisé par un autre bloc	Die Block-ID %d wird bereits von einem anderen Block verwendet	L'ID blocco %d è già usato da un altro blocco	Blok kimliği %d başka bir blok tarafından kullanılıyor	ID bloku %d jest już używany przez inny blok	ID บล็อก %d ถูกใช้โดยบล็อกอื่นแล้ว	ID khối %d đã được khối khác dùng
+
+字符串ID '%s' 已被其它积木占用	字串ID '%s' 已被其他積木佔用	String ID '%s' is already used by another block	文字列ID '%s' は他のブロックで使用されています	Строковый ID '%s' уже занят другим блоком	문자열 ID '%s'는 다른 블록에 사용 중입니다	El ID de texto '%s' ya lo usa otro bloque	O ID de string '%s' já é usado por outro bloco	L'ID de chaîne '%s' est déjà utilisé par un autre bloc	Die String-ID '%s' wird bereits von einem anderen Block verwendet	L'ID stringa '%s' è già usato da un altro blocco	Metin kimliği '%s' başka bir blok tarafından kullanılıyor	ID tekstowy '%s' jest już używany przez inny blok	ID สตริง '%s' ถูกใช้โดยบล็อกอื่นแล้ว	ID chuỗi '%s' đã được khối khác dùng
+
+内部错误: 批量上下文里没有有效积木	內部錯誤: 批次上下文裡沒有有效積木	Internal error: no valid blocks in the batch context	内部エラー: バッチコンテキストに有効なブロックがありません	Внутренняя ошибка: в пакетном контексте нет корректных блоков	내부 오류: 배치 컨텍스트에 유효한 블록이 없습니다	Error interno: no hay bloques válidos en el contexto de lote	Erro interno: não há blocos válidos no contexto de lote	Erreur interne : aucun bloc valide dans le contexte de lot	Interner Fehler: keine gültigen Blöcke im Stapelkontext	Errore interno: nessun blocco valido nel contesto batch	İç hata: toplu bağlamda geçerli blok yok	Błąd wewnętrzny: brak prawidłowych bloków w kontekście wsadowym	ข้อผิดพลาดภายใน: ไม่มีบล็อกที่ถูกต้องในบริบทชุด	Lỗi nội bộ: không có khối hợp lệ trong ngữ cảnh lô
+
+传送门入口	傳送門入口	Portal entrance	ポータル入口	Вход портала	포털 입구	Entrada de portal	Entrada de portal	Entrée de portail	Portal-Eingang	Ingresso portale	Portal girişi	Wejście portalu	ทางเข้าพอร์ทัล	Lối vào cổng
+
+传送门出口	傳送門出口	Portal exit	ポータル出口	Выход портала	포털 출구	Salida de portal	Saída de portal	Sortie de portail	Portal-Ausgang	Uscita portale	Portal çıkışı	Wyjście portalu	ทางออกพอร์ทัล	Lối ra cổng
+
+可传送	可傳送	Teleportable	転送可能	Телепортируемый	텔레포트 가능	Teletransportable	Teletransportável	Téléportable	Teleportierbar	Teletrasportabile	Işınlanabilir	Teleportowalny	เทเลพอร์ตได้	Có thể dịch chuyển
+
+内部错误: 缺少 block 上下文	內部錯誤: 缺少 block 上下文	Internal error: missing block context	内部エラー: block コンテキストがありません	Внутренняя ошибка: нет контекста блока	내부 오류: 블록 컨텍스트 누락	Error interno: falta el contexto de bloque	Erro interno: falta o contexto do bloco	Erreur interne : contexte de bloc manquant	Interner Fehler: Block-Kontext fehlt	Errore interno: manca il contesto del blocco	İç hata: blok bağlamı eksik	Błąd wewnętrzny: brak kontekstu bloku	ข้อผิดพลาดภายใน: ไม่มีบริบทของบล็อก	Lỗi nội bộ: thiếu ngữ cảnh khối
+
+重播语音	重播語音	Replay Voice	音声を再生	Повторить озвучку	음성 다시 재생	Reproducir voz	Reproduzir voz	Rejouer la voix	Stimme erneut abspielen	Riproduci voce	Sesi yeniden oynat	Odtwórz głos	เล่นเสียงอีกครั้ง	Phát lại giọng nói
+台词记录	台詞記錄	Dialogue Log	台詞ログ	Журнал реплик	대사 기록	Registro de diálogo	Registro de diálogo	Journal de dialogue	Dialogprotokoll	Registro dialoghi	Diyalog kaydı	Dziennik dialogów	บันทึกบทสนทนา	Nhật ký hội thoại
+
+标签选择（勾选=启用；动态标签按 + 添加）	標籤選擇（勾選=啟用；動態標籤按 + 新增）	Tag selection (check to enable; add dynamic tags with +)	タグ選択（チェックで有効、動的タグは + で追加）	Выбор тегов (отметьте для включения; динамические теги — кнопкой +)	태그 선택 (체크하면 활성화; 동적 태그는 +로 추가)	Selección de etiquetas (marca para activar; añade etiquetas dinámicas con +)	Seleção de tags (marque para ativar; adicione tags dinâmicas com +)	Sélection de tags (cochez pour activer ; ajoutez les tags dynamiques avec +)	Tag-Auswahl (ankreuzen zum Aktivieren; dynamische Tags mit + hinzufügen)	Selezione tag (spunta per attivare; aggiungi tag dinamici con +)	Etiket seçimi (etkinleştirmek için işaretle; dinamik etiketleri + ile ekle)	Wybór tagów (zaznacz, aby włączyć; tagi dynamiczne dodaj przez +)	เลือกแท็ก (ติ๊กเพื่อเปิดใช้; เพิ่มแท็กแบบไดนามิกด้วย +)	Chọn thẻ (tích để bật; thêm thẻ động bằng +)
+
+动态标签（按 + 添加，后缀自由填；点 × 移除）	動態標籤（按 + 新增，尾碼自由填；點 × 移除）	Dynamic tags (add with +, free-form suffix; click × to remove)	動的タグ（+ で追加、接尾辞は自由入力、× で削除）	Динамические теги (добавить кнопкой +, произвольный суффикс; × — удалить)	동적 태그 (+로 추가, 접미사 자유 입력; ×로 제거)	Etiquetas dinámicas (añade con +, sufijo libre; pulsa × para quitar)	Tags dinâmicas (adicione com +, sufixo livre; clique em × para remover)	Tags dynamiques (ajoutez avec +, suffixe libre ; cliquez sur × pour supprimer)	Dynamische Tags (mit + hinzufügen, freies Suffix; zum Entfernen × klicken)	Tag dinamici (aggiungi con +, suffisso libero; clicca × per rimuovere)	Dinamik etiketler (+ ile ekle, serbest sonek; kaldırmak için × tıkla)	Tagi dynamiczne (dodaj przez +, dowolny sufiks; kliknij ×, aby usunąć)	แท็กไดนามิก (เพิ่มด้วย +, ตั้งท้ายได้อิสระ; คลิก × เพื่อลบ)	Thẻ động (thêm bằng +, hậu tố tùy ý; bấm × để xóa)
+
+（暂无，按 + 添加）	（暫無，按 + 新增）	(none yet, add with +)	（まだありません。+ で追加）	(пока нет, добавьте кнопкой +)	(아직 없음, +로 추가)	(ninguno aún, añade con +)	(nenhum ainda, adicione com +)	(aucun pour l'instant, ajoutez avec +)	(noch keine, mit + hinzufügen)	(nessuno ancora, aggiungi con +)	(henüz yok, + ile ekle)	(brak, dodaj przez +)	(ยังไม่มี เพิ่มด้วย +)	(chưa có, thêm bằng +)
+
+后缀	尾碼	Suffix	接尾辞	Суффикс	접미사	Sufijo	Sufixo	Suffixe	Suffix	Suffisso	Sonek	Sufiks	ท้าย	Hậu tố
+
+无	無	None	なし	Нет	없음	Ninguno	Nenhum	Aucun	Keine	Nessuno	Yok	Brak	ไม่มี	Không
+
+帧率上限	幀率上限	Frame rate cap												
+
+不限制	不限制	Unlimited												
+
+过高的帧率会影响设备性能，且几乎不会带来观感上的提升	過高的幀率會影響裝置效能，且幾乎不會帶來觀感上的提升	High frame rates strain your device with almost no perceptible gain.												
+
+空闲时会自动降到 15 帧，有操作时按上面的设置运行。	空閒時會自動降到 15 幀，有操作時按上面的設定運行。	Idles down to 15 fps when unused, and follows the setting above while you interact.												
+
+帧	幀	fps	fps	fps	fps	fps	fps	fps	fps	fps	fps	fps	fps	fps
+
+桌面自动存档上限	桌面自動存檔上限	Desktop auto-save limit
+
+世界自动存档上限	世界自動存檔上限	World auto-save limit
+
+超过上限时，最旧的自动存档会被移入回收站。	超過上限時，最舊的自動存檔會移入回收站。	When the limit is exceeded, the oldest auto-save is moved to the Recycle Bin.
+
+新建积木	新建積木	Create block	ブロックを作成	Создать блок	블록 생성	Crear bloque	Criar bloco	Créer un bloc	Block erstellen	Crea blocco	Blok oluştur	Utwórz blok	สร้างบล็อก	Tạo khối
+
+删除积木	刪除積木	Delete block	ブロックを削除	Удалить блок	블록 삭제	Eliminar bloque	Excluir bloco	Supprimer un bloc	Block löschen	Elimina blocco	Blok sil	Usuń blok	ลบบล็อก	Xóa khối
+
+设置变量	設定變數	Set variable	変数を設定	Задать переменную	변수 설정	Establecer variable	Definir variável	Définir une variable	Variable setzen	Imposta variabile	Değişken ayarla	Ustaw zmienną	ตั้งค่าตัวแปร	Đặt biến
+
+新增变量	新增變數	Add variable	変数を追加	Добавить переменную	변수 추가	Añadir variable	Adicionar variável	Ajouter une variable	Variable hinzufügen	Aggiungi variabile	Değişken ekle	Dodaj zmienną	เพิ่มตัวแปร	Thêm biến
+
+移除变量	移除變數	Remove variable	変数を取り除く	Убрать переменную	변수 제거	Quitar variable	Remover variável	Retirer une variable	Variable entfernen	Rimuovi variabile	Değişken kaldır	Usuń zmienną	ลบตัวแปร	Xóa biến
+
+加载关卡	載入關卡	Load level	レベルを読み込む	Загрузить уровень	레벨 불러오기	Cargar nivel	Carregar nível	Charger un niveau	Level laden	Carica livello	Seviye yükle	Wczytaj poziom	โหลดด่าน	Tải màn chơi
+
+性能自测量	效能自量測	Self-measurement	自己計測	Самозамер	자체 측정	Automedición	Automedição	Auto-mesure	Selbstmessung	Auto-misura	Öz ölçüm	Samopomiar	วัดเอง	Tự đo
+
+帮助	說明	Help	ヘルプ	Справка	도움말	Ayuda	Ajuda	Aide	Hilfe	Aiuto	Yardım	Pomoc	ช่วยเหลือ	Trợ giúp
+
+清空输出	清空輸出	Clear output	出力を消去	Очистить вывод	출력 지우기	Limpiar salida	Limpar saída	Effacer la sortie	Ausgabe leeren	Pulisci output	Çıktıyı temizle	Wyczyść wynik	ล้างเอาต์พุต	Xóa kết quả
+
+效果编辑	效果編輯	Effect editor	効果エディター	Редактор эффектов	효과 편집기	Editor de efectos	Editor de efeitos	Éditeur d'effets	Effekt-Editor	Editor effetti	Efekt düzenleyici	Edytor efektów	ตัวแก้ไขเอฟเฟกต์	Trình sửa hiệu ứng
+
+
+拖动以移动效果编辑器	拖曳以移動效果編輯器	Drag to move the effect editor	ドラッグして効果エディターを移動	Перетащите, чтобы переместить редактор эффектов	드래그하여 효과 편집기 이동	Arrastra para mover el editor de efectos	Arraste para mover o editor de efeitos	Faites glisser pour déplacer l'éditeur d'effets	Ziehen, um den Effekt-Editor zu verschieben	Trascina per spostare l'editor effetti	Sürükleyerek efekt düzenleyiciyi taşı	Przeciągnij, aby przesunąć edytor efektów	ลากเพื่อย้ายตัวแก้ไขเอฟเฟกต์	Kéo để di chuyển trình sửa hiệu ứng
+
+＋ 添加命令	＋ 新增指令	+ Add command	＋ コマンドを追加	+ Добавить команду	+ 명령 추가	+ Añadir comando	+ Adicionar comando	+ Ajouter une commande	+ Befehl hinzufügen	+ Aggiungi comando	+ Komut ekle	+ Dodaj polecenie	+ เพิ่มคำสั่ง	+ Thêm lệnh
+
+完成	完成	Done	完了	Готово	완료	Listo	Concluir	Terminé	Fertig	Fine	Bitti	Gotowe	เสร็จสิ้น	Xong
+
+自定义文件名（如 player_profile.json）	自訂檔名（如 player_profile.json）	Custom file name (e.g. player_profile.json)	カスタムファイル名（例：player_profile.json）	Своё имя файла (напр. player_profile.json)	사용자 지정 파일 이름 (예: player_profile.json)	Nombre de archivo personalizado (p. ej. player_profile.json)	Nome de arquivo personalizado (ex.: player_profile.json)	Nom de fichier personnalisé (ex. player_profile.json)	Eigener Dateiname (z. B. player_profile.json)	Nome file personalizzato (es. player_profile.json)	Özel dosya adı (örn. player_profile.json)	Własna nazwa pliku (np. player_profile.json)	ชื่อไฟล์กำหนดเอง (เช่น player_profile.json)	Tên tệp tùy chỉnh (ví dụ player_profile.json)
+
+或手动输入变量名	或手動輸入變數名稱	Or type a variable name	または変数名を直接入力	Или введите имя переменной	또는 변수 이름 직접 입력	O escribe el nombre de la variable	Ou digite o nome da variável	Ou saisissez un nom de variable	Oder Variablennamen eingeben	Oppure digita il nome della variabile	Veya değişken adını yazın	Lub wpisz nazwę zmiennej	หรือพิมพ์ชื่อตัวแปรเอง	Hoặc nhập tên biến
+
+附加（值 / 参数，如 正义 或 100）	附加（值 / 參數，如 正義 或 100）	Extra (value / parameter, e.g. 正义 or 100)	追加（値 / 引数、例：正義 または 100）	Дополнительно (значение / параметр, напр. 正义 или 100)	추가 (값 / 매개변수, 예: 正义 또는 100)	Extra (valor / parámetro, p. ej. 正义 o 100)	Extra (valor / parâmetro, ex.: 正义 ou 100)	Supplément (valeur / paramètre, ex. 正义 ou 100)	Zusatz (Wert / Parameter, z. B. 正义 oder 100)	Extra (valore / parametro, es. 正义 o 100)	Ek (değer / parametre, örn. 正义 veya 100)	Dodatkowo (wartość / parametr, np. 正义 lub 100)	เพิ่มเติม (ค่า / พารามิเตอร์ เช่น 正义 หรือ 100)	Bổ sung (giá trị / tham số, ví dụ 正义 hoặc 100)
+
+(选择变量)	(選擇變數)	(Choose a variable)	（変数を選択）	(Выберите переменную)	(변수 선택)	(Elegir variable)	(Escolher variável)	(Choisir une variable)	(Variable wählen)	(Scegli variabile)	(Değişken seç)	(Wybierz zmienną)	(เลือกตัวแปร)	(Chọn biến)
+
+(自定义文件名…)	(自訂檔名…)	(Custom file name…)	（カスタムファイル名…）	(Своё имя файла…)	(사용자 지정 파일 이름…)	(Nombre de archivo personalizado…)	(Nome de arquivo personalizado…)	(Nom de fichier personnalisé…)	(Eigener Dateiname…)	(Nome file personalizzato…)	(Özel dosya adı…)	(Własna nazwa pliku…)	(ชื่อไฟล์กำหนดเอง…)	(Tên tệp tùy chỉnh…)
+
+积木类型	積木類型	Block type	ブロック種別	Тип блока	블록 유형	Tipo de bloque	Tipo de bloco	Type de bloc	Blocktyp	Tipo di blocco	Blok türü	Typ bloku	ชนิดบล็อก	Loại khối
+
+字符串 ID	字串 ID	String ID	文字列 ID	Строковый ID	문자열 ID	ID de cadena	ID de string	ID de chaîne	String-ID	ID stringa	Metin kimliği	ID tekstowy	ID ข้อความ	ID chuỗi
+
+位置	位置	Position	位置	Позиция	위치	Posición	Posição	Position	Position	Posizione	Konum	Pozycja	ตำแหน่ง	Vị trí
+
+目标引用	目標參照	Target reference	対象の参照	Ссылка на цель	대상 참조	Referencia objetivo	Referência de destino	Référence cible	Zielreferenz	Riferimento destinazione	Hedef başvurusu	Odniesienie docelowe	การอ้างอิงเป้าหมาย	Tham chiếu đích
+
+变量名	變數名稱	Variable name	変数名	Имя переменной	변수 이름	Nombre de variable	Nome da variável	Nom de variable	Variablenname	Nome variabile	Değişken adı	Nazwa zmiennej	ชื่อตัวแปร	Tên biến
+
+操作	操作	Operation	操作	Операция	연산	Operación	Operação	Opération	Operation	Operazione	İşlem	Operacja	การดำเนินการ	Thao tác
+
+模式	模式	Mode	モード	Режим	모드	Modo	Modo	Mode	Modus	Modalità	Mod	Tryb	โหมด	Chế độ
+
+值类型	值類型	Value type	値の型	Тип значения	값 유형	Tipo de valor	Tipo de valor	Type de valeur	Werttyp	Tipo di valore	Değer türü	Typ wartości	ชนิดค่า	Kiểu giá trị
+
+值	值	Value	値	Значение	값	Valor	Valor	Valeur	Wert	Valore	Değer	Wartość	ค่า	Giá trị
+
+删除条件	刪除條件	Delete condition	削除条件	Условие удаления	삭제 조건	Condición de borrado	Condição de exclusão	Condition de suppression	Löschbedingung	Condizione di eliminazione	Silme koşulu	Warunek usuwania	เงื่อนไขลบ	Điều kiện xóa
+
+关卡名	關卡名稱	Level name	レベル名	Имя уровня	레벨 이름	Nombre del nivel	Nome do nível	Nom du niveau	Levelname	Nome del livello	Seviye adı	Nazwa poziomu	ชื่อระดับ	Tên màn
+
+参数	參數	Parameter	引数	Параметр	매개변수	Parámetro	Parâmetro	Paramètre	Parameter	Parametro	Parametre	Parametr	พารามิเตอร์	Tham số
+
+帮助的命令	說明的指令	Command for help	ヘルプ対象のコマンド	Команда для справки	도움말 대상 명령	Comando para ayuda	Comando para ajuda	Commande d'aide	Befehl für Hilfe	Comando per la guida	Yardım komutu	Polecenie pomocy	คำสั่งช่วยเหลือ	Lệnh trợ giúp
+
+其他参数	其他參數	Other parameters	その他の引数	Прочие параметры	기타 매개변수	Otros parámetros	Outros parâmetros	Autres paramètres	Weitere Parameter	Altri parametri	Diğer parametreler	Inne parametry	พารามิเตอร์อื่น ๆ	Tham số khác
+
+留空 = 自动生成	留空 = 自動產生	Empty = auto-generated	空欄 = 自動生成	Пусто = автосоздание	비우면 자동 생성	Vacío = generado automáticamente	Vazio = gerado automaticamente	Vide = généré automatiquement	Leer = automatisch erzeugt	Vuoto = generato automaticamente	Boş = otomatik oluşturulur	Puste = generowane automatycznie	ว่าง = สร้างอัตโนมัติ	Trống = tự tạo
+
+留空 = 桌面中心；也可写 100,200	留空 = 桌面中心；也可寫 100,200	Empty = desktop center; or write 100,200	空欄 = デスクトップ中央；100,200 でも可	Пусто = центр рабочего стола; можно указать 100,200	비우면 데스크톱 중앙, 100,200 형식도 가능	Vacío = centro del escritorio; o escribe 100,200	Vazio = centro da área de trabalho; ou escreva 100,200	Vide = centre du bureau ; ou saisir 100,200	Leer = Desktop-Mitte; oder 100,200 angeben	Vuoto = centro del desktop; oppure scrivi 100,200	Boş = masaüstü merkezi; 100,200 de yazılabilir	Puste = środek pulpitu; można wpisać 100,200	ว่าง = กลางเดสก์ท็อป หรือพิมพ์ 100,200	Trống = giữa màn hình; hoặc nhập 100,200
+
+自定义引用（文件名 / 积木 ID / 全局变量）	自訂參照（檔名 / 積木 ID / 全域變數）	Custom reference (file / block ID / global var)	カスタム参照（ファイル名 / ブロック ID / グローバル変数）	Своя ссылка (файл / ID блока / глобальная переменная)	사용자 지정 참조(파일 / 블록 ID / 전역 변수)	Referencia personalizada (archivo / ID de bloque / variable global)	Referência personalizada (arquivo / ID do bloco / variável global)	Référence personnalisée (fichier / ID de bloc / variable globale)	Eigene Referenz (Datei / Block-ID / globale Variable)	Riferimento personalizzato (file / ID blocco / variabile globale)	Özel başvuru (dosya / blok kimliği / genel değişken)	Własne odniesienie (plik / ID bloku / zmienna globalna)	การอ้างอิงกำหนดเอง (ไฟล์ / ID บล็อก / ตัวแปรส่วนกลาง)	Tham chiếu tùy chỉnh (tệp / ID khối / biến toàn cục)
+
+值（文本 / 数字 / true/false）	值（文字 / 數字 / true/false）	Value (text / number / true/false)	値（文字列 / 数値 / true/false）	Значение (текст / число / true/false)	값(텍스트 / 숫자 / true/false)	Valor (texto / número / true/false)	Valor (texto / número / true/false)	Valeur (texte / nombre / true/false)	Wert (Text / Zahl / true/false)	Valore (testo / numero / true/false)	Değer (metin / sayı / true/false)	Wartość (tekst / liczba / true/false)	ค่า (ข้อความ / ตัวเลข / true/false)	Giá trị (văn bản / số / true/false)
+
+条件表达式（如 this:width > 100）	條件運算式（如 this:width > 100）	Condition (e.g. this:width > 100)	条件式（例：this:width > 100）	Условие (напр. this:width > 100)	조건식(예: this:width > 100)	Expresión de condición (p. ej. this:width > 100)	Expressão de condição (ex.: this:width > 100)	Expression de condition (ex. this:width > 100)	Bedingungsausdruck (z. B. this:width > 100)	Espressione di condizione (es. this:width > 100)	Koşul ifadesi (örn. this:width > 100)	Wyrażenie warunku (np. this:width > 100)	นิพจน์เงื่อนไข (เช่น this:width > 100)	Biểu thức điều kiện (vd: this:width > 100)
+
+或手动输入关卡名	或手動輸入關卡名稱	Or type a level name	またはレベル名を直接入力	Или введите имя уровня	또는 레벨 이름 직접 입력	O escribe un nombre de nivel	Ou digite um nome de nível	Ou saisir un nom de niveau	Oder Levelname eingeben	Oppure digita un nome di livello	Veya seviye adı yazın	Lub wpisz nazwę poziomu	หรือพิมพ์ชื่อระดับ	Hoặc nhập tên màn
+
+其他参数（原样保留，如 width=120, tags={gravity}）	其他參數（原樣保留，如 width=120, tags={gravity}）	Other parameters (kept as-is, e.g. width=120, tags={gravity})	その他の引数（そのまま保持、例：width=120, tags={gravity}）	Прочие параметры (как есть, напр. width=120, tags={gravity})	기타 매개변수(그대로 유지, 예: width=120, tags={gravity})	Otros parámetros (se conservan, p. ej. width=120, tags={gravity})	Outros parâmetros (mantidos, ex.: width=120, tags={gravity})	Autres paramètres (conservés, ex. width=120, tags={gravity})	Weitere Parameter (unverändert, z. B. width=120, tags={gravity})	Altri parametri (mantenuti, es. width=120, tags={gravity})	Diğer parametreler (korunur, örn. width=120, tags={gravity})	Inne parametry (bez zmian, np. width=120, tags={gravity})	พารามิเตอร์อื่น ๆ (ตามเดิม เช่น width=120, tags={gravity})	Tham số khác (giữ nguyên, vd: width=120, tags={gravity})
+
+其他判定（如 width=120）	其他判定（如 width=120）	Other predicates (e.g. width=120)	その他の判定（例：width=120）	Другие условия (напр. width=120)	기타 판정(예: width=120)	Otros criterios (p. ej. width=120)	Outros critérios (ex.: width=120)	Autres critères (ex. width=120)	Weitere Bedingungen (z. B. width=120)	Altri criteri (es. width=120)	Diğer ölçütler (örn. width=120)	Inne kryteria (np. width=120)	เงื่อนไขอื่น ๆ (เช่น width=120)	Tiêu chí khác (vd: width=120)
+
+(自定义引用…)	(自訂參照…)	(Custom reference…)	（カスタム参照…）	(Своя ссылка…)	(사용자 지정 참조…)	(Referencia personalizada…)	(Referência personalizada…)	(Référence personnalisée…)	(Eigene Referenz…)	(Riferimento personalizzato…)	(Özel başvuru…)	(Własne odniesienie…)	(การอ้างอิงกำหนดเอง…)	(Tham chiếu tùy chỉnh…)
+
+(选择关卡)	(選擇關卡)	(Choose a level)	（レベルを選択）	(Выберите уровень)	(레벨 선택)	(Elegir nivel)	(Escolher nível)	(Choisir un niveau)	(Level wählen)	(Scegli livello)	(Seviye seç)	(Wybierz poziom)	(เลือกระดับ)	(Chọn màn)
+
+(空白积木)	(空白積木)	(Blank block)	（空白ブロック）	(Пустой блок)	(빈 블록)	(Bloque en blanco)	(Bloco vazio)	(Bloc vide)	(Leerer Block)	(Blocco vuoto)	(Boş blok)	(Pusty blok)	(บล็อกว่าง)	(Khối trống)
+
+(全部命令)	(全部指令)	(All commands)	（すべてのコマンド）	(Все команды)	(모든 명령)	(Todos los comandos)	(Todos os comandos)	(Toutes les commandes)	(Alle Befehle)	(Tutti i comandi)	(Tüm komutlar)	(Wszystkie polecenia)	(คำสั่งทั้งหมด)	(Tất cả lệnh)
+
+(切换)	(切換)	(Toggle)	（切り替え）	(Переключить)	(전환)	(Alternar)	(Alternar)	(Basculer)	(Umschalten)	(Attiva/disattiva)	(Değiştir)	(Przełącz)	(สลับ)	(Bật/tắt)
+
+覆盖（=）	覆蓋（=）	Overwrite (=)	上書き（=）	Перезаписать (=)	덮어쓰기 (=)	Sobrescribir (=)	Substituir (=)	Écraser (=)	Überschreiben (=)	Sovrascrivi (=)	Üzerine yaz (=)	Nadpisz (=)	เขียนทับ (=)	Ghi đè (=)
+
+累加（+=）	累加（+=）	Add (+=)	加算（+=）	Прибавить (+=)	더하기 (+=)	Sumar (+=)	Somar (+=)	Ajouter (+=)	Addieren (+=)	Somma (+=)	Ekle (+=)	Dodaj (+=)	บวกเพิ่ม (+=)	Cộng (+=)
+
+累减（-=）	累減（-=）	Subtract (-=)	減算（-=）	Вычесть (-=)	빼기 (-=)	Restar (-=)	Subtrair (-=)	Soustraire (-=)	Subtrahieren (-=)	Sottrai (-=)	Çıkar (-=)	Odejmij (-=)	ลบออก (-=)	Trừ (-=)
+
+累乘（*=）	累乘（*=）	Multiply (*=)	乗算（*=）	Умножить (*=)	곱하기 (*=)	Multiplicar (*=)	Multiplicar (*=)	Multiplier (*=)	Multiplizieren (*=)	Moltiplica (*=)	Çarp (*=)	Pomnóż (*=)	คูณ (*=)	Nhân (*=)
+
+累除（/=）	累除（/=）	Divide (/=)	除算（/=）	Разделить (/=)	나누기 (/=)	Dividir (/=)	Dividir (/=)	Diviser (/=)	Dividieren (/=)	Dividi (/=)	Böl (/=)	Podziel (/=)	หาร (/=)	Chia (/=)
+
+移除该键 / 清空	移除該鍵 / 清空	Remove the key / clear	キーを削除 / 空にする	Удалить ключ / очистить	키 제거 / 비우기	Quitar la clave / vaciar	Remover a chave / limpar	Supprimer la clé / vider	Schlüssel entfernen / leeren	Rimuovi la chiave / svuota	Anahtarı kaldır / temizle	Usuń klucz / wyczyść	ลบ 키 / ล้าง	Xóa khóa / làm trống
+
+移除集合中的指定元素	移除集合中的指定元素	Remove a specific element	コレクション内の指定要素を削除	Удалить указанный элемент	컬렉션에서 지정 요소 제거	Quitar un elemento concreto	Remover um elemento específico	Supprimer un élément précis	Bestimmtes Element entfernen	Rimuovi un elemento specifico	Belirli bir öğeyi kaldır	Usuń konkretny element	ลบองค์ประกอบที่ระบุ	Xóa một phần tử cụ thể
+
+自动（按内容判断）	自動（依內容判斷）	Auto (by content)	自動（内容から判定）	Авто (по содержимому)	자동(내용 기준)	Automático (según contenido)	Automático (pelo conteúdo)	Auto (selon le contenu)	Automatisch (nach Inhalt)	Automatico (dal contenuto)	Otomatik (içeriğe göre)	Automatycznie (z treści)	อัตโนมัติ (ตามเนื้อหา)	Tự động (theo nội dung)
+
+文本	文字	Text	文字列	Текст	텍스트	Texto	Texto	Texte	Text	Testo	Metin	Tekst	ข้อความ	Văn bản
+
+整数	整數	Integer	整数	Целое число	정수	Entero	Inteiro	Entier	Ganzzahl	Intero	Tam sayı	Liczba całkowita	จำนวนเต็ม	Số nguyên
+
+小数	小數	Decimal	小数	Дробное число	소수	Decimal	Decimal	Décimal	Dezimalzahl	Decimale	Ondalık	Liczba dziesiętna	ทศนิยม	Số thập phân
+
+布尔	布林	Boolean	真偽値	Логический	불리언	Booleano	Booleano	Booléen	Boolesch	Booleano	Mantıksal	Logiczna	บูลีน	Boolean
+
+空（null）	空（null）	Null	空（null）	Пусто (null)	비어 있음(null)	Nulo (null)	Nulo (null)	Nul (null)	Null	Nullo (null)	Boş (null)	Puste (null)	ว่าง (null)	Rỗng (null)
+
+打开	開啟	Open	開く	Открыть	열기	Abrir	Abrir	Ouvrir	Öffnen	Apri	Aç	Otwórz	เปิด	Mở
+
+导出快照	匯出快照	Export snapshot	スナップショットを書き出す	Экспорт снимка	스냅샷 내보내기	Exportar instantánea	Exportar instantâneo	Exporter un instantané	Snapshot exportieren	Esporta istantanea	Anlık görüntüyü dışa aktar	Eksportuj zrzut	ส่งออกสแนปช็อต	Xuất ảnh chụp
+
+（未完成：请补齐必填项）	（未完成：請補齊必填項）	(Incomplete: fill the required fields)	（未完成：必須項目を入力）	(Не заполнено: обязательные поля)	(미완성: 필수 항목 입력)	(Incompleto: completa los campos)	(Incompleto: preencha os campos)	(Incomplet : champs obligatoires)	(Unvollständig: Pflichtfelder)	(Incompleto: campi obbligatori)	(Eksik: zorunlu alanlar)	(Niekompletne: wymagane pola)	(ไม่สมบูรณ์: กรอกข้อมูลที่จำเป็น)	(Chưa xong: điền mục bắt buộc)
+
+播放事件														
+(同事件链 auto)														
+事件链														
+事件名														
+取反														
+且														
+或														
+添加条件														
+添加分组														
+状态标签														
+数值比较														
+全局变量														
+状态数值字段														
+有标签														
+无标签														
+大于														
+小于														
+大于等于														
+小于等于														
+等于														
+不等于														
+数值														
+标签名（如 happy）														
+预览														
+语法有效														
+语法错误														
+原始文本（无法用可视化编辑器解析，已原样保留；可手动编辑）														
+满足以下条件时显示按钮（空 = 始终显示）														
+拖动以移动显示要求编辑器														
+显示要求编辑														
+玩家状态														
+在忙														
+在闲														
+正在运行某类活动														
+未运行某类活动														
+权重最高的活动是														
+权重最低的活动是														
+某活动权重														
+权重数值														
+是														
+不是														
+添加玩家状态														
+满足以下条件时触发（空 = 不限制）														
+拖动以移动条件编辑器														
+休闲														
+学习														
+社区														
+预计时间														
+时间轴效果														
+触发事件														
+其他属性														
+添加到时间轴														
+添加状态标签														
+移除状态标签														
+清空状态标签														
+(选择状态)														
+(选择标签字段)														
+或手动输入字段名（顶层字符串数组）														
+要添加 / 移除的标签（如 得到钥匙）														
+状态														
+标签字段														
+标签														
+(选择标签)														
+或手填新标签														

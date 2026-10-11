@@ -1,0 +1,51 @@
+{
+	"attrs": {
+		"compute_score": 0,
+		"cooling_score": -2,
+		"cpu_slots": 1,
+		"cpu_socket": "LGA1700",
+		"external_ports": [
+			{
+				"count": 1,
+				"kind": "eth",
+				"speed_mbps": 1000
+			},
+			{
+				"count": 4,
+				"kind": "usb",
+				"speed_mbps": 480
+			},
+			{
+				"count": 2,
+				"kind": "usb",
+				"speed_mbps": 5000
+			},
+			{
+				"count": 1,
+				"kind": "typec",
+				"speed_mbps": 10000
+			}
+		],
+		"form_factor": "ATX",
+		"gpu_if": "PCIe4x16",
+		"gpu_slots": 2,
+		"mem_slots": 4,
+		"mem_type": "DDR4",
+		"nic_if": "PCIe",
+		"nic_slots": 1,
+		"part_type": "motherboard",
+		"peripheral_if": "PCIe4x1",
+		"peripheral_slots": 2,
+		"power_w": 15,
+		"storage_if": "SATA3",
+		"storage_slots": 6
+	},
+	"description": "主板 ATX（DDR4 内存 / PCIe4x16 显卡）",
+	"id": "mb_atx_lga1700_ddr4",
+	"name": "ATX 主板 LGA1700/DDR4",
+	"tags": [
+		"pc_hardware",
+		"real_item",
+		"motherboard"
+	]
+}

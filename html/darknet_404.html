@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>404 · 节点未找到</title>
+<style>
+  :root {
+    --bg: #050505;
+    --txt: #e8e8e8;
+    --dim: rgba(255, 255, 255, 0.55);
+    --faint: rgba(255, 255, 255, 0.32);
+    --line: rgba(255, 255, 255, 0.24);
+  }
+  * { box-sizing: border-box; border-radius: 0 !important; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: radial-gradient(120% 90% at 50% 0%, #0c0c0c 0%, var(--bg) 55%);
+    color: var(--txt);
+    font-family: "Cascadia Code", "Consolas", "Courier New", "Microsoft YaHei", monospace;
+  }
+  .crt {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 72px 24px 0;
+    text-align: center;
+  }
+  .code {
+    font-size: 150px;
+    font-weight: 800;
+    letter-spacing: 16px;
+    margin-left: 16px;   /* 抵消末字符字距，保持视觉居中 */
+    color: #ffffff;
+    margin-top: 0;
+    margin-bottom: 0;
+    line-height: 1;
+  }
+  h1 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #ffffff;
+    margin: 10px 0 20px;
+  }
+  .addr {
+    font-size: 17px;
+    color: #ffffff;
+    word-break: break-all;
+    margin: 0 auto 24px;
+    padding: 12px 18px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--line);
+    display: inline-block;
+  }
+  p.msg { color: var(--dim); line-height: 1.8; font-size: 14px; margin: 0 0 6px; }
+  a.back {
+    display: inline-block;
+    margin-top: 26px;
+    padding: 13px 26px;
+    color: #000000;
+    background: #ffffff;
+    border: 1px solid #ffffff;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 3px;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  a.back:hover { background: transparent; color: #ffffff; }
+  .foot { margin-top: 26px; font-size: 11px; letter-spacing: 4px; color: var(--faint); }
+
+  /* ===== 底部装饰：伪 3D 方块地球（黑白 · 太空俯瞰 · 可拖动）===== */
+  .globe-wrap {
+    width: 100%;
+    margin: 46px 0 0;
+    text-align: center;
+    user-select: none;
+  }
+  #globe {
+    display: block;
+    margin: 0;
+    cursor: grab;
+    touch-action: none;
+  }
+  #globe.dragging { cursor: grabbing; }
+  .globe-hint {
+    margin: 0 0 6px;
+    font-size: 10px;
+    letter-spacing: 6px;
+    color: rgba(255, 255, 255, 0.22);
+    user-select: none;
+  }
+</style>
+</head>
+<body>
+  <div class="crt">
+    <p class="code">404</p>
+    <h1>节点未找到 / NODE NOT FOUND</h1>
+    <div id="addr" class="addr">(未知地址)</div>
+    <p class="msg">
+      该地址暂无对应页面。<br>
+      本地节点尚未搭建，空跳转将被引至此页。
+    </p>
+    <a class="back" href="darknet_entry.html">← 返回跳转器入口</a>
+    <p class="foot">DARKNET · 404</p>
+  </div>
+
+  <div class="globe-wrap">
+    <p class="globe-hint">DRAG TO ROTATE // 拖动旋转</p>
+    <canvas id="globe"></canvas>
+  </div>
+
+<script>
+(function () {
+  /* ---- 地址回显（原有逻辑）---- */
+  var p = new URLSearchParams(window.location.search);
+  var to = p.get("to");
+  if (to) {
+    document.getElementById("addr").textContent = "地址：" + to;
+    document.title = "404 · " + to;
+  }
+})();
+</script>
+<script src="globe.js"></script>
+</body>
+</html>
