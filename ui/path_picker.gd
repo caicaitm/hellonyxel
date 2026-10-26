@@ -30,6 +30,7 @@ const DIR_ROOT := "res://"
 # 文件类型过滤串（FileDialog.filters 用 "扩展名列表 ; 名称" 的写法）
 const IMG_EXTS := "*.png,*.jpg,*.jpeg,*.webp,*.svg,*.bmp,*.tga,*.gif"
 const AUDIO_EXTS := "*.wav,*.ogg,*.mp3"
+const SCENE_EXTS := "*.tscn,*.escn"
 const ANY_EXTS := "*.*"
 
 static var _icon: ImageTexture = null
@@ -60,6 +61,15 @@ static func attach(target: LineEdit, default_dir: String, opts: Dictionary = {})
 		row.move_child(b, target.get_index() + 1)   # 紧跟输入框（不依赖 add 顺序）
 		p._btn = b
 	return p
+
+
+## 切换选择器配置（如积木「填充类型」从静态图切到骨骼动画：
+## 默认目录、扩展名过滤、标题、是否允许把项目外图片收进用户素材目录都会变）。
+func set_config(default_dir: String, opts: Dictionary = {}) -> void:
+	_default_dir = default_dir
+	_opts = opts
+	if _btn != null and is_instance_valid(_btn):
+		_btn.tooltip_text = "选择文件（默认目录 %s）" % _default_dir
 
 
 # ==================== 按钮 ====================
@@ -146,13 +156,31 @@ func _ensure_dialog() -> FileDialog:
 func _on_file_selected(path: String) -> void:
 	if path == null or path == "":
 		return
-	apply_abs_path(_target, path)
+	if not _accept_path(path):
+		return
+	apply_abs_path(_target, path, bool(_opts.get("allow_user_copy", true)))
 
 
 func _on_files_selected(paths: PackedStringArray) -> void:
 	if paths.is_empty():
 		return
-	apply_abs_path(_target, str(paths[0]))
+	if not _accept_path(str(paths[0])):
+		return
+	apply_abs_path(_target, str(paths[0]), bool(_opts.get("allow_user_copy", true)))
+
+
+# 按 opts.accept_exts 过滤（如骨骼场景只接受 .tscn/.escn）。
+# 系统对话框总会附带「全部文件」项，靠它兜住用户手选错类型的文件。
+func _accept_path(path: String) -> bool:
+	var accept: PackedStringArray = PackedStringArray(_opts.get("accept_exts", []))
+	if accept.is_empty():
+		return true
+	var ext := path.get_extension().to_lower()
+	for e in accept:
+		if ext == str(e).trim_prefix(".").to_lower():
+			return true
+	notify_msg("不支持的文件类型，已忽略：%s" % path.get_file())
+	return false
 
 
 # ==================== 路径换算（纯逻辑，便于单独验证）====================
@@ -197,8 +225,9 @@ static func to_res_path(abs_path: String) -> String:
 ##      回填该副本的绝对路径。运行期直读，**不需要导入、不需要重启**。
 ##      这条是「玩家自定义贴图」能落地的关键：以前一律拒绝，玩家只能手动拷进项目再重启。
 ##   ③ 其它项目外文件 → 仍拒绝并提示（避免把任意路径写进贴图字段）。
+## ★ allow_user_copy = false 时关闭 ②（骨骼场景这类多文件资源不能只拷一个文件出去）。
 ## 返回是否写入。
-static func apply_abs_path(target: LineEdit, abs_path: String) -> bool:
+static func apply_abs_path(target: LineEdit, abs_path: String, allow_user_copy: bool = true) -> bool:
 	if not is_instance_valid(target):
 		return false
 	var p := str(abs_path).strip_edges()
@@ -215,7 +244,7 @@ static func apply_abs_path(target: LineEdit, abs_path: String) -> bool:
 		target.caret_column = rp.length()
 		return true
 	# ② 项目外的图片 → 收进用户素材目录
-	if _is_image_file(p) and SaveManager != null:
+	if allow_user_copy and _is_image_file(p) and SaveManager != null:
 		var copied: String = SaveManager.import_user_texture(p)
 		if not copied.is_empty():
 			target.text = copied
@@ -223,7 +252,10 @@ static func apply_abs_path(target: LineEdit, abs_path: String) -> bool:
 			notify_msg("已复制到用户素材目录并启用：%s" % copied)
 			return true
 	# ③ 其它 → 拒绝
-	notify_msg("只能选择项目目录（res://）内的文件或图片；本次已忽略：%s" % p.get_file())
+	if allow_user_copy:
+		notify_msg("只能选择项目目录（res://）内的文件或图片；本次已忽略：%s" % p.get_file())
+	else:
+		notify_msg("只能选择项目目录（res://）内的文件；本次已忽略：%s" % p.get_file())
 	return false
 
 

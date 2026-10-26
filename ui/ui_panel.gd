@@ -48,9 +48,21 @@ var _frosted_override: int = -1
 var _glass: ColorRect = null   # 面板背景着色器层（玻璃 或 全息，由 _bg_kind 区分）
 var _bg_kind: String = ""      # "" = 无着色器层；"glass" / "holo" = 当前挂的着色器种类
 
+# 深色舞台模式（页面透明效果开关）：开启后强制平板渲染并画「课程表同款」纯净深色底。
+var _dark_stage: bool = false
+var _dark_stage_managed: bool = false
+
+
+func _init() -> void:
+	# ★★「默认不接收鼠标」必须放在 _init()（构造默认值），不能放 _ready()：
+	#    _ready() 在节点入树时才跑，会**无条件覆盖**调用方在 add_child 之前的显式赋值
+	#    （如课程表面板的单元格/时段标签/主时段名都在构造时设了 MOUSE_FILTER_STOP，
+	#    入树后被这行冲成 IGNORE → 真实命中测试直接跳过 → gui_input 永远收不到 →
+	#    「右键菜单点不开、左键编辑也点不动」，而探针 emit_signal 直驱不经过命中测试所以全 PASS）。
+	#    _init() 只提供默认值：调用方之后显式设 STOP/PASS 照常生效，语义同原注释。
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 func _ready() -> void:
-	mouse_filter = Control.MOUSE_FILTER_IGNORE  # 默认不接收鼠标（按钮自己接）
 	resized.connect(_on_resized)
 	add_to_group("uis_theme_panel")
 	# 订阅主题变化：玻璃 ↔ 纯色切换、主题色变更时本实例即时换肤。
@@ -269,9 +281,54 @@ func set_border_width(w: float) -> void:
 		queue_redraw()
 
 
+# ===================== 深色舞台模式（页面透明效果开关） =====================
+# 开启后：强制平板渲染（关玻璃磨砂 shader），画一层「课程表同款」纯净深色底
+#   （FILL_LEVEL_STAGE + STAGE_BORDER 1px + 0.6*CORNER_RADIUS 圆角），节点类型与
+#   set_* API 不变 → 现有面板零破坏性切换。由 SaveManager.page_dark_bg_changed 驱动。
+
+## 订阅「页面透明效果」开关：立即按当前值渲染，并连信号以便在设置页切换时实时换肤。
+## 只有主面板调用本方法；编辑器弹窗等不调用 → 始终保持玻璃透出。
+func bind_page_dark_bg() -> void:
+	_dark_stage_managed = true
+	if SaveManager != null:
+		set_dark_stage(SaveManager.get_page_dark_bg())
+	var sm := UIStyle._save_manager()
+	if sm != null and sm.has_signal("page_dark_bg_changed"):
+		if not sm.page_dark_bg_changed.is_connected(_on_page_dark_bg_changed):
+			sm.page_dark_bg_changed.connect(_on_page_dark_bg_changed)
+
+
+func _on_page_dark_bg_changed(on: bool) -> void:
+	set_dark_stage(on)
+
+
+## 开=纯净深色底（关玻璃 shader）；关=恢复跟随主题的玻璃/全息/平板。
+func set_dark_stage(on: bool) -> void:
+	_dark_stage = on
+	_frosted_override = 0 if on else -1
+	_sync_render()
+	queue_redraw()
+
+
+## 课程表同款纯净深色底：FILL_LEVEL_STAGE + STAGE_BORDER 1px + 0.6*CORNER_RADIUS 圆角。
+func _draw_stage_bg() -> void:
+	var rect := Rect2(Vector2.ZERO, size)
+	var r := float(int(UIStyle.CORNER_RADIUS * 0.6))
+	if r > 0.0:
+		_draw_rounded_rect(rect, r, UIStyle.FILL_LEVEL_STAGE, true)
+		_draw_rounded_rect(rect, r, UIStyle.STAGE_BORDER, false, 1.0)
+	else:
+		draw_rect(rect, UIStyle.FILL_LEVEL_STAGE, true)
+		draw_rect(rect, UIStyle.STAGE_BORDER, false, 1.0)
+
+
 # ===================== 绘制 =====================
 
 func _draw() -> void:
+	# 深色舞台模式：直接画一层纯净深色圆角矩形（课程表同款），不走玻璃/渐变。
+	if _dark_stage:
+		_draw_stage_bg()
+		return
 	# 磨砂路径下，玻璃（填充/渐变/高光/描边/光晕）全部由着色器绘制，_draw 无需再画。
 	if _glass != null and is_instance_valid(_glass):
 		return

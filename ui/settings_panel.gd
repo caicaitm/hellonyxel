@@ -61,6 +61,30 @@ var _scroll: ScrollContainer
 var _drag_handle: UIDragHandle
 var _confirm_btn: UIBtn
 var _close_btn: UIBtn
+# —— 设置页附加页「全局 / 世界」：世界相关设置单独放一页 ——
+var _tab_global_btn: UIBtn = null       # 「全局」附加页标签
+var _tab_world_btn: UIBtn = null        # 「世界」附加页标签
+var _global_body: VBoxContainer = null  # 全局页内容
+var _world_body: VBoxContainer = null   # 世界页内容
+var _invert_wheel_check: CheckButton = null   # 「反转滚轮」开关（世界页）
+var _snapshot_invert_wheel: bool = false      # 打开设置时该开关的基准值（未确定关闭→回滚）
+var _invert_mouse_check: CheckButton = null   # 「反转鼠标」开关（世界页）
+var _snapshot_invert_mouse: bool = false      # 打开设置时该开关的基准值（未确定关闭→回滚）
+
+# —— 通用多页（标签页）机制：把「全局 / 世界 / 键鼠映射」统一成 page 字典 ——
+#   每个 page：{ "btn": UIBtn, "body": VBoxContainer, "title": String }
+var _pages: Dictionary = {}            # id -> page 信息
+var _page_order: Array = []            # 标签页顺序（决定标签按钮排布）
+var _current_page: String = "global"   # 当前显示的页 id
+var _pages_tab_row: HBoxContainer = null  # 标签按钮所在行
+var _input_body: VBoxContainer = null  # 「键鼠映射」页内容容器
+# 「键鼠映射」页：设备勾选 / 各功能重绑按钮 / 暂存
+var _device_checks: Dictionary = {}    # device -> CheckButton（暂存显示）
+var _input_buttons: Dictionary = {}    # action -> UIBtn（显示当前绑定）
+var _staged_devices: Dictionary = {}   # 暂存：device -> bool（未确定不落盘）
+var _staged_bindings: Dictionary = {}  # 暂存：action -> {device -> dict|null}
+var _listening_action: String = ""     # 正在监听重绑的动作 id（空=未在监听）
+var _listening_ignore_release: bool = false  # 吞掉「开始监听」那一下的鼠标松开
 
 # 是否已居中过一次：首次 open 居中，之后允许用拖动把柄改位置（拖动位置保留）
 var _ever_centered: bool = false
@@ -85,6 +109,7 @@ var _theme_color_opt: OptionButton = null       # 「半透明纯色」的主题
 var _theme_color_hint: Label = null             # 主题色行的说明文字
 var _timeline_max_input: SpinBox = null         # 时间轴同时触发数量上限
 var _quit_auto_check: CheckButton = null        # 退出游戏时自动存档开关
+var _page_dark_check: CheckButton = null        # 页面透明效果开关（开=深色背景）
 var _autostart_check: CheckButton = null        # 开机自启动开关（真实状态 = 注册表 Run 键）
 var _autoload_check: CheckButton = null          # 自动载入存档开关（开启时启动即载入最新存档）
 var _tray_debug_check: CheckButton = null        # 是否在托盘右键菜单显示「进入/退出调试模式」项
@@ -103,6 +128,7 @@ var _snapshot_timeline_max: int = 0     # 打开时时间轴同时触发数量�
 var _snapshot_quit_auto: bool = false   # 打开时退出自动存档开关
 var _snapshot_autostart: bool = false   # 打开时开机自启动状态（= 注册表当前状态）
 var _snapshot_autoload: bool = false     # 打开时自动载入存档开关
+var _snapshot_page_dark: bool = false     # 打开时「页面透明效果」开关（开=深色背景）
 var _snapshot_tray_debug: bool = true    # 打开时「显示调试模式按钮」开关
 var _snapshot_theme_mode: String = "glass"   # 打开时界面主题（glass / solid）
 var _snapshot_theme_color: String = "ice"    # 打开时「半透明纯色」的主题色键
@@ -142,6 +168,14 @@ func open() -> void:
 	#   （实际生效值在 SaveManager 里）。滑条类（音量 / UI 缩放）有"松手即预览"语义，
 	#   它们本身就是实时生效的，不在同步范围内。
 	_sync_staged_widgets()
+	# ★★ 键鼠映射页：每次打开都从 InputBindings 取「已生效值」回填暂存与控件
+	#   （理由同上方「暂存型控件每次打开回到已生效值」——避免上一次未提交的改动残留显示）。
+	if InputBindings != null:
+		_staged_devices = InputBindings.get_devices()
+		_staged_bindings = InputBindings.get_bindings()
+		_listening_action = ""
+		_listening_ignore_release = false
+		_refresh_input_tab()
 	_pending_lang = _snapshot_lang
 	_committed = false
 	_open = true
@@ -169,8 +203,14 @@ func _sync_staged_widgets() -> void:
 		_quit_auto_check.button_pressed = bool(SaveManager.get_quit_auto_save())
 	if _autoload_check != null and is_instance_valid(_autoload_check):
 		_autoload_check.button_pressed = bool(SaveManager.get_auto_load_save())
+	if _page_dark_check != null and is_instance_valid(_page_dark_check):
+		_page_dark_check.button_pressed = bool(SaveManager.get_page_dark_bg()) if SaveManager != null else false
 	if _tray_debug_check != null and is_instance_valid(_tray_debug_check):
 		_tray_debug_check.button_pressed = _tray_debug_default()
+	if _invert_wheel_check != null and is_instance_valid(_invert_wheel_check):
+		_invert_wheel_check.button_pressed = bool(SaveManager.get_world_invert_wheel()) if SaveManager != null else false
+	if _invert_mouse_check != null and is_instance_valid(_invert_mouse_check):
+		_invert_mouse_check.button_pressed = bool(SaveManager.get_world_invert_mouse()) if SaveManager != null else false
 
 
 func close() -> void:
@@ -228,12 +268,20 @@ func apply() -> void:
 			"timeline_max": int(_timeline_max_input.value) if _timeline_max_input != null else 10,
 			"quit_auto_save": _quit_auto_check.button_pressed if _quit_auto_check != null else false,
 			"auto_load_save": _autoload_check.button_pressed if _autoload_check != null else false,
+			"page_dark_bg": _page_dark_check.button_pressed if _page_dark_check != null else false,
 			"tray_debug_button": _tray_debug_check.button_pressed if _tray_debug_check != null else true,
+			"world_invert_wheel": _invert_wheel_check.button_pressed if _invert_wheel_check != null else false,
+			"world_invert_mouse": _invert_mouse_check.button_pressed if _invert_mouse_check != null else false,
 			"max_fps": _fps_value(),
 			"ui_theme_mode": _theme_value(),
 			"ui_theme_color": _theme_color_value(),
 		}
 		SaveManager.save_app_settings(patch)
+		# ★ 键鼠映射：把暂存的设备开关 + 各功能绑定落到 settings.json（InputBindings 内部写盘）。
+		if InputBindings != null and not _staged_bindings.is_empty():
+			InputBindings.set_devices(_staged_devices)
+			InputBindings.set_bindings(_staged_bindings)
+			InputBindings.commit()
 		# ★ 自动存档上限调小后**立即清理一次**：patch 已同步内部上限变量，此刻
 		#   "数量已超过新阈值" 就已经成立，不必等到下一次自动存档。
 		#   （不超限时是空操作，不发起 PowerShell 调用。）
@@ -297,6 +345,7 @@ func _build_ui() -> void:
 	_panel.set_border_width(UIStyle.BORDER_WIDTH)
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_panel)
+	_panel.bind_page_dark_bg()
 
 	# 顶栏：标题 + 右侧拖动把柄（复用 UIDragHandle，拖拽可改整个面板位置）
 	var top := _hbox()
@@ -334,11 +383,50 @@ func _build_ui() -> void:
 	_scroll.size = Vector2(inner_w, H - PAD - TITLE_H - FOOTER_H)
 	add_child(_scroll)
 
-	var body := VBoxContainer.new()
-	body.name = "Body"
-	body.custom_minimum_size = Vector2(inner_w, 0.0)
-	body.add_theme_constant_override("separation", 8)
-	_scroll.add_child(body)
+	# —— 通用多页（标签页）：全局 / 世界 / 键鼠映射，同一时刻只显示一页 ——
+	var pages := VBoxContainer.new()
+	pages.name = "Pages"
+	pages.custom_minimum_size = Vector2(inner_w, 0.0)
+	pages.add_theme_constant_override("separation", 8)
+	_scroll.add_child(pages)
+
+	# 标签按钮行（通用；标签按钮在 _add_page 里逐个追加）
+	var tab_row := _row_box()
+	pages.add_child(_end_row(tab_row))
+	_pages_tab_row = tab_row
+
+	# 全局页
+	_global_body = VBoxContainer.new()
+	_global_body.name = "GlobalBody"
+	_global_body.custom_minimum_size = Vector2(inner_w, 0.0)
+	_global_body.add_theme_constant_override("separation", 8)
+	pages.add_child(_global_body)
+
+	# 世界页
+	_world_body = VBoxContainer.new()
+	_world_body.name = "WorldBody"
+	_world_body.custom_minimum_size = Vector2(inner_w, 0.0)
+	_world_body.add_theme_constant_override("separation", 8)
+	_world_body.visible = false
+	pages.add_child(_world_body)
+
+	# 键鼠映射页
+	_input_body = VBoxContainer.new()
+	_input_body.name = "InputBody"
+	_input_body.custom_minimum_size = Vector2(inner_w, 0.0)
+	_input_body.add_theme_constant_override("separation", 8)
+	_input_body.visible = false
+	pages.add_child(_input_body)
+
+	# 注册三页（标签按钮 + 可见性切换）
+	_add_page("global", TranslationManager.t("全局"), _global_body)
+	_add_page("world", TranslationManager.t("世界"), _world_body)
+	_add_page("input", TranslationManager.t("键鼠映射"), _input_body)
+	_build_input_tab()
+	_select_page("global")
+
+	# 兼容下方既有代码对全局页内容容器的引用
+	var body := _global_body
 
 	# —— 声音设置滑条 ——
 	for row in SOUND_ROWS:
@@ -467,7 +555,7 @@ func _build_ui() -> void:
 	_desktop_interval_opt = _interval_row(body, TranslationManager.t("桌面自动存档间隔"),
 		SaveManager.DESKTOP_MINUTES_OPTIONS if SaveManager != null else [5, 10, 15, 20, 30, 60],
 		TranslationManager.t("分钟"), "desktop")
-	_world_interval_opt = _interval_row(body, TranslationManager.t("世界自动存档间隔"),
+	_world_interval_opt = _interval_row(_world_body, TranslationManager.t("世界自动存档间隔"),
 		SaveManager.WORLD_HOURS_OPTIONS if SaveManager != null else [1, 2, 3, 4],
 		TranslationManager.t("小时"), "world")
 
@@ -477,9 +565,41 @@ func _build_ui() -> void:
 	_auto_limit_desktop_opt = _limit_row(body, TranslationManager.t("桌面自动存档上限"),
 		SaveManager.AUTO_LIMIT_OPTIONS if SaveManager != null else [3, 5, 10, 20, 50],
 		SaveManager.get_auto_limit_desktop() if SaveManager != null else 10)
-	_auto_limit_world_opt = _limit_row(body, TranslationManager.t("世界自动存档上限"),
+	_auto_limit_world_opt = _limit_row(_world_body, TranslationManager.t("世界自动存档上限"),
 		SaveManager.AUTO_LIMIT_OPTIONS if SaveManager != null else [3, 5, 10, 20, 50],
 		SaveManager.get_auto_limit_world() if SaveManager != null else 10)
+
+	# —— 反转滚轮（世界页）：世界 3D 舞台里滚轮缩放的上下方向对调 ——
+	#   落盘 settings.json 的 world_invert_wheel；世界页面每次打开时读取（见 WorldPage._read_invert_wheel）。
+	var inv_row := _row_box()
+	var inv_label := _label(TranslationManager.t("反转滚轮"))
+	inv_label.custom_minimum_size = Vector2(LABEL_W, 30.0)
+	inv_row.add_child(inv_label)
+	_invert_wheel_check = CheckButton.new()
+	_invert_wheel_check.button_pressed = bool(SaveManager.get_world_invert_wheel()) if SaveManager != null else false
+	_invert_wheel_check.custom_minimum_size = Vector2(0.0, 30.0)
+	_invert_wheel_check.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_invert_wheel_check.tooltip_text = "世界页面里滚轮缩放的上下方向对调（默认关：向上滚 = 拉近）"
+	_invert_wheel_check.add_theme_font_override("font", UIStyle.get_cjk_font())
+	_invert_wheel_check.add_theme_font_size_override("font_size", UIStyle.FONT_SIZE)
+	inv_row.add_child(_invert_wheel_check)
+	_world_body.add_child(_end_row(inv_row))
+
+	# —— 反转鼠标（世界页）：世界 3D 舞台里鼠标拖动（卫星视角绕转 / 自由平移）方向对调 ——
+	#   落盘 settings.json 的 world_invert_mouse；世界页面每次打开时读取（见 WorldPage._read_invert_mouse）。
+	var mou_row := _row_box()
+	var mou_label := _label(TranslationManager.t("反转鼠标"))
+	mou_label.custom_minimum_size = Vector2(LABEL_W, 30.0)
+	mou_row.add_child(mou_label)
+	_invert_mouse_check = CheckButton.new()
+	_invert_mouse_check.button_pressed = bool(SaveManager.get_world_invert_mouse()) if SaveManager != null else false
+	_invert_mouse_check.custom_minimum_size = Vector2(0.0, 30.0)
+	_invert_mouse_check.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_invert_mouse_check.tooltip_text = "世界页面里鼠标拖动方向对调（默认关）"
+	_invert_mouse_check.add_theme_font_override("font", UIStyle.get_cjk_font())
+	_invert_mouse_check.add_theme_font_size_override("font_size", UIStyle.FONT_SIZE)
+	mou_row.add_child(_invert_mouse_check)
+	_world_body.add_child(_end_row(mou_row))
 	# 说明行：手工断行、不开 autowrap（面板宽度固定，autowrap 会撑出多余高度）。
 	var limit_hint := _label(TranslationManager.t("超过上限时，最旧的自动存档会被移入回收站。"))
 	limit_hint.add_theme_font_size_override("font_size", maxi(10, UIStyle.FONT_SIZE - 3))
@@ -567,6 +687,22 @@ func _build_ui() -> void:
 	_autoload_check.add_theme_font_size_override("font_size", UIStyle.FONT_SIZE)
 	al_row.add_child(_autoload_check)
 	body.add_child(_end_row(al_row))
+
+	# —— 页面透明效果开关（开=各浮动主面板改用课程表同款深色背景；默认关=玻璃透出）——
+	#   落盘 settings.json，重启保留。由 SaveManager.page_dark_bg_changed 驱动已开面板实时换肤。
+	var pd_row := _row_box()
+	var pd_label := _label(TranslationManager.t("页面透明效果"))
+	pd_label.custom_minimum_size = Vector2(LABEL_W, 30.0)
+	pd_row.add_child(pd_label)
+	_page_dark_check = CheckButton.new()
+	_page_dark_check.button_pressed = bool(SaveManager.get_page_dark_bg()) if SaveManager != null else false
+	_page_dark_check.custom_minimum_size = Vector2(0.0, 30.0)
+	_page_dark_check.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_page_dark_check.tooltip_text = "开启后，浮动主面板改用课程表同款纯净深色背景；关闭则维持玻璃磨砂透出"
+	_page_dark_check.add_theme_font_override("font", UIStyle.get_cjk_font())
+	_page_dark_check.add_theme_font_size_override("font_size", UIStyle.FONT_SIZE)
+	pd_row.add_child(_page_dark_check)
+	body.add_child(_end_row(pd_row))
 
 	body.add_child(_sep())
 
@@ -782,8 +918,11 @@ func _capture_snapshot() -> void:
 	_snapshot_timeline_max = int(TimelineManager.get_max_simultaneous()) if TimelineManager != null else 10
 	_snapshot_quit_auto = bool(SaveManager.get_quit_auto_save()) if SaveManager != null else false
 	_snapshot_autoload = bool(SaveManager.get_auto_load_save()) if SaveManager != null else false
+	_snapshot_page_dark = bool(SaveManager.get_page_dark_bg()) if SaveManager != null else false
 	_snapshot_autostart = _autostart_enabled()
 	_snapshot_tray_debug = _tray_debug_default()
+	_snapshot_invert_wheel = bool(SaveManager.get_world_invert_wheel()) if SaveManager != null else false
+	_snapshot_invert_mouse = bool(SaveManager.get_world_invert_mouse()) if SaveManager != null else false
 	_snapshot_max_fps = SaveManager.get_max_fps() if SaveManager != null else 60
 	_snapshot_theme_mode = SaveManager.get_ui_theme_mode() if SaveManager != null else UIStyle.THEME_MODE_DEFAULT
 	_snapshot_theme_color = SaveManager.get_ui_theme_color() if SaveManager != null else UIStyle.SOLID_COLOR_DEFAULT
@@ -808,6 +947,10 @@ func _restore_snapshot() -> void:
 	_set_interval(_world_interval_opt, _snapshot_world_interval)
 	_set_interval(_auto_limit_desktop_opt, _snapshot_auto_limit_desktop)
 	_set_interval(_auto_limit_world_opt, _snapshot_auto_limit_world)
+	if _invert_wheel_check != null and is_instance_valid(_invert_wheel_check):
+		_invert_wheel_check.button_pressed = _snapshot_invert_wheel
+	if _invert_mouse_check != null and is_instance_valid(_invert_mouse_check):
+		_invert_mouse_check.button_pressed = _snapshot_invert_mouse
 	# 帧率上限：未点「确定修改」就关闭 → 回到打开前的选择（不落盘、不改 Engine.max_fps）
 	_fps_select(_snapshot_max_fps)
 	# 界面主题 / 主题色：未点「确定修改」就关闭 → 重选回打开前的档位
@@ -820,6 +963,8 @@ func _restore_snapshot() -> void:
 		_quit_auto_check.button_pressed = _snapshot_quit_auto
 	if _autoload_check != null and is_instance_valid(_autoload_check):
 		_autoload_check.button_pressed = _snapshot_autoload
+	if _page_dark_check != null and is_instance_valid(_page_dark_check):
+		_page_dark_check.button_pressed = _snapshot_page_dark
 	if _tray_debug_check != null and is_instance_valid(_tray_debug_check):
 		_tray_debug_check.button_pressed = _snapshot_tray_debug
 	# 开机自启动：注册表在未确认时绝不动 → 按钮回显打开前的真实状态即可
@@ -990,6 +1135,8 @@ func _load_settings() -> void:
 		_quit_auto_check.button_pressed = bool(d["quit_auto_save"])
 	if d.has("auto_load_save") and _autoload_check != null:
 		_autoload_check.button_pressed = bool(d["auto_load_save"])
+	if d.has("page_dark_bg") and _page_dark_check != null:
+		_page_dark_check.button_pressed = bool(d["page_dark_bg"])
 	if _tray_debug_check != null:
 		_tray_debug_check.button_pressed = _tray_debug_default()
 	# 帧率上限（0 = 不限制）：以 SaveManager 的**已生效值**为准（它做过合法性夹取）
@@ -1044,6 +1191,43 @@ func _hbox() -> HBoxContainer:
 #   右边距为 0，滚动条就压在控件上。
 # ★★ 垫片必须在**行内最后一个**（调用方填完内容后再 `_end_row()`）——
 #   若一开始就 add_child 进去，它会被后面的 EXPAND 控件挤成 0 宽（本次踩过）。
+
+# ---------------- 通用标签页机制 ----------------
+# 标签按钮 id 统一为 "tab_<page_id>"；按下后切到对应页。
+
+## 注册一个标签页：创建标签按钮 + 记录 body。
+func _add_page(id: String, title: String, body: VBoxContainer) -> void:
+	var btn := UIBtn.new()
+	btn.set_id("tab_" + id)
+	btn.custom_minimum_size = Vector2(104.0, UIStyle.BTN_HEIGHT)
+	btn.pressed_id.connect(_on_tab_pressed)
+	if _pages_tab_row != null and is_instance_valid(_pages_tab_row):
+		_pages_tab_row.add_child(btn)
+	_pages[id] = { "btn": btn, "body": body, "title": title }
+	_page_order.append(id)
+
+
+## 标签按钮按下：切到对应页（id 去掉 "tab_" 前缀）。
+func _on_tab_pressed(id: String) -> void:
+	var pid := str(id).replace("tab_", "")
+	if _pages.has(pid):
+		_select_page(pid)
+
+
+## 切换当前显示页：只显示选中页 body，其它隐藏；当前页标签加箭头。
+func _select_page(id: String) -> void:
+	_current_page = id
+	for pid in _pages:
+		var info: Dictionary = _pages[pid]
+		var is_cur: bool = (pid == id)
+		var b: Variant = info["body"]
+		if b != null and is_instance_valid(b):
+			(b as VBoxContainer).visible = is_cur
+		var bt: Variant = info["btn"]
+		if bt != null and is_instance_valid(bt):
+			(bt as UIBtn).set_label(("▶ " if is_cur else "") + str(info["title"]))
+
+
 func _row_box() -> HBoxContainer:
 	return _hbox()
 
@@ -1415,3 +1599,182 @@ func set_minimized(v: bool) -> void:
 ## 当前是否处于最小化状态
 func is_minimized() -> bool:
 	return _minimized
+
+
+# ================ 键鼠映射页（多设备输入） ================
+#
+# 结构（与设置页其它「暂存型」控件同语义）：
+#   · 设备「勾选」= 启用该设备；未勾选 → 该设备的所有绑定在 InputBindings 查询里被忽略
+#     （实现「专注某设备时其它设备不误触」）。
+#   · 每个功能一行：标签 + 一个 UIBtn 显示当前绑定；点击按钮进入「监听」，捕获下一个
+#     键盘 / 鼠标 / 手柄按下事件作为该功能的绑定（事件类型决定落到哪个设备槽）。
+#   · 监听中按 Esc 取消；右键该按钮清除该绑定（右键走 gui_input）。
+#   · 「恢复默认映射」把暂存整体还原成默认集。
+#   · 所有改动只是暂存；只有按下「确定修改」才经 InputBindings.commit() 落盘。
+
+## 构建键鼠映射页内容（只在 _build_ui 里调用一次；后续刷新走 _refresh_input_tab）。
+func _build_input_tab() -> void:
+	if _input_body == null or not is_instance_valid(_input_body):
+		return
+	# 说明行（手工断行、不开 autowrap：面板宽度固定）
+	var hint := _label(TranslationManager.t("勾选启用某设备；取消勾选后，该设备的所有按键都不会触发动作，避免专注操作时其它设备误触。"))
+	hint.add_theme_font_size_override("font_size", maxi(10, UIStyle.FONT_SIZE - 3))
+	hint.clip_text = true
+	_input_body.add_child(hint)
+
+	# —— 设备勾选 ——
+	var dev_title := _label(TranslationManager.t("启用设备"))
+	dev_title.add_theme_font_size_override("font_size", UIStyle.FONT_SIZE)
+	_input_body.add_child(dev_title)
+	if InputBindings != null:
+		for dev in InputBindings.get_device_order():
+			var row := _row_box()
+			var lb := _label(InputBindings.get_device_label(dev))
+			lb.custom_minimum_size = Vector2(LABEL_W, 30.0)
+			row.add_child(lb)
+			var cb := CheckButton.new()
+			cb.button_pressed = true
+			cb.custom_minimum_size = Vector2(0.0, 30.0)
+			cb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			cb.add_theme_font_override("font", UIStyle.get_cjk_font())
+			cb.add_theme_font_size_override("font_size", UIStyle.FONT_SIZE)
+			cb.toggled.connect(_on_device_toggled.bind(dev))
+			row.add_child(cb)
+			_device_checks[dev] = cb
+			_input_body.add_child(_end_row(row))
+
+	_input_body.add_child(_sep())
+
+	# —— 各功能映射 ——
+	var map_title := _label(TranslationManager.t("功能按键映射"))
+	map_title.add_theme_font_size_override("font_size", UIStyle.FONT_SIZE)
+	_input_body.add_child(map_title)
+	if InputBindings != null:
+		for action in InputBindings.get_action_order():
+			var row := _row_box()
+			var lb := _label(InputBindings.get_action_label(action))
+			lb.custom_minimum_size = Vector2(LABEL_W, 30.0)
+			row.add_child(lb)
+			row.add_child(_spacer())
+			var btn := UIBtn.new()
+			btn.custom_minimum_size = Vector2(DROPDOWN_W, DROPDOWN_H)
+			btn.set_id("rebind_" + action)
+			btn.pressed_id.connect(_on_rebind_pressed)
+			# 右键清除绑定（gui_input 监听鼠标右键）
+			btn.gui_input.connect(_on_rebind_gui_input.bind(action))
+			row.add_child(btn)
+			_input_buttons[action] = btn
+			_input_body.add_child(_end_row(row))
+
+	# —— 恢复默认 ——
+	var reset_row := _row_box()
+	reset_row.add_child(_spacer())
+	var reset_btn := UIBtn.new()
+	reset_btn.custom_minimum_size = Vector2(140.0, UIStyle.BTN_HEIGHT)
+	reset_btn.set_label(TranslationManager.t("恢复默认映射"))
+	reset_btn.pressed_id.connect(_on_reset_bindings)
+	reset_row.add_child(reset_btn)
+	_input_body.add_child(_end_row(reset_row))
+
+
+## 用暂存值刷新键鼠映射页的所有控件显示。
+func _refresh_input_tab() -> void:
+	for dev in _device_checks:
+		var cb: Variant = _device_checks[dev]
+		if cb != null and is_instance_valid(cb):
+			(cb as CheckButton).button_pressed = _staged_devices.get(dev, true)
+	for action in _input_buttons:
+		var btn: Variant = _input_buttons[action]
+		if btn != null and is_instance_valid(btn):
+			(btn as UIBtn).set_label(_binding_label(action))
+
+
+## 动作当前绑定的简短显示（优先键盘，其次鼠标 / 手柄；无则「未绑定」）。
+func _binding_label(action: String) -> String:
+	var ab: Dictionary = _staged_bindings.get(action, {})
+	for dev in ["keyboard", "mouse", "gamepad"]:
+		if ab.has(dev) and ab[dev] != null:
+			return InputBindings.describe_binding(ab[dev])
+	return TranslationManager.t("未绑定")
+
+
+func _on_device_toggled(on: bool, dev: String) -> void:
+	_staged_devices[dev] = on
+
+
+## 点击「重绑」按钮 → 进入监听（捕获下一个按下事件）。
+func _on_rebind_pressed(id: String) -> void:
+	var action := str(id).trim_prefix("rebind_")
+	_start_listening(action)
+
+
+## 右键「重绑」按钮 → 清除该动作的全部暂存绑定。
+func _on_rebind_gui_input(event: InputEvent, action: String) -> void:
+	if event is InputEventMouseButton:
+		var me: InputEventMouseButton = event as InputEventMouseButton
+		if me.pressed and me.button_index == MOUSE_BUTTON_RIGHT:
+			if _staged_bindings.has(action):
+				for dev in _staged_bindings[action]:
+					_staged_bindings[action][dev] = null
+			_stop_listening()
+			_refresh_input_tab()
+			get_viewport().set_input_as_handled()
+
+
+func _start_listening(action: String) -> void:
+	_listening_action = action
+	_listening_ignore_release = true
+	if _input_buttons.has(action):
+		var b: Variant = _input_buttons[action]
+		if b != null and is_instance_valid(b):
+			(b as UIBtn).set_label(TranslationManager.t("请按按键…（Esc 取消）"))
+
+
+func _stop_listening() -> void:
+	_listening_action = ""
+	_listening_ignore_release = false
+	_refresh_input_tab()
+
+
+## 捕获输入：仅在监听态处理；吞掉「开始监听」那一下鼠标松开；Esc 取消；其余有效按下即绑定。
+func _input(event: InputEvent) -> void:
+	if _listening_action == "":
+		return
+	# 吞掉开始监听时的鼠标松开（避免被当成「绑定鼠标」）
+	if _listening_ignore_release and event is InputEventMouseButton:
+		var me: InputEventMouseButton = event as InputEventMouseButton
+		if not me.pressed:
+			_listening_ignore_release = false
+			get_viewport().set_input_as_handled()
+			return
+	# Esc 取消
+	if event is InputEventKey:
+		var ke: InputEventKey = event as InputEventKey
+		if not ke.echo and ke.pressed and int(ke.keycode) == KEY_ESCAPE:
+			_stop_listening()
+			get_viewport().set_input_as_handled()
+			return
+	# 捕获绑定（仅「按下」类事件；event_to_dict 内部已过滤 echo / 松开）
+	var rep: Dictionary = InputBindings.event_to_dict(event)
+	if rep.is_empty():
+		return
+	var act := _listening_action
+	var dev: String = str(rep.get("device", ""))
+	if _staged_bindings.has(act) and _staged_bindings[act].has(dev):
+		_staged_bindings[act][dev] = rep
+	_stop_listening()
+	if _input_buttons.has(act):
+		var b: Variant = _input_buttons[act]
+		if b != null and is_instance_valid(b):
+			(b as UIBtn).set_label(_binding_label(act))
+	get_viewport().set_input_as_handled()
+
+
+## 「恢复默认映射」：暂存整体还原成默认集（仍需按「确定修改」才落盘）。
+func _on_reset_bindings(_id: String) -> void:
+	if InputBindings == null:
+		return
+	_staged_devices = InputBindings.get_default_devices()
+	_staged_bindings = InputBindings.get_default_bindings()
+	_stop_listening()
+	_refresh_input_tab()

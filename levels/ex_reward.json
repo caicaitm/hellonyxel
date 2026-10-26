@@ -1,0 +1,11 @@
+{
+  "name": "ex_reward",
+  "brief": "奖励关卡（最小单元）：中间是宝箱（金色），入口在左、出口在右。",
+  "layout": "row",
+  "env": ["reward_level"],
+  "blocks": [
+    { "x": -200.0, "y": 0.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "collision", "level_entrance"], "fill_color": [0.30, 0.80, 0.40, 1.0] },
+    { "x": 0.0, "y": 0.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "collision"], "fill_color": [0.95, 0.80, 0.30, 1.0] },
+    { "x": 200.0, "y": 0.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "collision", "level_exit"], "fill_color": [0.30, 0.50, 0.90, 1.0] }
+  ]
+}

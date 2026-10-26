@@ -139,6 +139,7 @@ func _build_ui() -> void:
 	position = Vector2(maxf(40.0, (vs.x - PANEL_W) * 0.5), maxf(40.0, (vs.y - PANEL_H) * 0.4))
 
 	_bg = UIPanel.new()
+	_bg.bind_page_dark_bg()
 	_bg.name = "Bg"
 	_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_bg.set_corner_radius(UIStyle.CORNER_RADIUS)

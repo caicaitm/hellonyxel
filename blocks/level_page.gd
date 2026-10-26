@@ -331,6 +331,41 @@ func project_level(level_name: String) -> bool:
 	return true
 
 
+# 按内存中的关卡 dict 投影（不读文件、不依赖关卡名）。
+# 与 project_level 同逻辑，但数据来源是传入的 dict —— 用于随机生成的关卡组等
+# 「仅生成不保存」场景。返回是否成功。
+func project_data(data: Dictionary) -> bool:
+	if data.is_empty():
+		push_warning("[LevelPage] project_data：空数据，无法投影")
+		return false
+	if LevelManager == null:
+		push_warning("[LevelPage] LevelManager 不可用，无法投影关卡数据")
+		return false
+	_clear_level_blocks()
+	var bounds := LevelManager.blocks_bounds(data)
+	var cam: Variant = data.get("camera", {})
+	if cam is Dictionary and cam.has("x") and cam.has("y"):
+		_free_center = Vector2(float(cam["x"]), float(cam["y"]))
+	else:
+		_free_center = bounds.get_center()
+	_ensure_stage()
+	_level_blocks = LevelManager.instantiate_blocks(data, _stage, Vector2.ZERO)
+	current_level_name = str(data.get("name", ""))
+	set_level_env(data.get("env", []))
+	GlobalVars.set_var(title_var, current_level_name)
+	if _name_input != null and is_instance_valid(_name_input):
+		_name_input.text = current_level_name
+	_zoom = 1.0
+	_panning = false
+	_rdrag_pending = false
+	_apply_camera()
+	_update_blocked()
+	print("[LevelPage] 已投影内存关卡数据「%s」 积木=%d 面板size=%s 视口中心=%s 锚定=%s 环境=%s" % [
+		current_level_name, _level_blocks.size(), str(size), str(_free_center),
+		_anchor_desc(), str(level_env())])
+	return true
+
+
 # ---------------- 就地新建积木（右键「新建积木」时归入关卡）----------------
 
 # 该**全局**坐标点是否落在本关卡页面矩形内（页面显示时才可能为真）。

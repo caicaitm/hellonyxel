@@ -27,7 +27,7 @@ const GRID_COLS: int = 7
 const WEEK_MONDAY_FIRST: Array[String] = ["一", "二", "三", "四", "五", "六", "日"]
 const WEEK_SUNDAY_FIRST: Array[String] = ["日", "一", "二", "三", "四", "五", "六"]
 
-var _bg: UIPanel
+var _bg: PanelContainer
 var _title_label: Label
 var _close_btn: UIBtn
 var _state_label: Label
@@ -56,6 +56,11 @@ var _diary_events_label: Label
 var _diary_list_label: Label
 var _diary_input: TextEdit
 var _diary_add_btn: UIBtn
+
+# 生理期
+var _period_btn: UIBtn
+var _period_forecast: Label
+var _period_status: Label
 
 var _day_buttons: Array = []     # 仅当天格子按钮（用于刷新标记）
 
@@ -89,6 +94,10 @@ func _connect_signals() -> void:
 		CalendarInfo.updated.connect(_on_calendar_updated)
 	if CalendarNotes != null and CalendarNotes.has_method("changed") and not CalendarNotes.changed.is_connected(_on_notes_changed):
 		CalendarNotes.changed.connect(_on_notes_changed)
+	# 「周起始」变化：与课程表页共用同一设置，任一页切换都让两页同步刷新。
+	if SaveManager != null and SaveManager.has_signal("calendar_week_start_changed") \
+			and not SaveManager.calendar_week_start_changed.is_connected(_on_week_start_changed):
+		SaveManager.calendar_week_start_changed.connect(_on_week_start_changed)
 
 
 
@@ -101,16 +110,25 @@ func _build_ui() -> void:
 	size = Vector2(PANEL_W, PANEL_H)
 	position = Vector2(maxf(40.0, (vs.x - PANEL_W) * 0.5), maxf(50.0, (vs.y - PANEL_H) * 0.4))
 
-	_bg = UIPanel.new()
+	# ★ 深色背景：与「设备管理」页「设备性能」块**完全同款**（PanelContainer + StyleBoxFlat：
+	#   FILL_LEVEL_STAGE 深蓝近黑 + STAGE_BORDER 1px + 0.6*CORNER_RADIUS 圆角 + 10/10/8/8 内容边距）。
+	#   本页内容（月格/备忘录/日记）全是浅色文字，亮桌面下浅色文字叠玻璃底会重叠成一片难看清
+	#   → 纯净深色面板托住内容（批次547 换填充色、批次548 换成同款结构）。
+	#   ★ 不用 UIPanel：玻璃主题下它挂 glass_blur 磨砂着色器（SCREEN_TEXTURE 模糊 + 顶部
+	#     高光 + 外发光 + 渐变），填充色再深也是「磨砂玻璃」观感，与设备性能块的纯净深面板不同。
+	_bg = PanelContainer.new()
 	_bg.name = "Bg"
 	_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_bg.set_corner_radius(UIStyle.CORNER_RADIUS)
-	_bg.set_fill_color(UIStyle.FILL_DEFAULT)
-	# ★ 边框用「深色区」配套色（STAGE_BORDER，深蓝 alpha 0.95），不用默认的 BORDER：
-	#   BORDER 是**亮白蓝 alpha 0.65**，画在亮色玻璃填充上几乎融掉 → 液态玻璃主题下看不见边框。
-	#   深色描边在任何主题（玻璃/纯色/全息）下都能与背景明确分离。
-	_bg.set_border_color(UIStyle.STAGE_BORDER)
-	_bg.set_border_width(UIStyle.BORDER_WIDTH)
+	var bg_sb := StyleBoxFlat.new()
+	bg_sb.bg_color = UIStyle.FILL_LEVEL_STAGE
+	bg_sb.border_color = UIStyle.STAGE_BORDER
+	bg_sb.set_border_width_all(1)
+	bg_sb.set_corner_radius_all(int(UIStyle.CORNER_RADIUS * 0.6))
+	bg_sb.content_margin_left = 10.0
+	bg_sb.content_margin_right = 10.0
+	bg_sb.content_margin_top = 8.0
+	bg_sb.content_margin_bottom = 8.0
+	_bg.add_theme_stylebox_override("panel", bg_sb)
 	_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_bg)
 
@@ -315,6 +333,43 @@ func _build_date_section() -> VBoxContainer:
 		_memo_status.add_theme_font_override("font", _cjk)
 	sec.add_child(_memo_status)
 
+	# 生理期（选中日期后可逐天标记；系统按历史自动预测下次）
+	var period_title := Label.new()
+	period_title.text = "生理期（选中日期后标记；系统按历史自动预测下次）"
+	period_title.add_theme_color_override("font_color", UIStyle.TEXT_DEFAULT)
+	period_title.add_theme_font_size_override("font_size", UIStyle.FONT_SIZE - 1)
+	if is_instance_valid(_cjk):
+		period_title.add_theme_font_override("font", _cjk)
+	sec.add_child(period_title)
+
+	_period_btn = UIBtn.new()
+	_period_btn.set_id("period_toggle")
+	_period_btn.set_label("标记生理期")
+	_period_btn.custom_minimum_size = Vector2(180.0, 28.0)
+	_period_btn.pressed_id.connect(_on_period_pressed)
+	sec.add_child(_period_btn)
+
+	_period_forecast = Label.new()
+	_period_forecast.name = "PeriodForecast"
+	_period_forecast.text = ""
+	_period_forecast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_period_forecast.custom_minimum_size = Vector2(0.0, 20.0)
+	_period_forecast.add_theme_color_override("font_color", Color(1.0, 0.62, 0.72))
+	_period_forecast.add_theme_font_size_override("font_size", UIStyle.FONT_SIZE - 1)
+	if is_instance_valid(_cjk):
+		_period_forecast.add_theme_font_override("font", _cjk)
+	sec.add_child(_period_forecast)
+
+	_period_status = Label.new()
+	_period_status.name = "PeriodStatus"
+	_period_status.text = ""
+	_period_status.custom_minimum_size = Vector2(0.0, 18.0)
+	_period_status.add_theme_color_override("font_color", Color(0.78, 0.86, 0.95, 0.8))
+	_period_status.add_theme_font_size_override("font_size", UIStyle.FONT_SIZE - 1)
+	if is_instance_valid(_cjk):
+		_period_status.add_theme_font_override("font", _cjk)
+	sec.add_child(_period_status)
+
 	# 日记（可折叠）
 	_diary_block = VBoxContainer.new()
 	_diary_block.name = "DiaryBlock"
@@ -431,6 +486,8 @@ func _rebuild_grid() -> void:
 			label += "·"
 		if CalendarInfo != null and CalendarInfo.day_has_events(date):
 			label += "○"
+		if CalendarNotes != null and CalendarNotes.is_period_day(date):
+			label += "♥"
 		btn.set_label(label)
 		btn.custom_minimum_size = CELL
 		btn.size = CELL
@@ -461,6 +518,8 @@ func _refresh_grid_markers() -> void:
 			label += "·"
 		if CalendarInfo != null and CalendarInfo.day_has_events(date):
 			label += "○"
+		if CalendarNotes != null and CalendarNotes.is_period_day(date):
+			label += "♥"
 		(btn as UIBtn).set_label(label)
 
 
@@ -480,6 +539,7 @@ func _refresh_date_section() -> void:
 			_diary_events_label.text = ""
 		if _diary_list_label != null and is_instance_valid(_diary_list_label):
 			_diary_list_label.text = ""
+		_update_period_ui()
 		return
 	_sel_label.text = "已选日期：%s（%s）" % [_selected_date, _weekday_cn(_day_of_week_str(_selected_date))]
 	if CalendarNotes != null:
@@ -570,9 +630,14 @@ func _on_refresh_pressed(_id: String) -> void:
 
 
 func _on_week_toggle_pressed(_id: String) -> void:
-	_week_starts_monday = not _week_starts_monday
 	if SaveManager != null and SaveManager.has_method("set_calendar_week_starts_monday"):
-		SaveManager.set_calendar_week_starts_monday(_week_starts_monday)
+		SaveManager.set_calendar_week_starts_monday(not _week_starts_monday)
+	# 信号 calendar_week_start_changed 会同步刷新本页与课程表页（_on_week_start_changed）
+
+
+## 收到「周起始」变化（来自本页或课程表页的按钮）→ 两页同步刷新。
+func _on_week_start_changed(on: bool) -> void:
+	_week_starts_monday = on
 	if _week_toggle != null and is_instance_valid(_week_toggle):
 		_week_toggle.set_label(_week_toggle_text())
 	_rebuild_week_header()
@@ -598,6 +663,54 @@ func _on_diary_add_pressed(_id: String) -> void:
 	_set_memo_status("已追加一条玩家日记")
 
 
+func _on_period_pressed(_id: String) -> void:
+	if CalendarNotes == null or _selected_date.is_empty():
+		return
+	var now := CalendarNotes.toggle_period(_selected_date)
+	_update_period_ui()
+	_set_period_status(("已标记 %s 为生理期" % _selected_date) if now else ("已取消 %s 的生理期标记" % _selected_date))
+
+
+## 刷新生理期按钮文案 + 预测行（不依赖选中日，预测为全局）
+func _update_period_ui() -> void:
+	if _period_btn != null and is_instance_valid(_period_btn):
+		if _selected_date.is_empty():
+			_period_btn.set_label("请先选择日期")
+		elif CalendarNotes != null and CalendarNotes.is_period_day(_selected_date):
+			_period_btn.set_label("✓ 已标记（点击取消）")
+		else:
+			_period_btn.set_label("标记生理期")
+	if _period_forecast != null and is_instance_valid(_period_forecast):
+		_period_forecast.text = _period_forecast_text()
+
+
+func _period_forecast_text() -> String:
+	if CalendarNotes == null:
+		return "（生理期预测不可用）"
+	var fc := CalendarNotes.forecast_period()
+	if not bool(fc.get("has_prediction", false)):
+		if int(fc.get("period_days", 0)) > 0:
+			return "已记录 %d 次周期；经期约 %d 天。再记录一次即可预测下次。" % [CalendarNotes.period_starts().size(), int(fc.get("period_days", 0))]
+		return "（尚未记录足够数据：请连续标记几天以开始预测）"
+	var ns := str(fc.get("next_start", ""))
+	var cy := int(fc.get("cycle_days", 0))
+	var pd := int(fc.get("period_days", 0))
+	var used := int(fc.get("cycles_used", 0))
+	var line := "预测下次生理期：%s（周期约 %d 天" % [ns, cy]
+	if pd > 0:
+		line += "，经期约 %d 天" % pd
+		var ne := str(fc.get("next_end", ""))
+		if not ne.is_empty():
+			line += "，约 %s 结束" % ne
+	line += "；基于 %d 次周期）" % used
+	return line
+
+
+func _set_period_status(t: String) -> void:
+	if _period_status != null and is_instance_valid(_period_status):
+		_period_status.text = t
+
+
 func _on_close_pressed(_id: String) -> void:
 	close()
 
@@ -619,6 +732,8 @@ func _on_notes_changed(_notes: Dictionary) -> void:
 	if not _selected_date.is_empty() and _diary_open:
 		if _diary_list_label != null and is_instance_valid(_diary_list_label):
 			_diary_list_label.text = _diary_list_text()
+	_update_period_ui()
+	_update_period_ui()
 
 
 # ============ 状态行 ============
@@ -640,6 +755,14 @@ func open() -> void:
 		var vs: Vector2 = UIStyle.canvas_viewport_size(self) if get_viewport() != null else Vector2(1280.0, 720.0)
 		position = Vector2(maxf(40.0, (vs.x - PANEL_W) * 0.5), maxf(50.0, (vs.y - PANEL_H) * 0.4))
 		_ever_centered = true
+	# 打开时按最新共享设置重排（避免本页关闭期间被课程表页改了「周起始」）
+	var want: bool = SaveManager.get_calendar_week_starts_monday() if (SaveManager != null and SaveManager.has_method("get_calendar_week_starts_monday")) else _week_starts_monday
+	if want != _week_starts_monday:
+		_week_starts_monday = want
+		if _week_toggle != null and is_instance_valid(_week_toggle):
+			_week_toggle.set_label(_week_toggle_text())
+		_rebuild_week_header()
+		_rebuild_grid()
 	_open = true
 	visible = true
 	move_to_front()

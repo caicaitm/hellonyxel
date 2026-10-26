@@ -1,0 +1,12 @@
+{
+  "name": "ex_challenge",
+  "brief": "挑战关卡（最小单元）：更长的走廊（3 段），入口在左、出口在右。",
+  "layout": "row",
+  "env": ["challenge_level"],
+  "blocks": [
+    { "x": -240.0, "y": 0.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "collision", "level_entrance"], "fill_color": [0.30, 0.80, 0.40, 1.0] },
+    { "x": -90.0, "y": 0.0, "width": 70.0, "height": 70.0, "tags": ["show", "border", "fill", "collision"] },
+    { "x": 60.0, "y": 0.0, "width": 70.0, "height": 70.0, "tags": ["show", "border", "fill", "collision"] },
+    { "x": 200.0, "y": 0.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "collision", "level_exit"], "fill_color": [0.30, 0.50, 0.90, 1.0] }
+  ]
+}

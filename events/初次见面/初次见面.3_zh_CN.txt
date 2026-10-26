@@ -1,0 +1,12 @@
+(#fffffeL)["现在开始多按钮调试"]
+
+@button b1 = (#ffffffL)["按钮一"]
+@button b10 = (#ffffffL)["按钮十"]
+@button b2 = (#ffffffL)["按钮二"]
+@button b3 = (#ffffffL)["按钮三"]
+@button b4 = (#ffffffL)["按钮四"]
+@button b5 = (#ffffffL)["按钮五"]
+@button b6 = (#ffffffL)["按钮六"]
+@button b7 = (#ffffffL)["按钮七"]
+@button b8 = (#ffffffL)["按钮八"]
+@button b9 = (#ffffffL)["按钮九"]

@@ -18,10 +18,22 @@ static func from_block(b) -> Dictionary:
 	var fp: String = ""
 	var fm: int = 0
 	var fa: int = 0
+	var tsplit_x: int = 1
+	var tsplit_y: int = 1
+	var tsize_mode: int = 0
+	var tsize_x: float = 32.0
+	var tsize_y: float = 32.0
+	var torder: int = 0
 	if b.fill != null:
 		fp = b.fill.path
 		fm = int(b.fill.fill_mode)
 		fa = int(b.fill.anim_type)
+		tsplit_x = int(b.fill.tile_split.x)
+		tsplit_y = int(b.fill.tile_split.y)
+		tsize_mode = int(b.fill.tile_size_mode)
+		tsize_x = float(b.fill.tile_size.x)
+		tsize_y = float(b.fill.tile_size.y)
+		torder = int(b.fill.tile_fill_order)
 	var tbs: Array = []
 	for tb in b.text_boxes:
 		tbs.append(text_box_to_dict(tb))
@@ -35,17 +47,27 @@ static func from_block(b) -> Dictionary:
 	for lv in b.local_vars:
 		lvs.append(local_var_to_dict(lv))
 	return {
+		# ★ 宽度：内存里恒为「解析后的数值」（常量名在 apply_to_block 时已由 SystemConst 解析）
 		"width": float(b.width),
 		"height": float(b.height),
+		"shape": int(b.shape),
+		"shape_dir": int(b.shape_dir),
 		"display_layer": float(b.display_layer),
 		"collision_layer": PackedStringArray(b.collision_layer),
 		"border_color": color_to_hex(b.border_color),
 		"border_width": float(b.border_width),
 		"fill_color": color_to_hex(b.fill_color),
 		"tags": PackedStringArray(b.tags),
+		"behaviors": PackedStringArray(b.behaviors),
 		"fill_path": fp,
 		"fill_mode": fm,
 		"fill_anim": fa,
+		"tile_split_x": tsplit_x,
+		"tile_split_y": tsplit_y,
+		"tile_size_mode": tsize_mode,
+		"tile_size_x": tsize_x,
+		"tile_size_y": tsize_y,
+		"tile_fill_order": torder,
 		"rotation_deg": rad_to_deg(b.rotation),
 		"text_boxes": tbs,
 		"facing": b.facing,
@@ -60,6 +82,22 @@ static func from_block(b) -> Dictionary:
 		"horiz_accel": float(b.horiz_accel),
 		"fly_up_max_speed": float(b.fly_up_max_speed),
 		"fly_up_accel": float(b.fly_up_accel),
+		"mass": float(b.mass),
+		# 重力 / 滚动开关（已从 gravity / rollable 标签迁来；轴偏移 = 质心偏移）
+		"gravity_enabled": bool(b.gravity_enabled),
+		"roll_enabled": bool(b.roll_enabled),
+		"free_roll": bool(b.free_roll),
+		"roll_axis_x": float(b.roll_axis_offset.x),
+		"roll_axis_y": float(b.roll_axis_offset.y),
+		# 摩擦 / 风阻 / 弹性（批次 537）
+		"friction_coef": float(b.friction_coef),
+		"air_drag": float(b.air_drag),
+		"restitution": float(b.restitution),
+		"squash_amount": float(b.squash_amount),
+		"squash_stiffness": float(b.squash_stiffness),
+		# 转动惯量（批次 541）
+		"inertia_enabled": bool(b.inertia_enabled),
+		"inertia_value": float(b.inertia_value),
 		# 父子级锚定（ID 绑定，参考废弃版父子级系统）
 		"parent_id": int(b.get_parent_id()) if b.has_method("get_parent_id") else 0,
 		"child_ids": Array(b.get_child_ids()) if b.has_method("get_child_ids") else [],
@@ -73,15 +111,24 @@ static func default_for_new() -> Dictionary:
 	return {
 		"width": 160.0,
 		"height": 100.0,
+		"shape": 0,
+		"shape_dir": 0,
 		"display_layer": 0,
 		"collision_layer": PackedStringArray(["default"]),
 		"border_color": "#FFFFFFFF",
 		"border_width": 3.0,
 		"fill_color": "#4090F0FF",
 		"tags": PackedStringArray(DEFAULT_TAGS),
+		"behaviors": PackedStringArray(),
 		"fill_path": "",
 		"fill_mode": 0,
 		"fill_anim": 0,
+		"tile_split_x": 1,
+		"tile_split_y": 1,
+		"tile_size_mode": 0,
+		"tile_size_x": 32.0,
+		"tile_size_y": 32.0,
+		"tile_fill_order": 0,
 		"rotation_deg": 0.0,
 		"text_boxes": [],
 		"facing": 1,
@@ -95,6 +142,19 @@ static func default_for_new() -> Dictionary:
 		"horiz_accel": 0.0,
 		"fly_up_max_speed": 240.0,
 		"fly_up_accel": 0.0,
+		"mass": 1.0,
+		"gravity_enabled": false,
+		"roll_enabled": false,
+		"free_roll": false,
+		"roll_axis_x": 0.0,
+		"roll_axis_y": 0.0,
+		"friction_coef": 0.45,
+		"air_drag": 0.15,
+		"restitution": 0.2,
+		"squash_amount": 0.25,
+		"squash_stiffness": 22.0,
+		"inertia_enabled": false,
+		"inertia_value": 0.0,
 		"parent_id": 0,
 		"child_ids": [],
 	}
@@ -105,9 +165,16 @@ static func apply_to_block(b, d: Dictionary) -> void:
 	if b == null:
 		return
 	if d.has("width"):
-		b.width = float(d["width"])
+		# ★ 宽 / 高可以是数值，也可以是**已注册的系统常量名**（如 "icon_size"）：
+		#   常量名在运行时按当前设备解析（SystemConst 现读 sysinfo.json），
+		#   于是同一份类型定义在不同设备上得到不同（但都合适）的实际尺寸。
+		b.width = SystemConst.resolve(d["width"])
 	if d.has("height"):
-		b.height = float(d["height"])
+		b.height = SystemConst.resolve(d["height"])
+	if d.has("shape"):
+		b.shape = int(d["shape"])
+	if d.has("shape_dir"):
+		b.shape_dir = int(d["shape_dir"])
 	if d.has("display_layer"):
 		b.display_layer = float(d["display_layer"])
 	if d.has("collision_layer"):
@@ -124,6 +191,8 @@ static func apply_to_block(b, d: Dictionary) -> void:
 			b.fill_color = hex_to_color(fc)
 	if d.has("tags"):
 		b.tags = PackedStringArray(Array(d["tags"]))
+	if d.has("behaviors"):
+		b.behaviors = PackedStringArray(Array(d["behaviors"]))
 	# 填充来源（图片/动图/骨骼）
 	if d.has("fill_path"):
 		var fp: String = d["fill_path"]
@@ -133,6 +202,11 @@ static func apply_to_block(b, d: Dictionary) -> void:
 			b.fill.path = fp
 			b.fill.fill_mode = int(d.get("fill_mode", 0))
 			b.fill.anim_type = int(d.get("fill_anim", 0))
+			# 瓦片系统参数（标量键，规避 Vector2i/Vector2 经 dict 序列化问题）
+			b.fill.tile_split = Vector2i(int(d.get("tile_split_x", 1)), int(d.get("tile_split_y", 1)))
+			b.fill.tile_size_mode = int(d.get("tile_size_mode", 0))
+			b.fill.tile_size = Vector2(float(d.get("tile_size_x", 32.0)), float(d.get("tile_size_y", 32.0)))
+			b.fill.tile_fill_order = int(d.get("tile_fill_order", 0))
 			if not (BlockTags.FILL_IMAGE in b.tags):
 				b.tags.append(BlockTags.FILL_IMAGE)
 		else:
@@ -201,7 +275,44 @@ static func apply_to_block(b, d: Dictionary) -> void:
 		b.fly_up_max_speed = float(d["fly_up_max_speed"])
 	if d.has("fly_up_accel"):
 		b.fly_up_accel = float(d["fly_up_accel"])
-	if b.has_method("queue_redraw"):
+	if d.has("mass"):
+		b.mass = maxf(0.01, float(d["mass"]))
+	# 摩擦 / 风阻 / 弹性（批次 537，与「积木运动」面板同一套字段）：夹紧到面板允许的区间，
+	# 免得手改 JSON / 命令回放塞进 μ=80 或 e=5 这类把物理打崩的值。
+	if d.has("friction_coef"):
+		b.friction_coef = clampf(float(d["friction_coef"]), 0.0, 2.0)
+	if d.has("air_drag"):
+		b.air_drag = maxf(0.0, float(d["air_drag"]))
+	if d.has("restitution"):
+		b.restitution = clampf(float(d["restitution"]), 0.0, 0.9)
+	if d.has("squash_amount"):
+		b.squash_amount = clampf(float(d["squash_amount"]), 0.0, 0.6)
+	if d.has("squash_stiffness"):
+		b.squash_stiffness = clampf(float(d["squash_stiffness"]), 2.0, 60.0)
+	# 转动惯量（批次 541）：I 的单位是「质量·像素²」，绕自转轴。
+	# ★ 上限必须与「积木运动」面板的 INERTIA_MAX 一致（量纲带 px²，大件自动值本就上千万）；
+	#   负数没有物理意义 → 夹到 0（= 按形状自动算）。
+	if d.has("inertia_enabled"):
+		b.inertia_enabled = bool(d["inertia_enabled"])
+	if d.has("inertia_value"):
+		b.inertia_value = clampf(float(d["inertia_value"]), 0.0, 20000000.0)
+	# 重力 / 滚动开关 + 轴偏移。
+	# ★ 开关走 set_motion_toggles：同时标记「已显式配置」并**剥离**残留的旧 gravity/rollable 标签
+	#   （这两个开关已从标签系统移除，标签只剩存量迁移的作用），
+	#   否则 _ready 会用旧标签把刚写入的开关覆盖掉。
+	var has_motion_toggle: bool = d.has("gravity_enabled") or d.has("roll_enabled")
+	if d.has("free_roll"):
+		b.free_roll = bool(d["free_roll"])
+	if d.has("roll_axis_x") or d.has("roll_axis_y"):
+		b.roll_axis_offset = Vector2(float(d.get("roll_axis_x", 0.0)), float(d.get("roll_axis_y", 0.0)))
+	if has_motion_toggle and b.has_method("set_motion_toggles"):
+		b.set_motion_toggles(
+			bool(d.get("gravity_enabled", b.gravity_enabled)),
+			bool(d.get("roll_enabled", b.roll_enabled))
+		)
+	if b.has_method("refresh_fill_visual"):
+		b.refresh_fill_visual()   # 骨骼填充：按新路径/类型重建离屏场景（静态图/纯色只重绘）
+	elif b.has_method("queue_redraw"):
 		b.queue_redraw()
 	print("[BlockProperty.apply_to_block] 已应用: text_boxes=%d, TEXT标签=%s, collision_layer=%s" % [b.text_boxes.size(), str(BlockTags.TEXT in b.tags), b.collision_layer])
 
@@ -256,7 +367,7 @@ static func _is_name_char(c: String, is_first: bool) -> bool:
 static func text_box_to_dict(tb) -> Dictionary:
 	if tb == null:
 		return {}
-	return {
+	var out: Dictionary = {
 		"name": tb.name,
 		"width": float(tb.width),
 		"height": float(tb.height),
@@ -271,6 +382,12 @@ static func text_box_to_dict(tb) -> Dictionary:
 		"text_def": tb.text_def,
 		"hide_when_empty": bool(tb.hide_when_empty),
 	}
+	# 多语言文本定义（语言代码 → 定义串）。
+	# ★ 空字典「不写键」：存量存档 / block_types/*.json 里没有这个字段，
+	#   若强行写 {} 会让它们首次保存后满屏 diff（且旧版本读回也多余）。非空才落盘。
+	if not tb.text_defs.is_empty():
+		out["text_defs"] = tb.text_defs.duplicate(true)
+	return out
 
 
 static func text_box_from_dict(d: Dictionary) -> TextBox:
@@ -286,6 +403,10 @@ static func text_box_from_dict(d: Dictionary) -> TextBox:
 	tb.rotation_deg = float(d.get("rotation_deg", 0.0))
 	tb.follow_block_rotation = bool(d.get("follow_block_rotation", true))
 	tb.text_def = d.get("text_def", "")
+	# 缺字段（存量存档）→ 空字典 = 只用默认文本；类型不对（手工改坏）也当空，不让它崩。
+	var defs: Variant = d.get("text_defs", {})
+	if defs is Dictionary:
+		tb.text_defs = (defs as Dictionary).duplicate(true)
 	tb.hide_when_empty = bool(d.get("hide_when_empty", false))
 	return tb
 

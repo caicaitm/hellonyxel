@@ -1,0 +1,12 @@
+{
+  "name": "ex_normal_b",
+  "brief": "普通关卡 B（最小单元）：带台阶的走廊，入口在左、出口在右。",
+  "layout": "row",
+  "env": ["normal_level"],
+  "blocks": [
+    { "x": -200.0, "y": 0.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "collision", "level_entrance"], "fill_color": [0.30, 0.80, 0.40, 1.0] },
+    { "x": -60.0, "y": 0.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "collision"] },
+    { "x": 80.0, "y": 80.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "collision"] },
+    { "x": 200.0, "y": 0.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "collision", "level_exit"], "fill_color": [0.30, 0.50, 0.90, 1.0] }
+  ]
+}

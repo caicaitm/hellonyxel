@@ -37,6 +37,7 @@ param(
     [int]$GamePid = 0,
     [int]$AutoClickSeconds = 0,
     [string]$BusyIconPath = '',
+    [string]$VersionRequestPath = '',
     [switch]$SelfTest
 )
 
@@ -60,7 +61,7 @@ try {
         exit 0
     }
 
-    [TrayIcon]::Run($IconPath, $RequestPath, $SettingsRequestPath, $SavesRequestPath, $ModListRequestPath, $PassthroughRequestPath, $PerfBusyRequestPath, $WeatherRequestPath, $AIRequestPath, $CalendarRequestPath, $DebugRequestPath, $BusyStatePath, $DebugStatePath, $DebugVisiblePath, $ShowDebugItem, $BusyNowRequestPath, $IdleNowRequestPath, $GamePid, $AutoClickSeconds, $BusyIconPath)
+    [TrayIcon]::Run($IconPath, $RequestPath, $SettingsRequestPath, $SavesRequestPath, $ModListRequestPath, $PassthroughRequestPath, $PerfBusyRequestPath, $WeatherRequestPath, $AIRequestPath, $CalendarRequestPath, $DebugRequestPath, $BusyStatePath, $DebugStatePath, $DebugVisiblePath, $ShowDebugItem, $BusyNowRequestPath, $IdleNowRequestPath, $GamePid, $AutoClickSeconds, $BusyIconPath, $VersionRequestPath)
     exit 0
 } catch {
     $msg = $_.Exception.ToString().Replace("`r", ' ').Replace("`n", ' ')

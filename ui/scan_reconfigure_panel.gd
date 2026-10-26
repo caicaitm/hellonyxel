@@ -120,6 +120,7 @@ func _build_ui() -> void:
 	_fnt = UIStyle.get_cjk_font()
 
 	_bg = UIPanel.new()
+	_bg.bind_page_dark_bg()
 	_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_bg.set_corner_radius(UIStyle.CORNER_RADIUS)
 	# ★ 深色背景：取关卡页「舞台」与设备页「总览」同款配色（FILL_LEVEL_STAGE + STAGE_BORDER），

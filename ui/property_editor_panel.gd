@@ -12,7 +12,7 @@
 #   父级移动时，带 child_follow 标签的子级一并位移；子级移动不影响父级。
 #
 # 长文本：
-#   「标签」行 与 文本框的「文本(修饰)[内容]」行 末尾各有一个「长文本」按钮，
+#   文本框的「语言文本」列表里，每一行（含最前的「默认(兜底)」行）末尾都有一个「长文本」按钮，
 #   按下后用复用的 UILongTextInputPanel 打开大窗口书写，内容实时回填到本行 LineEdit。
 #
 # signal applied(action, payload)
@@ -36,6 +36,16 @@ const LONG_BTN_W: float = 52.0    # 行内「长文本」按钮宽度
 const TAG_ADJUST_BTN_W: float = 68.0   # 行内「调整标签」按钮宽度
 const COLOR_BTN_W: float = 52.0   # 行内「色盘」按钮宽度
 const HELP_BTN_W: float = 26.0    # 行内「?」说明按钮宽度
+const LANG_LABEL_W: float = 90.0  # 文本框多语言区「语言名」标签宽（与「文本框名」对齐）
+const LANG_ADD_BTN_W: float = 26.0   # 文本框多语言区「＋」按钮宽度
+const LANG_DEL_BTN_W: float = 24.0   # 文本框多语言行「×」删除按钮宽度
+
+# 填充类型（「填充类型」下拉的 id；纯色没有路径，静态图 = STATIC，骨骼动画 = SKELETON，
+# YSM = AnimType.YSM：包目录 / .zip / ysm.json，由 YSMProjector 烘焙成 2D 贴图）
+const FILL_KIND_SOLID: int = 0
+const FILL_KIND_IMAGE: int = 1
+const FILL_KIND_SKELETON: int = 2
+const FILL_KIND_YSM: int = 3
 
 var _built: bool = false
 
@@ -56,15 +66,29 @@ var _form: VBoxContainer
 var _name_input: LineEdit
 var _width_input: LineEdit
 var _height_input: LineEdit
+var _shape_select: OptionButton
+var _shape_dir_select: OptionButton
 var _display_layer_input: LineEdit
 var _collision_layer_input: LineEdit
 var _border_width_input: LineEdit
 var _border_color_input: LineEdit
 var _fill_color_input: LineEdit
 var _tags_input: LineEdit
+var _behaviors_input: LineEdit
 var _fill_path_input: LineEdit
+var _fill_type_select: OptionButton
 var _fill_mode_select: OptionButton
-var _fill_anim_select: OptionButton
+var _fill_path_row: Control
+var _fill_mode_row: Control
+var _fill_path_picker: UIPathPicker
+# 瓦片（九宫格/网格）贴图系统 UI：切分列/行、尺寸模式、瓦片宽/高、填充顺序
+var _tile_rows: Array[Control] = []
+var _tile_cols_spin: SpinBox
+var _tile_rows_spin: SpinBox
+var _tile_size_mode_select: OptionButton
+var _tile_w_input: LineEdit
+var _tile_h_input: LineEdit
+var _tile_order_select: OptionButton
 var _save_loc_select: OptionButton   # 「保存位置」下拉：MOD(默认) / DLC(仅占位) / 本体(仅生效)
 var _rotation_input: LineEdit
 var _facing_input: LineEdit
@@ -77,6 +101,8 @@ var _string_id_input: LineEdit
 var _string_id_editable: bool = false
 var _tb_list: VBoxContainer
 var _tb_editors: Array = []   # Array[Dictionary(控件引用)]
+# 文本框多语言区「＋」弹出的语言选择菜单（同屏只留一个；close() 里统一收尾）
+var _lang_menu: ContextMenu = null
 var _preset_select: OptionButton = null   # 「预留文本框」下拉：选中类型后由「添加文本框」按钮创建
 var _selected_preset: String = ""         # 下拉当前选中的预设 key（"" = 空 / 全空文本框）
 var _ab_list: VBoxContainer
@@ -110,6 +136,7 @@ var _long_text_panel: UILongTextInputPanel = null
 
 # 标签选择窗（复用 TagPickerPanel）：勾选标签方便地增删，确认后回填到「标签」输入框
 var _tag_picker: TagPickerPanel = null
+var _behavior_picker: BehaviorPickerPanel = null
 
 # 取色盘窗（复用 UIColorPickerPanel）：拖色盘选 RGB 码，确认后回填到来源颜色输入框
 var _color_panel: UIColorPickerPanel = null
@@ -134,6 +161,9 @@ func _ready() -> void:
 	_build_ui()
 	if not TranslationManager.language_changed.is_connected(_on_lang_changed):
 		TranslationManager.language_changed.connect(_on_lang_changed)
+	# 左键点面板别处 → 收起「＋语言」菜单（点菜单内部不会走到这里：菜单自己吃掉点击）
+	if not gui_input.is_connected(_on_panel_gui_input):
+		gui_input.connect(_on_panel_gui_input)
 	# 默认隐藏：只有 open() 被调用（右键菜单触发）时才显示。
 	# 否则一进入游戏就会挂着一个不指向任何积木的属性面板。
 	visible = false
@@ -243,8 +273,31 @@ func _build_ui() -> void:
 	_form.add_child(sl_row)
 	_save_loc_row = sl_row
 	_save_loc_hint_row = _add_hint_row("保存位置：仅「本体」位置的积木类型会在游戏中生效；\nMOD 为默认、DLC 为占位预留，二者本阶段暂不生效。")
-	_width_input = _add_text_row("宽(width,像素)", "120")
-	_height_input = _add_text_row("高(height,像素)", "120")
+	_width_input = _add_text_row("宽(width,像素/常量名)", "120")
+	_height_input = _add_text_row("高(height,像素/常量名)", "120")
+	# 形状：矩形（默认）/ 圆 / 椭圆 / 三种三角形；三角形可单独设朝向。
+	var shape_row := HBoxContainer.new()
+	shape_row.add_theme_constant_override("separation", 6)
+	_form.add_child(shape_row)
+	shape_row.add_child(_label("形状"))
+	_shape_select = OptionButton.new()
+	_shape_select.add_item("矩形", 0)
+	_shape_select.add_item("圆形", 1)
+	_shape_select.add_item("椭圆", 2)
+	_shape_select.add_item("等腰三角形", 3)
+	_shape_select.add_item("等边三角形", 4)
+	_shape_select.add_item("直角三角形", 5)
+	shape_row.add_child(_shape_select)
+	var shape_dir_row := HBoxContainer.new()
+	shape_dir_row.add_theme_constant_override("separation", 6)
+	_form.add_child(shape_dir_row)
+	shape_dir_row.add_child(_label("三角形朝向"))
+	_shape_dir_select = OptionButton.new()
+	_shape_dir_select.add_item("朝上", 0)
+	_shape_dir_select.add_item("朝右", 1)
+	_shape_dir_select.add_item("朝下", 2)
+	_shape_dir_select.add_item("朝左", 3)
+	shape_dir_row.add_child(_shape_dir_select)
 	_display_layer_input = _add_text_row("显示图层", "0")
 	_collision_layer_input = _add_text_row("碰撞图层(逗号分隔)", "default")
 	# 图层提示（复用需求 K 的「?」）：两个积木只有图层集合有公共元素时才会互相阻挡
@@ -263,6 +316,7 @@ func _build_ui() -> void:
 	_border_color_input = _add_color_row("边框色(#RRGGBBAA)", "#FFFFFFFF")
 	_fill_color_input = _add_color_row("填充色(#RRGGBBAA)", "#4090F0FF")
 	_tags_input = _add_tag_row()   # 标签行：输入框 + 「长文本」按钮 + 「调整标签」按钮
+	_behaviors_input = _add_behavior_row()   # 行为行：输入框 + 「长文本」按钮 + 「编辑挂载行为」按钮
 	# 检测标签提示（复用需求 K 的「?」）：成对出现、键可自由替换；被检测方会自动增删 detected_XXX
 	_help_for_row(_tags_input.get_parent(),
 		"动态检测标签（XXX 可替换，两边成对）：\n" +
@@ -313,15 +367,34 @@ func _build_ui() -> void:
 	_parent_id_input = _add_text_row("父级ID(0=无)", "0")
 	_child_ids_input = _add_text_row("子级ID(逗号分隔)", "")
 
-	# 填充：图片/动图/骨骼 来源
+	# 填充：纯色 / 静态图 / 骨骼动画 / YSM模型（四选一）
+	var fill_type_row := HBoxContainer.new()
+	fill_type_row.add_theme_constant_override("separation", 6)
+	_form.add_child(fill_type_row)
+	fill_type_row.add_child(_label("填充类型"))
+	_fill_type_select = OptionButton.new()
+	_fill_type_select.custom_minimum_size = Vector2(FIELD_W, ROW_H)
+	_fill_type_select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_fill_type_select.mouse_filter = Control.MOUSE_FILTER_STOP
+	_fill_type_select.add_theme_font_size_override("font_size", FORM_FONT)
+	_fill_type_select.add_item("纯色", FILL_KIND_SOLID)
+	_fill_type_select.add_item("静态图", FILL_KIND_IMAGE)
+	_fill_type_select.add_item("骨骼动画", FILL_KIND_SKELETON)
+	_fill_type_select.add_item("YSM模型", FILL_KIND_YSM)
+	_fill_type_select.item_selected.connect(_on_fill_type_selected)
+	fill_type_row.add_child(_fill_type_select)
+
 	_fill_path_input = _add_text_row("填充图片路径", "")
 	_fill_path_input.placeholder_text = "res://textures/（图片相对路径）"
-	# 右侧文件夹按钮：系统对话框选图 → 回填 res:// 相对路径（默认目录 res://textures/）
-	UIPathPicker.attach(_fill_path_input, UIPathPicker.DIR_TEXTURES,
+	_fill_path_row = _fill_path_input.get_parent() as Control
+	# 右侧文件夹按钮：系统对话框选文件 → 回填 res:// 相对路径。
+	# 默认按「静态图」配置；切到骨骼动画时由 _apply_fill_type_ui() 改为 .tscn 过滤 + 项目根目录。
+	_fill_path_picker = UIPathPicker.attach(_fill_path_input, UIPathPicker.DIR_TEXTURES,
 		{"exts": UIPathPicker.IMG_EXTS, "label": "图片", "title": "选择填充图片"})
 	var mode_row := HBoxContainer.new()
 	mode_row.add_theme_constant_override("separation", 6)
 	_form.add_child(mode_row)
+	_fill_mode_row = mode_row
 	mode_row.add_child(_label("填充模式"))
 	_fill_mode_select = OptionButton.new()
 	_fill_mode_select.custom_minimum_size = Vector2(FIELD_W, ROW_H)
@@ -335,19 +408,90 @@ func _build_ui() -> void:
 	_fill_mode_select.add_item("原尺寸", BlockFill.Mode.ORIGINAL)
 	mode_row.add_child(_fill_mode_select)
 
-	var anim_row := HBoxContainer.new()
-	anim_row.add_theme_constant_override("separation", 6)
-	_form.add_child(anim_row)
-	anim_row.add_child(_label("动画类型"))
-	_fill_anim_select = OptionButton.new()
-	_fill_anim_select.custom_minimum_size = Vector2(FIELD_W, ROW_H)
-	_fill_anim_select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_fill_anim_select.mouse_filter = Control.MOUSE_FILTER_STOP
-	_fill_anim_select.add_theme_font_size_override("font_size", FORM_FONT)
-	_fill_anim_select.add_item("静态图", BlockFill.AnimType.STATIC)
-	_fill_anim_select.add_item("动图(预留)", BlockFill.AnimType.ANIMATED)
-	_fill_anim_select.add_item("骨骼(预留)", BlockFill.AnimType.SKELETON)
-	anim_row.add_child(_fill_anim_select)
+	# 瓦片（九宫格/网格）贴图系统：仅静态图有意义；纯色 / 骨骼动画时整组隐藏
+	var tile_sep := HBoxContainer.new()
+	tile_sep.add_theme_constant_override("separation", 6)
+	tile_sep.add_child(_label("瓦片切分(列×行)"))
+	_tile_cols_spin = SpinBox.new()
+	_tile_cols_spin.min_value = 1
+	_tile_cols_spin.max_value = 32
+	_tile_cols_spin.value = 1
+	_tile_cols_spin.step = 1
+	_tile_cols_spin.custom_minimum_size = Vector2(FIELD_W * 0.5, ROW_H)
+	_tile_cols_spin.add_theme_font_size_override("font_size", FORM_FONT)
+	_tile_cols_spin.mouse_filter = Control.MOUSE_FILTER_STOP
+	tile_sep.add_child(_tile_cols_spin)
+	tile_sep.add_child(_label("×"))
+	_tile_rows_spin = SpinBox.new()
+	_tile_rows_spin.min_value = 1
+	_tile_rows_spin.max_value = 32
+	_tile_rows_spin.value = 1
+	_tile_rows_spin.step = 1
+	_tile_rows_spin.custom_minimum_size = Vector2(FIELD_W * 0.5, ROW_H)
+	_tile_rows_spin.add_theme_font_size_override("font_size", FORM_FONT)
+	_tile_rows_spin.mouse_filter = Control.MOUSE_FILTER_STOP
+	tile_sep.add_child(_tile_rows_spin)
+	var tile_hint := Label.new()
+	tile_hint.text = "（≥2×2 启用瓦片）"
+	tile_hint.add_theme_color_override("font_color", Color(1, 1, 1, 0.5))
+	tile_hint.add_theme_font_size_override("font_size", FORM_FONT)
+	tile_sep.add_child(tile_hint)
+	_form.add_child(tile_sep)
+	_tile_rows.append(tile_sep)
+
+	var tmode_row := HBoxContainer.new()
+	tmode_row.add_theme_constant_override("separation", 6)
+	tmode_row.add_child(_label("瓦片尺寸模式"))
+	_tile_size_mode_select = OptionButton.new()
+	_tile_size_mode_select.custom_minimum_size = Vector2(FIELD_W, ROW_H)
+	_tile_size_mode_select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_tile_size_mode_select.mouse_filter = Control.MOUSE_FILTER_STOP
+	_tile_size_mode_select.add_theme_font_size_override("font_size", FORM_FONT)
+	_tile_size_mode_select.add_item("绝对像素", BlockFill.TileSizeMode.ABSOLUTE)
+	_tile_size_mode_select.add_item("积木倍数", BlockFill.TileSizeMode.MULTIPLE)
+	tmode_row.add_child(_tile_size_mode_select)
+	_form.add_child(tmode_row)
+	_tile_rows.append(tmode_row)
+
+	var tsize_row := HBoxContainer.new()
+	tsize_row.add_theme_constant_override("separation", 6)
+	tsize_row.add_child(_label("瓦片宽×高"))
+	_tile_w_input = LineEdit.new()
+	_tile_w_input.custom_minimum_size = Vector2(FIELD_W * 0.5, ROW_H)
+	_tile_w_input.add_theme_font_size_override("font_size", FORM_FONT)
+	_tile_w_input.text = "32"
+	_tile_w_input.add_theme_color_override("font_color", Color.WHITE)
+	_tile_w_input.mouse_filter = Control.MOUSE_FILTER_STOP
+	tsize_row.add_child(_tile_w_input)
+	tsize_row.add_child(_label("×"))
+	_tile_h_input = LineEdit.new()
+	_tile_h_input.custom_minimum_size = Vector2(FIELD_W * 0.5, ROW_H)
+	_tile_h_input.add_theme_font_size_override("font_size", FORM_FONT)
+	_tile_h_input.text = "32"
+	_tile_h_input.add_theme_color_override("font_color", Color.WHITE)
+	_tile_h_input.mouse_filter = Control.MOUSE_FILTER_STOP
+	tsize_row.add_child(_tile_h_input)
+	var tsize_hint := Label.new()
+	tsize_hint.text = "（倍数模式填 0~1）"
+	tsize_hint.add_theme_color_override("font_color", Color(1, 1, 1, 0.5))
+	tsize_hint.add_theme_font_size_override("font_size", FORM_FONT)
+	tsize_row.add_child(tsize_hint)
+	_form.add_child(tsize_row)
+	_tile_rows.append(tsize_row)
+
+	var torder_row := HBoxContainer.new()
+	torder_row.add_theme_constant_override("separation", 6)
+	torder_row.add_child(_label("填充顺序"))
+	_tile_order_select = OptionButton.new()
+	_tile_order_select.custom_minimum_size = Vector2(FIELD_W, ROW_H)
+	_tile_order_select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_tile_order_select.mouse_filter = Control.MOUSE_FILTER_STOP
+	_tile_order_select.add_theme_font_size_override("font_size", FORM_FONT)
+	_tile_order_select.add_item("顺序(循环)", BlockFill.TileFillOrder.SEQUENTIAL)
+	_tile_order_select.add_item("随机(稳定)", BlockFill.TileFillOrder.RANDOM)
+	torder_row.add_child(_tile_order_select)
+	_form.add_child(torder_row)
+	_tile_rows.append(torder_row)
 
 	# 文本框列表
 	var tb_title_row := HBoxContainer.new()
@@ -542,6 +686,24 @@ func _label(text: String) -> Label:
 	return l
 
 
+# 按 item 的 id（不是索引）选中 OptionButton；找不到则退回首项。
+func _select_option_by_id(opt: OptionButton, id: int) -> void:
+	if opt == null:
+		return
+	for i in range(opt.item_count):
+		if opt.get_item_id(i) == id:
+			opt.select(i)
+			return
+	opt.select(0)
+
+
+# 取 OptionButton 当前选中项绑定的 id（无则返回 fallback）。
+func _selected_option_id(opt: OptionButton, fallback: int = 0) -> int:
+	if opt == null or opt.selected < 0:
+		return fallback
+	return opt.get_item_id(opt.selected)
+
+
 # 文本行：标签 + 输入框（可选：行尾加「长文本」按钮，打开长文本输入窗编辑同一输入框）
 func _add_text_row(label_text: String, default_text: String, with_long_text: bool = false) -> LineEdit:
 	var row := HBoxContainer.new()
@@ -606,6 +768,40 @@ func _tag_adjust_btn(source: LineEdit) -> UIBtn:
 	b.size = Vector2(TAG_ADJUST_BTN_W, ROW_H)
 	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	b.pressed_id.connect(_on_adjust_tags_pressed.bind(source))
+	return b
+
+
+# 「行为」专用行：输入框（逗号分隔，前优先）+「长文本」按钮 +「编辑挂载行为」按钮
+# 仿 _add_tag_row，但「调整标签」换成「编辑挂载行为」（打开 BehaviorPickerPanel）。
+func _add_behavior_row() -> LineEdit:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	_form.add_child(row)
+	row.add_child(_label("行为(逗号分隔,前优先)"))
+	var field := LineEdit.new()
+	field.custom_minimum_size = Vector2(FIELD_W, ROW_H)
+	field.add_theme_font_size_override("font_size", FORM_FONT)
+	field.text = ""
+	field.add_theme_color_override("font_color", Color.WHITE)
+	field.add_theme_color_override("placeholder_color", Color(1, 1, 1, 0.5))
+	field.mouse_filter = Control.MOUSE_FILTER_STOP
+	field.caret_blink = true
+	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(field)
+	row.add_child(_long_text_btn(field))
+	row.add_child(_behavior_pick_btn(field))
+	return field
+
+
+# 行内「编辑挂载行为」按钮：按下 → 打开行为选择窗（source = 本行输入框）
+func _behavior_pick_btn(source: LineEdit) -> UIBtn:
+	var b := UIBtn.new()
+	b.set_id("pick_behaviors")
+	b.set_label("编辑挂载行为")
+	b.custom_minimum_size = Vector2(TAG_ADJUST_BTN_W, ROW_H)
+	b.size = Vector2(TAG_ADJUST_BTN_W, ROW_H)
+	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	b.pressed_id.connect(_on_pick_behaviors_pressed.bind(source))
 	return b
 
 
@@ -814,7 +1010,7 @@ func _on_add_tb_pressed() -> void:
 		"name": "", "width": 200.0, "height": 48.0, "cx": 0.0, "cy": 0.0,
 		"border_color": "#FFFFFFFF", "fill_color": "#3399FFFF",
 		"fill_source": 0, "fill_image_path": "", "rotation_deg": 0.0,
-		"follow_block_rotation": true, "text_def": "", "hide_when_empty": false,
+		"follow_block_rotation": true, "text_def": "", "text_defs": {}, "hide_when_empty": false,
 	})
 
 
@@ -832,8 +1028,8 @@ func _on_preset_selected(idx: int) -> void:
 # 按预留预设生成一份文本框数据并创建编辑器（带同名冲突检测）。
 # 尺寸 / 偏移以「文本框列表里积木当前显示的宽高」为基准（即时快照，见 text_box.gd 的 PRESETS）。
 func _add_preset_tb(key: String) -> void:
-	var w: float = _fnum(_width_input.text, 120.0)
-	var h: float = _fnum(_height_input.text, 120.0)
+	var w: float = _wh_resolved(_width_input.text, 120.0)
+	var h: float = _wh_resolved(_height_input.text, 120.0)
 	var d: Dictionary = TextBox.preset_dict(key, w, h)
 	if d.is_empty():
 		return
@@ -932,7 +1128,57 @@ func _make_tb_editor(data: Dictionary) -> void:
 	# 右侧文件夹按钮：选图 → 回填 res:// 相对路径
 	UIPathPicker.attach(ctrls["fill_image_path"], UIPathPicker.DIR_TEXTURES,
 		{"exts": UIPathPicker.IMG_EXTS, "label": "图片", "title": "选择文本框填充图片"})
-	ctrls["text_def"] = _tb_row(root, "文本(修饰)[内容]", str(data.get("text_def", "")), 90.0, true)   # 行尾带「长文本」按钮
+	# ---- 多语言文本（语言代码 → (修饰)[内容]）：一种语言一个输入框 ----
+	# 语义：语言列表最前的「默认(兜底)」行 = text_def（通用回落，运行时某语言没配就显示它）；
+	#   其下每种语言行 = 该语言专属内容，覆盖兜底。整块内容编辑都收进语言列表，
+	#   旧版独立的「文本(修饰)[内容]」默认行已移除（批次 120）。
+	var lang_head := HBoxContainer.new()
+	lang_head.add_theme_constant_override("separation", 6)
+	root.add_child(lang_head)
+	var lang_lbl := Label.new()
+	lang_lbl.text = "语言文本"
+	lang_lbl.add_theme_color_override("font_color", Color.WHITE)
+	lang_lbl.add_theme_font_size_override("font_size", FORM_FONT)
+	lang_lbl.custom_minimum_size = Vector2(LANG_LABEL_W, ROW_H)
+	lang_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lang_head.add_child(lang_lbl)
+	var lang_add := UIBtn.new()
+	lang_add.set_id("add_tb_lang")
+	lang_add.set_label("＋")
+	# ★ UIBtn 宽度必须显式给：内部 Label 是全锚定的，不计入最小尺寸 → 不给宽就是 0 宽（看得见、点不到）。
+	lang_add.custom_minimum_size = Vector2(LANG_ADD_BTN_W, ROW_H)
+	lang_add.size = Vector2(LANG_ADD_BTN_W, ROW_H)
+	lang_add.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	lang_add.tooltip_text = "为某种语言单独添加文本"
+	lang_add.pressed_id.connect(_on_add_tb_lang_pressed.bind(ctrls))
+	lang_head.add_child(lang_add)
+	ctrls["lang_add_btn"] = lang_add
+
+	var lang_box := VBoxContainer.new()
+	lang_box.add_theme_constant_override("separation", 3)
+	root.add_child(lang_box)
+	ctrls["lang_box"] = lang_box
+	ctrls["lang_edits"] = {}
+	# ★ 批次 120：语言列表最前固定一行「默认(兜底)」——对应 text_def（通用回落）。
+	#   不可删除（无 × 按钮），始终在场；其余语言行才是可增删的。
+	ctrls["text_def_field"] = _add_tb_default_row(lang_box, str(data.get("text_def", "")))
+	# 已有语言定义 → 按 LANG_CODES 顺序重建各行（顺序稳定，便于肉眼比对）
+	var init_defs: Dictionary = {}
+	var raw_defs: Variant = data.get("text_defs", {})
+	if raw_defs is Dictionary:
+		init_defs = raw_defs
+	for code: Variant in TranslationManager.LANG_CODES:
+		var cs: String = str(code)
+		if init_defs.has(cs):
+			_add_tb_lang_row(ctrls, cs, str(init_defs[cs]))
+	# 表里没有的语言代码（旧数据 / 手工写入）也照原样列出来，避免「应用」时被静默丢弃
+	for k: Variant in init_defs.keys():
+		var ks: String = str(k)
+		if TranslationManager.LANG_CODES.has(ks):
+			continue
+		_add_tb_lang_row(ctrls, ks, str(init_defs[ks]))
+
+	# （原独立「文本(修饰)[内容]」默认行已移除，改为语言列表最前的「默认(兜底)」行 —— 见上方 _add_tb_default_row）
 	# 「内容为空时是否隐藏」：文本（经变量求值后）与填充图片都为空 → 整个文本框不显示。
 	# 该变量亦可在运行时由事件链修改：block.set_text_box_var(文本框名, "hide_when_empty", true)
 	var hide_empty := CheckBox.new()
@@ -950,6 +1196,165 @@ func _make_tb_editor(data: Dictionary) -> void:
 
 	_tb_list.add_child(outer)
 	_tb_editors.append(ctrls)
+
+
+# ---- 文本框多语言行（一种是语言 = 一行输入框）----
+# 数据结构：ctrls["lang_edits"] = { 语言代码: LineEdit }；行节点挂在 ctrls["lang_box"] 下。
+# 「＋」按下 → 弹出语言选择菜单 → 选中语言 → 追加一行。
+
+func _on_add_tb_lang_pressed(_id: String, ctrls: Dictionary) -> void:
+	if _error_label != null and is_instance_valid(_error_label):
+		_error_label.text = ""
+	var edits: Variant = ctrls.get("lang_edits", null)
+	if not (edits is Dictionary):
+		return
+	# 只列「还没添加」的语言，避免重复行
+	var items: Array = []
+	for i in TranslationManager.LANG_CODES.size():
+		var code: String = str(TranslationManager.LANG_CODES[i])
+		if (edits as Dictionary).has(code):
+			continue
+		items.append({ "label": str(TranslationManager.LANG_NAMES[i]), "id": code })
+	if items.is_empty():
+		_show_error("所有语言都已添加")
+		return
+	_close_lang_menu()
+	var menu := ContextMenu.new()
+	add_child(menu)
+	menu.item_selected.connect(_on_tb_lang_selected.bind(ctrls))
+	_lang_menu = menu
+	menu.open(get_global_mouse_position(), items)
+
+
+func _on_tb_lang_selected(id: String, _full_path: PackedStringArray, ctrls: Dictionary) -> void:
+	_close_lang_menu()
+	_add_tb_lang_row(ctrls, id, "")
+
+
+func _close_lang_menu() -> void:
+	if _lang_menu != null and is_instance_valid(_lang_menu):
+		_lang_menu.close()
+		_lang_menu.queue_free()
+	_lang_menu = null
+
+
+# 点面板本体（非菜单区域）→ 收起语言选择菜单。
+# ★ 菜单是本面板的子节点，但点它内部会被它自己的 UIPanel/UIBtn 吃掉（MOUSE_FILTER_STOP），
+#   事件不会冒泡到这里；再加一次落点判定兜底，行为与背包面板的右键菜单一致。
+func _on_panel_gui_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton):
+		return
+	var mb: InputEventMouseButton = event
+	if not mb.pressed or mb.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if _lang_menu == null or not is_instance_valid(_lang_menu) or not _lang_menu.is_open():
+		return
+	var cr := Rect2(_lang_menu.global_position, _lang_menu.size)
+	if not cr.has_point(get_global_mouse_position()):
+		_close_lang_menu()
+
+
+# 追加一行「语言名 + 输入框 + 长文本 + ×」；同语言已存在则忽略。
+func _add_tb_lang_row(ctrls: Dictionary, lang: String, def: String) -> void:
+	var lang_box: Variant = ctrls.get("lang_box", null)
+	var edits: Variant = ctrls.get("lang_edits", null)
+	if lang_box == null or not is_instance_valid(lang_box):
+		return
+	if not (edits is Dictionary):
+		return
+	if (edits as Dictionary).has(lang):
+		return
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	(lang_box as Node).add_child(row)
+	var l := Label.new()
+	l.text = TranslationManager.get_lang_name(lang)
+	l.add_theme_color_override("font_color", Color.WHITE)
+	l.add_theme_font_size_override("font_size", FORM_FONT)
+	l.custom_minimum_size = Vector2(LANG_LABEL_W, ROW_H)
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(l)
+	var field := LineEdit.new()
+	field.custom_minimum_size = Vector2(180.0, ROW_H)
+	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	field.add_theme_font_size_override("font_size", FORM_FONT)
+	field.text = def
+	field.placeholder_text = "该语言的(修饰)[内容]"
+	field.add_theme_color_override("font_color", Color.WHITE)
+	field.add_theme_color_override("placeholder_color", Color(1, 1, 1, 0.5))
+	field.mouse_filter = Control.MOUSE_FILTER_STOP
+	field.caret_blink = true
+	row.add_child(field)
+	row.add_child(_long_text_btn(field))
+	var del := UIBtn.new()
+	del.set_id("del_tb_lang")
+	del.set_label("×")
+	del.custom_minimum_size = Vector2(LANG_DEL_BTN_W, ROW_H)
+	del.size = Vector2(LANG_DEL_BTN_W, ROW_H)
+	del.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	del.tooltip_text = "移除该语言文本"
+	del.pressed_id.connect(_on_del_tb_lang_pressed.bind(ctrls, lang))
+	row.add_child(del)
+	(edits as Dictionary)[lang] = field
+
+
+# 语言列表最前的「默认(兜底)」行：写入 text_def（所有未单独配置语言的通用回落）。
+# 不可删除（无 × 按钮），始终在场；其余语言行才是可增删的。结构与 _add_tb_lang_row 对齐。
+func _add_tb_default_row(lang_box: Node, def: String) -> LineEdit:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	lang_box.add_child(row)
+	var l := Label.new()
+	l.text = "默认(兜底)"
+	l.add_theme_color_override("font_color", Color(1.0, 0.88, 0.6, 1.0))   # 暖色区分兜底行
+	l.add_theme_font_size_override("font_size", FORM_FONT)
+	l.custom_minimum_size = Vector2(LANG_LABEL_W, ROW_H)
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(l)
+	var field := LineEdit.new()
+	field.custom_minimum_size = Vector2(180.0, ROW_H)
+	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	field.add_theme_font_size_override("font_size", FORM_FONT)
+	field.text = def
+	field.placeholder_text = "未单独配置语言的，回落显示此内容"
+	field.add_theme_color_override("font_color", Color.WHITE)
+	field.add_theme_color_override("placeholder_color", Color(1, 1, 1, 0.5))
+	field.mouse_filter = Control.MOUSE_FILTER_STOP
+	field.caret_blink = true
+	row.add_child(field)
+	row.add_child(_long_text_btn(field))   # 兜底内容同样可能是长文本
+	return field
+
+
+func _on_del_tb_lang_pressed(_id: String, ctrls: Dictionary, lang: String) -> void:
+	var edits: Variant = ctrls.get("lang_edits", null)
+	if not (edits is Dictionary) or not (edits as Dictionary).has(lang):
+		return
+	var field: Variant = (edits as Dictionary)[lang]
+	if field != null and is_instance_valid(field):
+		var row: Node = (field as Node).get_parent()
+		var lang_box: Node = row.get_parent() if row != null else null
+		if lang_box != null and is_instance_valid(lang_box):
+			lang_box.remove_child(row)   # 先摘再 free（避免在信号派发链上同步析构控件）
+		if row != null and is_instance_valid(row):
+			row.queue_free()
+	(edits as Dictionary).erase(lang)
+
+
+# 收集某文本框的多语言文本：语言代码 → 定义串（空白值不写键 → 存档里不堆空条目）。
+func _collect_tb_lang_defs(ctrls: Dictionary) -> Dictionary:
+	var out: Dictionary = {}
+	var edits: Variant = ctrls.get("lang_edits", null)
+	if not (edits is Dictionary):
+		return out
+	for code: Variant in (edits as Dictionary).keys():
+		var le: Variant = (edits as Dictionary)[code]
+		if le == null or not is_instance_valid(le):
+			continue
+		var t: String = (le as LineEdit).text.strip_edges()
+		if not t.is_empty():
+			out[str(code)] = t
+	return out
 
 
 func _tb_row(parent: Container, label_text: String, default_text: String, lbl_w: float, with_long_text: bool = false, with_color: bool = false) -> LineEdit:
@@ -1038,6 +1443,28 @@ func _on_tag_picker_closed() -> void:
 	_tag_picker = null
 
 
+# 「编辑挂载行为」按钮：打开行为选择窗，勾选预设行为 / 挂载已存脚本 → 确定后回填到「行为」输入框
+func _on_pick_behaviors_pressed(_id: String, source: LineEdit) -> void:
+	if source == null or not is_instance_valid(source):
+		return
+	# 已有窗口 → 先关闭再开新的
+	if _behavior_picker != null and is_instance_valid(_behavior_picker):
+		_behavior_picker.close()
+		_behavior_picker = null
+	var layer := _ui_layer()
+	if layer == null:
+		push_warning("[PropertyEditor] 未找到 CanvasLayer，行为选择窗无法显示")
+		return
+	_behavior_picker = BehaviorPickerPanel.new()
+	layer.add_child(_behavior_picker)
+	_behavior_picker.closed.connect(_on_behavior_picker_closed)
+	_behavior_picker.open(source)
+
+
+func _on_behavior_picker_closed() -> void:
+	_behavior_picker = null
+
+
 # 「色盘」按钮：打开取色盘窗口（源 = 本行颜色输入框），确认后回填
 func _on_pick_color_pressed(_id: String, source: LineEdit, title: String) -> void:
 	if source == null or not is_instance_valid(source):
@@ -1074,7 +1501,14 @@ func _on_motion_pressed() -> void:
 	_motion_panel = BlockMotionPanel.new()
 	layer.add_child(_motion_panel)
 	_motion_panel.closed.connect(_on_motion_closed)
-	_motion_panel.open(_motion_data.duplicate())
+	# ★ 第二个参数是**只读几何上下文**：运动面板用它算「自动转动惯量」参考值给玩家看量级。
+	#   取属性面板当前的宽/高/形状输入（所见即所算）；面板不会把它写回 _values，也不会入库。
+	_motion_panel.open(_motion_data.duplicate(), {
+		"width": _fnum(_width_input.text, 120.0),
+		"height": _fnum(_height_input.text, 120.0),
+		"shape": _selected_option_id(_shape_select, 0),
+		"shape_dir": _selected_option_id(_shape_dir_select, 0),
+	})
 
 
 func _on_motion_closed() -> void:
@@ -1090,15 +1524,32 @@ func _refresh_motion_summary() -> void:
 	if _motion_summary == null or not is_instance_valid(_motion_summary):
 		return
 	var fly: String = "可飞行" if bool(_motion_data.get("can_fly", false)) else "不可飞行"
-	var t := "%s | 水平 %s/%s | 上升 %s/%s" % [
-		fly,
+	var grav: String = "重力" if bool(_motion_data.get("gravity_enabled", false)) else "无重力"
+	var roll: String = "可滚动" if bool(_motion_data.get("roll_enabled", false)) else "不滚动"
+	if bool(_motion_data.get("free_roll", false)):
+		roll += "(自由)"
+	# 惯量摘要：关 = 538 质点近似；开但没填数值 = 按形状自动算；填了 = 直接显示 I
+	var inert: String = "惯量 关"
+	if bool(_motion_data.get("inertia_enabled", false)):
+		var iv: float = float(_motion_data.get("inertia_value", 0.0))
+		inert = "惯量 自动" if iv <= 0.0 else "惯量 %s" % _fmt_brief(iv)
+	var t := "%s | %s | %s | 轴(%s,%s) | 摩擦 %s 风阻 %s 弹性 %s 挤压 %s | 水平 %s/%s | 质量 %s | %s" % [
+		grav, roll, fly,
+		_fmt_brief(_motion_data.get("roll_axis_x", 0.0)),
+		_fmt_brief(_motion_data.get("roll_axis_y", 0.0)),
+		_fmt_brief(_motion_data.get("friction_coef", 0.45)),
+		_fmt_brief(_motion_data.get("air_drag", 0.15)),
+		_fmt_brief(_motion_data.get("restitution", 0.2)),
+		_fmt_brief(_motion_data.get("squash_amount", 0.25)),
 		_fmt_brief(_motion_data.get("horiz_max_speed", 240.0)),
 		_fmt_brief(_motion_data.get("horiz_accel", 0.0)),
-		_fmt_brief(_motion_data.get("fly_up_max_speed", 240.0)),
-		_fmt_brief(_motion_data.get("fly_up_accel", 0.0)),
+		_fmt_brief(_motion_data.get("mass", 1.0)),
+		inert,
 	]
 	_motion_summary.text = t
-	_motion_summary.tooltip_text = "可飞行 | 水平 最大速度/加速度 | 上升 最大速度/加速度\n" + t
+	_motion_summary.tooltip_text = (
+		"重力 / 滚动 | 可飞行 | 旋转轴偏移(质心) | 摩擦系数μ / 风阻 / 弹性e / 挤压 | 水平 最大速度/加速度 | 质量 | 转动惯量\n" + t
+	)
 
 
 # 整数值去掉小数点，方便摘要显示
@@ -1142,7 +1593,8 @@ func _collect_textboxes() -> Array:
 			"fill_image_path": ctrls["fill_image_path"].text.strip_edges(),
 			"rotation_deg": _fnum(ctrls["rotation"].text, 0.0),
 			"follow_block_rotation": bool(ctrls["follow"].button_pressed),
-			"text_def": ctrls["text_def"].text,
+			"text_def": ctrls["text_def_field"].text,
+			"text_defs": _collect_tb_lang_defs(ctrls),
 			"hide_when_empty": bool(ctrls["hide_empty"].button_pressed),
 		})
 	return out
@@ -1678,23 +2130,75 @@ func _inum(s: String, default_val: int) -> int:
 	return int(t)
 
 
+# ---- 宽 / 高输入：数值 或 系统常量名 ----
+# 传「已注册的系统常量名」（如 icon_size）→ 原样返回字符串（apply_to_block 时由 SystemConst 解析）；
+# 其余按数字解析（非法 / 空 -> default_val）。
+func _wh_value(s: String) -> Variant:
+	var t := s.strip_edges()
+	if SystemConst.has(t):
+		return t
+	return _fnum(t, -1.0)
+
+
+# 回填宽 / 高输入框：常量名原样显示（不转数字），其余按数值显示（整数不带 .0，与 block_property._fmt_num 同口径）
+func _wh_text(v: Variant) -> String:
+	if v is String:
+		var s := str(v).strip_edges()
+		if not s.is_empty():
+			return s
+	var f: float = float(v)
+	if f == floor(f) and abs(f) < 1e15:
+		return str(int(f))
+	return str(f)
+
+
+# 宽 / 高输入的「解析后数值」（预设文本框基准尺寸等需要真实像素的场合；非法 / 空 / 常量名为 0 -> default_val）
+func _wh_resolved(s: String, default_val: float) -> float:
+	var v: Variant = _wh_value(s)
+	var f: float = 0.0
+	if v is String:
+		f = SystemConst.get_value(str(v))
+	else:
+		f = float(v)
+	if f <= 0.0:
+		return default_val
+	return f
+
+
 # ---- 打开 / 关闭 ----
 func open(at_pos: Vector2, initial_dict: Dictionary, target_action: String, context: Dictionary = {}) -> void:
+	_close_lang_menu()   # 上次遗留的语言选择菜单先收掉
 	_initial_dict = initial_dict.duplicate(true)
 	_target_action = target_action
 	_context = context
 	# 填基础字段
-	_width_input.text = str(float(_initial_dict.get("width", 120.0)))
-	_height_input.text = str(float(_initial_dict.get("height", 120.0)))
+	_width_input.text = _wh_text(_initial_dict.get("width", 120.0))
+	_height_input.text = _wh_text(_initial_dict.get("height", 120.0))
+	_select_option_by_id(_shape_select, int(_initial_dict.get("shape", 0)))
+	_select_option_by_id(_shape_dir_select, int(_initial_dict.get("shape_dir", 0)))
 	_display_layer_input.text = str(float(_initial_dict.get("display_layer", 0)))
 	_collision_layer_input.text = _tags_to_str(Array(_initial_dict.get("collision_layer", [])))
 	_border_width_input.text = str(float(_initial_dict.get("border_width", 3.0)))
 	_border_color_input.text = str(_initial_dict.get("border_color", "#FFFFFFFF"))
 	_fill_color_input.text = str(_initial_dict.get("fill_color", "#4090F0FF"))
 	_tags_input.text = _tags_to_str(Array(_initial_dict.get("tags", [])))
+	_behaviors_input.text = _tags_to_str(Array(_initial_dict.get("behaviors", [])))
 	_rotation_input.text = str(float(_initial_dict.get("rotation_deg", 0.0)))
 	_facing_input.text = str(int(_initial_dict.get("facing", 1)))
-	_fill_path_input.text = str(_initial_dict.get("fill_path", ""))
+	# 填充类型：没有路径 = 纯色；有路径时按 fill_anim 区分静态图 / 骨骼动画。
+	# 旧数据里的 ANIMATED(1) 目前按静态图渲染，这里也归到「静态图」。
+	var fill_path := str(_initial_dict.get("fill_path", ""))
+	_fill_path_input.text = fill_path
+	var fill_anim := int(_initial_dict.get("fill_anim", 0))
+	var fill_kind := FILL_KIND_SOLID
+	if not fill_path.is_empty():
+		if fill_anim == int(BlockFill.AnimType.YSM):
+			fill_kind = FILL_KIND_YSM
+		elif fill_anim == int(BlockFill.AnimType.SKELETON):
+			fill_kind = FILL_KIND_SKELETON
+		else:
+			fill_kind = FILL_KIND_IMAGE
+	_select_by_id(_fill_type_select, fill_kind)
 	# 父子级（ID 绑定）
 	_parent_id_input.text = str(int(_initial_dict.get("parent_id", 0)))
 	_child_ids_input.text = _ids_to_str(Array(_initial_dict.get("child_ids", [])))
@@ -1718,7 +2222,14 @@ func open(at_pos: Vector2, initial_dict: Dictionary, target_action: String, cont
 	_string_id_input.text = str(blk.string_id) if (_id_editable and blk != null) else _initial_dict.get("string_id", "")
 	_string_id_input.placeholder_text = "字符串ID(可空,仅单块可改)" if not _id_editable else "字符串ID(可空)"
 	_select_by_id(_fill_mode_select, int(_initial_dict.get("fill_mode", 0)))
-	_select_by_id(_fill_anim_select, int(_initial_dict.get("fill_anim", 0)))
+	_apply_fill_type_ui()
+	# 瓦片系统：列/行 / 尺寸模式 / 宽 / 高 / 顺序
+	_tile_cols_spin.value = int(_initial_dict.get("tile_split_x", 1))
+	_tile_rows_spin.value = int(_initial_dict.get("tile_split_y", 1))
+	_select_by_id(_tile_size_mode_select, int(_initial_dict.get("tile_size_mode", 0)))
+	_tile_w_input.text = str(float(_initial_dict.get("tile_size_x", 32.0)))
+	_tile_h_input.text = str(float(_initial_dict.get("tile_size_y", 32.0)))
+	_select_by_id(_tile_order_select, int(_initial_dict.get("tile_fill_order", 0)))
 	# 文本框
 	for c in _tb_editors:
 		if c.has("root") and is_instance_valid(c["root"]):
@@ -1734,11 +2245,24 @@ func open(at_pos: Vector2, initial_dict: Dictionary, target_action: String, cont
 	_base_attack_input.text = str(float(_initial_dict.get("base_attack", 1.0)))
 	# 运动参数（积木运动面板）：从初始 dict 读入，缺键用默认；刷新行内摘要
 	_motion_data = {
+		"gravity_enabled": bool(_initial_dict.get("gravity_enabled", false)),
+		"roll_enabled": bool(_initial_dict.get("roll_enabled", false)),
+		"free_roll": bool(_initial_dict.get("free_roll", false)),
+		"roll_axis_x": float(_initial_dict.get("roll_axis_x", 0.0)),
+		"roll_axis_y": float(_initial_dict.get("roll_axis_y", 0.0)),
+		"friction_coef": float(_initial_dict.get("friction_coef", 0.45)),
+		"air_drag": float(_initial_dict.get("air_drag", 0.15)),
+		"restitution": float(_initial_dict.get("restitution", 0.2)),
+		"squash_amount": float(_initial_dict.get("squash_amount", 0.25)),
+		"squash_stiffness": float(_initial_dict.get("squash_stiffness", 22.0)),
+		"inertia_enabled": bool(_initial_dict.get("inertia_enabled", false)),
+		"inertia_value": float(_initial_dict.get("inertia_value", 0.0)),
 		"can_fly": bool(_initial_dict.get("can_fly", false)),
 		"horiz_max_speed": float(_initial_dict.get("horiz_max_speed", 240.0)),
 		"horiz_accel": float(_initial_dict.get("horiz_accel", 0.0)),
 		"fly_up_max_speed": float(_initial_dict.get("fly_up_max_speed", 240.0)),
 		"fly_up_accel": float(_initial_dict.get("fly_up_accel", 0.0)),
+		"mass": float(_initial_dict.get("mass", 1.0)),
 	}
 	_refresh_motion_summary()
 	# 攻击判定框：与文本框同规则，从现有积木/类型读取并重建编辑器
@@ -1833,6 +2357,7 @@ func close() -> void:
 	if _motion_panel != null and is_instance_valid(_motion_panel):
 		_motion_panel.close()   # close() 内部会回填 _motion_data 并 queue_free
 		_motion_panel = null
+	_close_lang_menu()          # 文本框「＋语言」选择菜单
 
 
 func is_open() -> bool:
@@ -1855,6 +2380,91 @@ func _select_by_id(sel: OptionButton, id: int) -> void:
 		if sel.get_item_id(i) == id:
 			sel.select(i)
 			return
+
+
+# ---- 填充类型（纯色 / 静态图 / 骨骼动画 / YSM模型）----
+func _selected_fill_kind() -> int:
+	if _fill_type_select == null or not is_instance_valid(_fill_type_select):
+		return FILL_KIND_SOLID
+	return int(_fill_type_select.get_selected_id())
+
+
+func _on_fill_type_selected(_index: int) -> void:
+	# 各类别的路径互不通用：切换时清掉不兼容的旧路径，避免把 .tscn 当图片、或把图片当模型包。
+	# 纯色只忽略路径、不清空，方便切回来继续用原来的路径。
+	var kind := _selected_fill_kind()
+	var path := _fill_path_input.text.strip_edges()
+	if not path.is_empty() and not _path_fits_kind(path, kind):
+		_fill_path_input.text = ""
+	_apply_fill_type_ui()
+
+
+# 路径扩展名是否契合某填充类别（切换类别时据此清理不兼容旧路径）。
+func _path_fits_kind(path: String, kind: int) -> bool:
+	var ext := path.get_extension().to_lower()
+	var is_scene := ext == "tscn" or ext == "escn"
+	var is_zip := ext == "zip"
+	var is_json := ext == "json"
+	var is_image := ext == "png" or ext == "jpg" or ext == "jpeg" or ext == "webp" \
+		or ext == "svg" or ext == "bmp" or ext == "tga" or ext == "gif"
+	match kind:
+		FILL_KIND_SKELETON:
+			return is_scene
+		FILL_KIND_IMAGE:
+			return is_image
+		FILL_KIND_YSM:
+			# YSM 包：.zip / .json，或无扩展名（目录）
+			return is_zip or is_json or ext.is_empty()
+		_:
+			return true
+
+
+# 按填充类型切换「路径行 / 填充模式 / 瓦片组」的显隐与文件选择器过滤。
+# ★ 切换不会清空输入框里的路径：切到纯色时只在收集阶段忽略路径，切回来仍可继续用。
+func _apply_fill_type_ui() -> void:
+	var kind := _selected_fill_kind()
+	var uses_path := kind != FILL_KIND_SOLID
+	if _fill_path_row != null and is_instance_valid(_fill_path_row):
+		_fill_path_row.visible = uses_path
+		var lbl := _fill_path_row.get_child(0) as Label
+		if lbl != null:
+			if kind == FILL_KIND_SKELETON:
+				lbl.text = "骨骼场景路径"
+			elif kind == FILL_KIND_YSM:
+				lbl.text = "YSM模型路径"
+			else:
+				lbl.text = "填充图片路径"
+	if _fill_mode_row != null and is_instance_valid(_fill_mode_row):
+		_fill_mode_row.visible = uses_path
+	for r in _tile_rows:
+		if is_instance_valid(r):
+			r.visible = (kind == FILL_KIND_IMAGE)
+	if _fill_path_picker != null and is_instance_valid(_fill_path_picker):
+		if kind == FILL_KIND_SKELETON:
+			_fill_path_input.placeholder_text = "res://（骨骼动画场景 .tscn）"
+			_fill_path_picker.set_config(UIPathPicker.DIR_ROOT, {
+				"exts": UIPathPicker.SCENE_EXTS,
+				"label": "骨骼场景",
+				"title": "选择骨骼动画场景",
+				"allow_user_copy": false,
+				"accept_exts": ["tscn", "escn"],
+			})
+		elif kind == FILL_KIND_YSM:
+			_fill_path_input.placeholder_text = "res://models/（YSM包：目录 / .zip / ysm.json）"
+			_fill_path_picker.set_config(UIPathPicker.DIR_ROOT, {
+				"exts": "*.zip,*.json",
+				"label": "YSM模型包",
+				"title": "选择 YSM 模型包（.zip / ysm.json）",
+				"allow_user_copy": false,
+				"accept_exts": ["zip", "json"],
+			})
+		else:
+			_fill_path_input.placeholder_text = "res://textures/（图片相对路径）"
+			_fill_path_picker.set_config(UIPathPicker.DIR_TEXTURES, {
+				"exts": UIPathPicker.IMG_EXTS,
+				"label": "图片",
+				"title": "选择填充图片",
+			})
 
 
 func _tags_to_str(arr: Array) -> String:
@@ -1899,13 +2509,15 @@ func _layers_from_text(s: String) -> PackedStringArray:
 
 # ---- 收集 prop dict（校验失败返回 {}）----
 func _collect_prop_dict() -> Dictionary:
-	var w: float = _fnum(_width_input.text, -1.0)
-	var h: float = _fnum(_height_input.text, -1.0)
-	if w < 1.0 or w > 4096.0:
-		_show_error("宽必须在 1..4096 之间")
+	# 宽 / 高：数字，或已注册的系统常量名（如 icon_size）——常量名运行时按当前设备解析，
+	# 故不做数值范围校验（值可能随设备变化，但都来自系统实际尺寸）。
+	var w: Variant = _wh_value(_width_input.text)
+	var h: Variant = _wh_value(_height_input.text)
+	if not (w is String) and (float(w) < 1.0 or float(w) > 4096.0):
+		_show_error("宽必须是 1..4096 的数字，或系统常量名（如 icon_size）")
 		return {}
-	if h < 1.0 or h > 4096.0:
-		_show_error("高必须在 1..4096 之间")
+	if not (h is String) and (float(h) < 1.0 or float(h) > 4096.0):
+		_show_error("高必须是 1..4096 的数字，或系统常量名（如 icon_size）")
 		return {}
 	var bc: String = _border_color_input.text.strip_edges()
 	if not bc.is_empty() and not BlockProperty.is_valid_hex_color(bc):
@@ -1927,6 +2539,12 @@ func _collect_prop_dict() -> Dictionary:
 		var t := str(part).strip_edges()
 		if not t.is_empty() and not (t in tags):
 			tags.append(t)
+
+	var behaviors: Array[String] = []
+	for part in _behaviors_input.text.split(","):
+		var t := str(part).strip_edges()
+		if not t.is_empty() and not (t in behaviors):
+			behaviors.append(t)
 
 	# 父子级（ID 绑定）：父级不能是自己；子级里去掉自己（成环在 Block 侧还会再兜一层）
 	var pid: int = _inum(_parent_id_input.text, 0)
@@ -1965,18 +2583,60 @@ func _collect_prop_dict() -> Dictionary:
 				_show_error("字符串ID '%s' 已被其它积木占用" % sid)
 				return {}
 
+	# 填充类型：纯色 → 路径清空（apply 时移除 fill_image），静态图/骨骼 → 路径 + 对应 anim。
+	var fill_kind := _selected_fill_kind()
+	var fill_path := ""
+	if fill_kind != FILL_KIND_SOLID:
+		fill_path = _fill_path_input.text.strip_edges()
+	if fill_kind == FILL_KIND_IMAGE and fill_path.is_empty():
+		_show_error("请选择填充图片（或把填充类型改为纯色）")
+		return {}
+	var fill_anim := int(BlockFill.AnimType.STATIC)
+	if fill_kind == FILL_KIND_SKELETON:
+		fill_anim = int(BlockFill.AnimType.SKELETON)
+		if fill_path.is_empty():
+			_show_error("请选择骨骼动画场景（.tscn）")
+			return {}
+		var ext := fill_path.get_extension().to_lower()
+		if ext != "tscn" and ext != "escn":
+			_show_error("骨骼动画必须使用 .tscn / .escn 场景")
+			return {}
+		if not ResourceLoader.exists(fill_path):
+			_show_error("找不到骨骼动画场景：%s" % fill_path)
+			return {}
+	elif fill_kind == FILL_KIND_YSM:
+		# YSM（是，史蒂夫）未加密模型包：填相对路径即启用（目录 / .zip / ysm.json）。
+		# 由 blocks/block.gd::_resolve_fill_texture → YSMProjector 烘焙成 2D 贴图；
+		# 包不合法时退回纯色兜底（不阻断保存，方便先填路径、后补文件）。
+		fill_anim = int(BlockFill.AnimType.YSM)
+		if fill_path.is_empty():
+			_show_error("请填写 YSM 模型包相对路径（包目录 / .zip / ysm.json）")
+			return {}
+	# 纯色必须带 fill 标签才可见（图片/骨骼用 fill_image 标签，由 BlockProperty 自动维护）
+	if fill_kind == FILL_KIND_SOLID and not ("fill" in tags):
+		tags.append("fill")
+
 	var out: Dictionary = {
 		"width": w,
 		"height": h,
+		"shape": _selected_option_id(_shape_select, 0),
+		"shape_dir": _selected_option_id(_shape_dir_select, 0),
 		"display_layer": _fnum(_display_layer_input.text, 0.0),
 		"collision_layer": _layers_from_text(_collision_layer_input.text),
 		"border_width": _fnum(_border_width_input.text, 3.0),
 		"border_color": bc,
 		"fill_color": fc,
 		"tags": PackedStringArray(tags),
-		"fill_path": _fill_path_input.text.strip_edges(),
+		"behaviors": PackedStringArray(behaviors),
+		"fill_path": fill_path,
 		"fill_mode": int(_fill_mode_select.get_selected_id()),
-		"fill_anim": int(_fill_anim_select.get_selected_id()),
+		"fill_anim": fill_anim,
+		"tile_split_x": int(_tile_cols_spin.value),
+		"tile_split_y": int(_tile_rows_spin.value),
+		"tile_size_mode": int(_tile_size_mode_select.get_selected_id()),
+		"tile_size_x": _fnum(_tile_w_input.text, 32.0),
+		"tile_size_y": _fnum(_tile_h_input.text, 32.0),
+		"tile_fill_order": int(_tile_order_select.get_selected_id()),
 		"rotation_deg": _fnum(_rotation_input.text, 0.0),
 		"facing": facing_val,
 		"base_attack": _fnum(_base_attack_input.text, 1.0),
@@ -1985,11 +2645,24 @@ func _collect_prop_dict() -> Dictionary:
 		"value_bars": _collect_value_bars(),
 		"local_vars": _collect_local_vars(),
 		# 运动参数（来自「积木运动」面板）
+		"gravity_enabled": bool(_motion_data.get("gravity_enabled", false)),
+		"roll_enabled": bool(_motion_data.get("roll_enabled", false)),
+		"free_roll": bool(_motion_data.get("free_roll", false)),
+		"roll_axis_x": float(_motion_data.get("roll_axis_x", 0.0)),
+		"roll_axis_y": float(_motion_data.get("roll_axis_y", 0.0)),
+		"friction_coef": float(_motion_data.get("friction_coef", 0.45)),
+		"air_drag": float(_motion_data.get("air_drag", 0.15)),
+		"restitution": float(_motion_data.get("restitution", 0.2)),
+		"squash_amount": float(_motion_data.get("squash_amount", 0.25)),
+		"squash_stiffness": float(_motion_data.get("squash_stiffness", 22.0)),
+		"inertia_enabled": bool(_motion_data.get("inertia_enabled", false)),
+		"inertia_value": float(_motion_data.get("inertia_value", 0.0)),
 		"can_fly": bool(_motion_data.get("can_fly", false)),
 		"horiz_max_speed": float(_motion_data.get("horiz_max_speed", 240.0)),
 		"horiz_accel": float(_motion_data.get("horiz_accel", 0.0)),
 		"fly_up_max_speed": float(_motion_data.get("fly_up_max_speed", 240.0)),
 		"fly_up_accel": float(_motion_data.get("fly_up_accel", 0.0)),
+		"mass": float(_motion_data.get("mass", 1.0)),
 		"parent_id": pid,
 		"child_ids": cids,
 		"id": new_id,

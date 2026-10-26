@@ -55,6 +55,10 @@ var _status_label: Label
 var _proc_list: VBoxContainer = null
 var _proc_rows: Array = []   # 每项 {name_edit, weight_edit, kind_opt, status_label, container}
 
+# ★ 批次 109：「电脑任务管理器」选取窗（点进程名旁的按钮打开，选中即回填该行进程名）
+var _task_mgr: TaskManagerPanel = null
+var _task_mgr_layer: CanvasLayer = null
+
 # ★★ 批次 70：进程「属性」—— 在「在忙 / 在闲」之上进一步判断玩家在干什么。
 #   每个进程可标注它属于哪类活动（游戏/工作/聊天/音乐/其他）；检测到该进程运行时，
 #   把活动类型计入「当前活动」统计，面板底部据此给出「玩家可能正在：XXX」的推断。
@@ -84,6 +88,11 @@ var _activity_label: Label = null
 var _schedule_list: VBoxContainer = null
 var _schedule_rows: Array = []   # 每项 {checks: Array, start_edit: LineEdit, end_edit: LineEdit, container: VBoxContainer}
 
+# ★ 批次 549：「上课时为忙」开关（与课程表页共同控制，存 perf_busy.json 的 class_busy_enabled）。
+#   开启后：上课时间且有课程 → 自动「在忙」，直到下课（BusyState 每秒向 CourseSchedule 查询）。
+var _class_busy_btn: UIBtn = null
+var _class_busy_on: bool = false
+
 const WEEK_LABELS := ["一", "二", "三", "四", "五", "六", "日"]     # 勾选框显示的单字
 const WEEK_NAMES := ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]   # tooltip 用
 const TIME_HINT := "HH:MM"
@@ -99,6 +108,11 @@ func _ready() -> void:
 		_sliders[k].value = THR_DEFAULTS[k]
 		_weight_inputs[k].text = "%.1f" % WEIGHT_DEFAULTS[k]
 	_load_state()   # 应用已保存的设置（文件缺失则保留上方默认值）
+	# 「上课时为忙」开关由 BusyState 单例统一裁决（两页按钮共同控制）→ 连信号实时同步文案
+	if BusyState != null and BusyState.has_signal("class_busy_changed") \
+			and not BusyState.class_busy_changed.is_connected(_on_class_busy_changed):
+		BusyState.class_busy_changed.connect(_on_class_busy_changed)
+	_refresh_class_busy_label()
 	_recompute()
 	# 每 0.4s 把 PerfMonitor 最新值刷到面板（采样是每分钟一次，这里只做显示刷新）
 	_refresh_timer = Timer.new()
@@ -129,6 +143,7 @@ var _minimized: bool = false
 
 func _build() -> void:
 	_bg = UIPanel.new()
+	_bg.bind_page_dark_bg()
 	_bg.size = Vector2(PANEL_W, PANEL_H)
 	_bg.set_corner_radius(UIStyle.CORNER_RADIUS)
 	_bg.set_border_width(UIStyle.BORDER_WIDTH)
@@ -138,18 +153,15 @@ func _build() -> void:
 	_center_bg()   # ★ 居中打开（用户拖动后由 UIDragHandle 接管，不再自动归位）
 	var fnt := UIStyle.get_cjk_font()
 
-	var sc := ScrollContainer.new()
-	sc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_bg.add_child(sc)
-	var vbox := VBoxContainer.new()
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.add_theme_constant_override("separation", 4)
-	sc.add_child(vbox)
-
-	# 标题栏
+	# 标题栏（固定置于 _bg 顶部，不随内容滚动移动）
+	# ★ 批次 551：原来 title_row 是 ScrollContainer 内 vbox 的第一个子节点 → 纵向滚动时
+	#   标题栏（拖动把柄 + 最小化 + 关闭 = 三个按钮）被一并滚走。现改为 _bg 直接子节点、
+	#   锚定顶部全宽，滚动区在其下方（offset_top = TITLE_BAR_H）。最小化逻辑不变
+	#   （UIMinimize.fold_below(title_row) 会隐藏其后的 sc 兄弟节点）。
 	var title_row := HBoxContainer.new()
-	title_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_row.name = "TitleRow"
+	title_row.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	title_row.custom_minimum_size = Vector2(0.0, TITLE_BAR_H)
 	_title_label = Label.new()
 	_title_label.text = "性能忙闲判断"
 	_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -171,7 +183,18 @@ func _build() -> void:
 	_close_btn.pressed_id.connect(_on_close)
 	_min_btn = UIMinimize.attach(title_row, func(): set_minimized(not _minimized))
 	title_row.add_child(_close_btn)
-	vbox.add_child(title_row)
+	_bg.add_child(title_row)
+
+	# 滚动区（标题栏之下；横向滚动禁用，纵向滚动时标题栏固定不动）
+	var sc := ScrollContainer.new()
+	sc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	sc.offset_top = TITLE_BAR_H
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_bg.add_child(sc)
+	var vbox := VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 4)
+	sc.add_child(vbox)
 
 	# 顶部：分数判断阈值
 	var thr_row := HBoxContainer.new()
@@ -274,6 +297,35 @@ func _build() -> void:
 	if is_instance_valid(fnt):
 		sch_title.add_theme_font_override("font", fnt)
 	vbox.add_child(sch_title)
+
+	# 「上课时为忙」开关（批次 549）：与课程表页按钮共同控制同一设置（class_busy_enabled）。
+	# 开启后上课时间且有课程的时间段自动「在忙」，直到下课。
+	var cb_row := HBoxContainer.new()
+	cb_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cb_row.add_theme_constant_override("separation", 8)
+	_class_busy_btn = UIBtn.new()
+	_class_busy_btn.set_id("class_busy_toggle")
+	_class_busy_btn.set_label(_class_busy_text())
+	_class_busy_btn.custom_minimum_size = Vector2(140.0, 26.0)
+	# ★ 批次 551：按钮固定宽、纵向不拉伸。否则 HBox 会把按钮拉到「整行高」(447px)，
+	#   按钮内文字被挤成竖排、占位过大。
+	_class_busy_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_class_busy_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_class_busy_btn.pressed_id.connect(_on_class_busy_toggle)
+	cb_row.add_child(_class_busy_btn)
+	var cb_hint := Label.new()
+	cb_hint.text = "开启后：上课时间且有课程 → 自动在忙，直到下课（跟随课程表）"
+	cb_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# ★ 批次 551：提示文字必须横向吸收余量（EXPAND_FILL）。若无此标志，autowrap 标签的
+	#   最小宽被算成 ~1px → 整行塌成「1px 宽 × 447px 高」竖条，连带把按钮拉成 140×447。
+	cb_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cb_hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	cb_hint.add_theme_color_override("font_color", Color(0.8, 0.85, 0.9))
+	cb_hint.add_theme_font_size_override("font_size", 11)
+	if is_instance_valid(fnt):
+		cb_hint.add_theme_font_override("font", fnt)
+	cb_row.add_child(cb_hint)
+	vbox.add_child(cb_row)
 
 	_schedule_list = VBoxContainer.new()
 	_schedule_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -478,6 +530,39 @@ func _on_proc_weight_changed(_text: String) -> void:
 	_save_state()
 
 
+# ★ 批次 109：打开「电脑任务管理器」选取窗，选中后回填到 name_edit。
+#   层号 138 —— 高于本面板所在的 134（性能），保证浮在最上层。
+func _on_pick_proc_pressed(_id: String, name_edit: LineEdit) -> void:
+	if name_edit == null or not is_instance_valid(name_edit):
+		return
+	if _task_mgr != null and is_instance_valid(_task_mgr):
+		_task_mgr.close()
+		_task_mgr = null
+	var root := get_tree().root if get_tree() != null else null
+	if root == null:
+		return
+	_task_mgr_layer = CanvasLayer.new()
+	_task_mgr_layer.layer = 138
+	root.add_child(_task_mgr_layer)
+	UIStyle.watch_ui_scale(_task_mgr_layer)
+	_task_mgr = TaskManagerPanel.new()
+	_task_mgr_layer.add_child(_task_mgr)
+	_task_mgr.closed.connect(_on_task_mgr_closed)
+	_task_mgr.open(name_edit)
+
+
+# 选取窗关闭：释放承载层，并手动补一次重算/存档
+# （★ 面板是直接写 LineEdit.text，不会触发 text_submitted → 必须自己刷新，
+#   同 level_page._on_env_picker_closed 的做法）
+func _on_task_mgr_closed() -> void:
+	if _task_mgr_layer != null and is_instance_valid(_task_mgr_layer):
+		_task_mgr_layer.queue_free()
+	_task_mgr_layer = null
+	_task_mgr = null
+	_recompute()
+	_save_state()
+
+
 func _add_proc_row(name: String, weight: String, kind: String = "other") -> void:
 	if _proc_list == null:
 		return
@@ -497,6 +582,15 @@ func _add_proc_row(name: String, weight: String, kind: String = "other") -> void
 	UIStyle.apply_line_edit_style(name_edit)
 	name_edit.text_submitted.connect(_on_proc_name_changed)
 	row.add_child(name_edit)
+
+	# ★ 批次 109：进程名旁的「…」按钮 → 打开「电脑任务管理器」选取正在运行的进程
+	var pick := UIBtn.new()
+	pick.set_id("perf_busy_pick_proc")
+	pick.set_label("…")
+	pick.custom_minimum_size = Vector2(30.0, 26.0)
+	pick.tooltip_text = "从正在运行的进程里选择（电脑任务管理器）"
+	pick.pressed_id.connect(_on_pick_proc_pressed.bind(name_edit))
+	row.add_child(pick)
 
 	# ★ 属性下拉：标注该进程属于哪类活动（真值存 item metadata，与批次 67/69 同规）
 	var kind_opt := OptionButton.new()
@@ -828,11 +922,26 @@ func _recompute() -> void:
 
 	_update_activity(kind_hits, ok)
 
+	# 状态行读**权威态** BusyState（托盘/调试/条件编辑器同一来源），附来源与分数明细：
+	#   上课时段 / 定时时段 / 手动切换 / 分数自动。数据不可用时只显示采样状态。
+	var busy_now: bool = BusyState != null and BusyState.is_busy()
+	var src: String = str(BusyState.state_source()) if BusyState != null else ""
 	if not ok:
 		_status_label.text = "状态: 数据不可用"
 		_status_label.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
-	elif score > _score_threshold:
-		_status_label.text = "状态: 在忙！(分数 %.1f > 阈值 %.1f)" % [score, _score_threshold]
+	elif busy_now:
+		var tag := ""
+		match src:
+			"class":                                   # SOURCE_CLASS（上课联动）
+				var subj := str(BusyState.class_subject()) if BusyState.has_method("class_subject") else ""
+				tag = "上课时段" + (" · " + subj if not subj.is_empty() else "")
+			"schedule":                                # SOURCE_SCHEDULE
+				tag = "定时时段"
+			"manual":                                  # SOURCE_MANUAL
+				tag = "手动切换"
+			_:
+				tag = "分数 %.1f > 阈值 %.1f" % [score, _score_threshold]
+		_status_label.text = "状态: 在忙！（%s）" % tag
 		_status_label.add_theme_color_override("font_color", Color(1.0, 0.5, 0.45))
 	else:
 		_status_label.text = "状态: 空闲 (分数 %.1f ≤ 阈值 %.1f)" % [score, _score_threshold]
@@ -893,6 +1002,7 @@ func _save_state() -> void:
 		"weights": weights,
 		"proc_rows": procs,
 		"schedule": _collect_schedule(),
+		"class_busy_enabled": _class_busy_on,
 	}
 	SaveManager.save_perf_busy_settings(data)
 	# ★ 忙闲状态单例立刻吃下新设置（时段边界/阈值刚变）→ 不必等下一秒 tick 才生效
@@ -934,7 +1044,39 @@ func _load_state() -> void:
 				var days_v: Variant = it.get("days", [])
 				var days: Array = days_v if typeof(days_v) == TYPE_ARRAY else []
 				_add_schedule_row(days, str(it.get("start", "")), str(it.get("end", "")))
+		if d.has("class_busy_enabled"):
+			_class_busy_on = bool(d["class_busy_enabled"])
 	_loading = false
+	_refresh_class_busy_label()
+
+
+# ---------------- 「上课时为忙」开关（批次 549） ----------------
+
+func _class_busy_text() -> String:
+	return "上课时为忙：%s" % ("开" if _class_busy_on else "关")
+
+
+func _refresh_class_busy_label() -> void:
+	if BusyState != null and BusyState.has_method("class_busy_enabled"):
+		_class_busy_on = BusyState.class_busy_enabled()
+	if _class_busy_btn != null and is_instance_valid(_class_busy_btn):
+		_class_busy_btn.set_label(_class_busy_text())
+
+
+## 本页按钮：切换后写盘 + 即刻应用（BusyState 发信号 → 两页按钮同步刷新）。
+func _on_class_busy_toggle(_id: String) -> void:
+	if BusyState != null and BusyState.has_method("set_class_busy"):
+		BusyState.set_class_busy(not _class_busy_on)
+	else:
+		_class_busy_on = not _class_busy_on
+		_save_state()
+	_refresh_class_busy_label()
+
+
+## 另一页（课程表）或外部改了开关 → 同步本页文案。
+func _on_class_busy_changed(enabled: bool) -> void:
+	_class_busy_on = enabled
+	_refresh_class_busy_label()
 
 
 ## 最小化 / 还原：折叠只隐藏内容，顶栏（标题 + 拖动把柄 + 最小化 + 关闭）整排保留。

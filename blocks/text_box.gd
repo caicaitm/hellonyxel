@@ -25,6 +25,13 @@ enum FillSource { SOLID, IMAGE }
 @export var rotation_deg: float = 0.0               # 度
 @export var follow_block_rotation: bool = true      # 是否随积木旋转而旋转
 @export var text_def: String = ""                   # (修饰变量)[内容] 格式，详见 text_renderer.gd
+# ---------- 多语言文本定义（语言代码 → (修饰变量)[内容]）----------
+# 语义：玩家语言 = current_lang 时，优先用 text_defs[current_lang]；该语言没定义 → 回落到 text_def。
+# 为什么保留 text_def 并让它做回落：
+#   ① 存量存档 / block_types/*.json / 预设字典里只有 text_def，不写迁移代码也照常显示；
+#   ② 作者没为某语言配文时自动退回默认文案，不会变成空白。
+# 空字典 = 只有默认文本（与旧行为完全一致）。
+@export var text_defs: Dictionary = {}
 
 # ---------- 「内容为空时是否隐藏」（可被事件修改）----------
 # 语义：本文本框的「内容」= 文本（text_def 经变量求值后）+ 填充图片（fill_image_path）。
@@ -48,9 +55,48 @@ var _hide_when_empty: bool = false
 		_hide_when_empty = value
 		emit_changed()
 
-# 该文本框是否为空（无定义则不绘制文本）
+# 该文本框是否「配了文本」：默认文本 或 任一语言文本非空，即算有文本。
 func has_text() -> bool:
-	return text_def != ""
+	if not text_def.strip_edges().is_empty():
+		return true
+	for k: Variant in text_defs.keys():
+		if not str(text_defs[k]).strip_edges().is_empty():
+			return true
+	return false
+
+
+# 取指定语言的文本定义：该语言配了非空定义 → 用它；否则回落默认 text_def。
+# lang 为空（或 TranslationManager 尚未就绪）时直接返回默认，调用方无需判空。
+func def_for_lang(lang: String) -> String:
+	if lang != "" and text_defs.has(lang):
+		var v: String = str(text_defs[lang])
+		if not v.strip_edges().is_empty():
+			return v
+	return text_def
+
+
+# 是否「专门为该语言」配了非空定义（不含默认回落）。属性面板据此把该语言输入框填上。
+func has_lang_def(lang: String) -> bool:
+	if lang == "" or not text_defs.has(lang):
+		return false
+	return not str(text_defs[lang]).strip_edges().is_empty()
+
+
+# 写入指定语言的文本定义。
+#   def 非空 → 写条目；def 为空 → 删除条目（不留空串，避免存档里堆垃圾键）。
+# 变更后 emit_changed()，Block 收到即刷新视图（与 hide_when_empty 同一机制），事件脚本可直接调用。
+func set_lang_def(lang: String, def: String) -> void:
+	if lang == "":
+		return
+	if def.strip_edges().is_empty():
+		if not text_defs.has(lang):
+			return
+		text_defs.erase(lang)
+	elif text_defs.has(lang) and str(text_defs[lang]) == def:
+		return
+	else:
+		text_defs[lang] = def
+	emit_changed()
 
 # 是否指定了填充图片（= 图片内容）。路径没接资源系统前，以「路径非空」为判据。
 func has_image() -> bool:
@@ -97,5 +143,6 @@ static func preset_dict(key: String, block_w: float, block_h: float) -> Dictiona
 		"rotation_deg": 0.0,
 		"follow_block_rotation": bool(p["follow"]),
 		"text_def": "",
+		"text_defs": {},
 		"hide_when_empty": false,
 	}

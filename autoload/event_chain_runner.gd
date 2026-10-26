@@ -244,6 +244,9 @@ func _apply_compound_target(t: Dictionary, open_state: bool) -> void:
 	if t.has("level"):
 		_set_level_page(str(t.get("level", "")), open_state)
 		return
+	if t.has("home"):
+		_set_home_page(open_state)
+		return
 	print("[EventChain] 未知复合目标（已忽略）：%s" % str(t))
 
 
@@ -265,6 +268,23 @@ func _set_level_page(name: String, on: bool) -> void:
 	print("[EventChain] 关卡页面 → %s%s" % [
 		"打开" if on else "关闭",
 		("（关卡「%s」）" % name) if not name.is_empty() else ""])
+
+
+# 家园页面 开 / 关（走 HomePage.open_home / close_home 统一入口）。
+# 家园是单一家园、无需名字；打开会投影当前存档里的 home.json 积木。
+func _set_home_page(on: bool) -> void:
+	if HomeManager == null:
+		push_warning("[EventChain] HomeManager 不可用，忽略家园目标")
+		return
+	var page = HomeManager.home_page
+	if page == null or not is_instance_valid(page):
+		push_warning("[EventChain] 家园面板尚未就绪，忽略家园目标")
+		return
+	if on:
+		page.open_home()
+	else:
+		page.close_home()
+	print("[EventChain] 家园页面 → %s" % ("打开" if on else "关闭"))
 
 
 func _set_block_visible(id: int, visible: bool) -> void:
@@ -328,6 +348,8 @@ func _open_content(c: Dictionary, lang: String, text_override = null,
 			var role := str(c.get("title", ""))
 			DialogueManager.character_name = role
 			DialogueManager.avatar_path = str(c.get("image", ""))
+			# 头像背景层：content.bg_image 为空 → 不绘制背景（面板 _apply_avatar_bg 置 null）
+			DialogueManager.avatar_background_path = str(c.get("bg_image", ""))
 			# ★ 给「原始定义 + 已解析纯文本」两份：台词音效要按原始结构逐字发声
 			#   （$变量 只响一声），显示用解析后的纯文本。
 			DialogueManager.set_line_definition(raw_text, text)

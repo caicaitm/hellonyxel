@@ -1,49 +1,27 @@
 简体中文	繁体中文	English	日本語	Русский	한국어	Español	Português	Français	Deutsch	Italiano	Türkçe	Polski	ไทย	Tiếng Việt
-
 设置	設定	Settings	設定	Настройки	설정	Configuración	Configurações	Paramètres	Einstellungen	Impostazioni	Ayarlar	Ustawienia	การตั้งค่า	Cài đặt
-
 语言	語言	Language	言語	Язык	언어	Idioma	Idioma	Langue	Sprache	Lingua	Dil	Język	ภาษา	Ngôn ngữ
-
 主音量	主音量	Master volume	マスター音量	Общая громкость	마스터 볼륨	Volumen principal	Volume principal	Volume principal	Hauptlautstärke	Volume principale	Ana ses	Głośność główna	เสียงหลัก	Âm lượng chính
-
 音乐音量	音樂音量	Music volume	音楽音量	Громкость музыки	음악 볼륨	Volumen de música	Volume da música	Volume musique	Musik-Lautstärke	Volume musica	Müzik sesi	Głośność muzyki	เสียงดนตรี	Âm lượng nhạc
-
 音效音量	音效音量	SFX volume	効果音音量	Громкость эффектов	효과음 볼륨	Volumen de efectos	Volume de efeitos	Volume des effets	Soundeffekt-Lautstärke	Volume effetti	Efekt sesi	Głośność efektów	เสียงเอฟเฟกต์	Âm lượng hiệu ứng
-
 环境音量	環境音量	Ambience volume	環境音量	Громкость окружения	환경 볼륨	Volumen ambiental	Volume ambiente	Volume d'ambiance	Umgebungs-Lautstärke	Volume ambiente	Ortam sesi	Głośność otoczenia	เสียงบรรยากาศ	Âm lượng môi trường
-
 语音音量	語音音量	Voice volume	音声音量	Громкость речи	음성 볼륨	Volumen de voz	Volume de voz	Volume voix	Sprach-Lautstärke	Volume voce	Ses düzeyi	Głośność głosu	เสียงพากย์	Âm lượng giọng nói
-
 UI 缩放	UI 縮放	UI scale	UIスケール	Масштаб UI	UI 배율	Escala de UI	Escala de UI	Échelle de l'UI	UI-Skalierung	Scala UI	Arayüz ölçeği	Skala UI	สเกล UI	Tỷ lệ giao diện
-
 关闭	關閉	Close	閉じる	Закрыть	닫기	Cerrar	Fechar	Fermer	Schließen	Chiudi	Kapat	Zamknij	ปิด	Đóng
 最小化	最小化	Minimize	最小化	Свернуть	최소화	Minimizar	Minimizar	Réduire	Minimieren	Riduci	Simge Durum	Pminimalizuj	ย่อขนาด	Thu nhỏ
 退出调试	退出除錯	Exit Debug	デバッグを終了	Выйти из отладки	디버그 종료	Salir de depuración	Sair da depuração	Quitter le débogage	Debugging beenden	Esci dal debug	Debugdan çık	Wyjdź z trybów debugowania	ออกจากโหมดดีบัก	Thoát gỡ lỗi
-
 确定修改	確定修改	Apply	変更を確定	Применить	적용	Aplicar	Aplicar	Appliquer	Übernehmen	Applica	Uygula	Zastosuj	ใช้	Áp dụng
-
 确定	確定	OK	OK	ОК	확인	Aceptar	OK	OK	OK	OK	Tamam	OK	ตกลง	OK
-
 取消	取消	Cancel	キャンセル	Отмена	취소	Cancelar	Cancelar	Annuler	Abbrechen	Annulla	İptal	Anuluj	ยกเลิก	Hủy
-
 背包	背包	Backpack	バックパック	Рюкзак	배낭	Mochila	Mochila	Sac à dos	Rucksack	Zaino	Sırt çantası	Plecak	กระเป๋าเป้	Ba lô
-
 筛选	篩選	Filter	フィルター	Фильтр	필터	Filtrar	Filtrar	Filtrer	Filtern	Filtra	Filtrele	Filtr	กรอง	Lọc
-
 上一页	上一頁	Previous	前へ	Назад	이전	Anterior	Anterior	Précédent	Zurück	Precedente	Önceki	Poprzedni	ก่อนหน้า	Trước
-
 下一页	下一頁	Next	次へ	Вперёд	다음	Siguiente	Próximo	Suivant	Weiter	Successivo	Sonraki	Następny	ถัดไป	Tiếp
-
 存档列表	存檔列表	Save list	セーブ一覧	Список сохранений	저장 목록	Lista de guardados	Lista de saves	Liste de sauvegardes	Speicherliste	Elenco salvataggi	Kayıt listesi	Lista zapisów	รายการเซฟ	Danh sách lưu
-
 存档名	存檔名	Save name	セーブ名	Название сохранения	저장 이름	Nombre del guardado	Nome do save	Nom de sauvegarde	Speichername	Nome salvataggio	Kayıt adı	Nazwa zapisu	ชื่อเซฟ	Tên lưu
-
 保存	保存	Save	保存	Сохранить	저장	Guardar	Salvar	Sauvegarder	Speichern	Salva	Kaydet	Zapisz	บันทึก	Lưu
-
 读取	讀取	Load	読み込む	Загрузить	불러오기	Cargar	Carregar	Charger	Laden	Carica	Yükle	Wczytaj	โหลด	Tải
-
 删除	刪除	Delete	削除	Удалить	삭제	Eliminar	Excluir	Supprimer	Löschen	Elimina	Sil	Usuń	ลบ	Xóa
-
 没有存档	沒有存檔	No saves	セーブがありません	Сохранений нет	저장 없음	Sin guardados	Sem saves	Aucune sauvegarde	Keine Speicher	Nessun salvataggio	Kayıt yok	Brak zapisów	ไม่มีเซฟ	Chưa có lưu
 手动存档	手動存檔	Manual save	手動セーブ	Ручное сохранение	수동 저장	Guardado manual	Salvamento manual	Sauvegarde manuelle	Manueller Speicher	Salvataggio manuale	Elle kayıt	Ręczny zapis	บันทึกแบบแมนนวล	Lưu thủ công
 自动存档	自動存檔	Auto save	自動セーブ	Автосохранение	자동 저장	Guardado automático	Salvamento automático	Sauvegarde auto	Automatischer Speicher	Salvataggio automatico	Otomatik kayıt	Automatyczny zapis	บันทึกอัตโนมัติ	Lưu tự động
@@ -51,398 +29,372 @@ UI 缩放	UI 縮放	UI scale	UIスケール	Масштаб UI	UI 배율	Escala d
 世界存档	世界存檔	World save	ワールドセーブ	Сохранение мира	월드 저장	Guardado de mundo	Salvamento de mundo	Sauvegarde du monde	Welt-Speicher	Salvataggio mondo	Dünya kaydı	Zapis świata	ไม่มีเซฟโลก	Lưu thế giới
 手动	手動	Manual	手動	Вручную	수동	Manual	Manual	Manuel	Manuell	Manuale	Elle	Ręcznie	แมนนวล	Thủ công
 自动	自動	Auto	自動	Авто	자동	Automático	Automático	Auto	Auto	Automatico	Otomatik	Automatycznie	อัตโนมัติ	Tự động
-
 桌面自动存档间隔	桌面自動存檔間隔	Desktop auto-save interval	デスクトップ自動保存間隔	Интервал автосохранения рабочего стола	데스크톱 자동 저장 간격	Intervalo de autoguardado de escritorio	Intervalo de autosave de desktop	Intervalle de sauvegarde auto du bureau	Desktop-Auto-Speicherintervall	Intervallo autosalvataggio desktop	Masaüstü otomatik kayıt aralığı	Przerwa autozapisu pulpitu	ช่วงเวลาเซฟอัตโนมัติของเดสก์ท็อป	Khoảng thời gian tự lưu màn hình
-
 世界自动存档间隔	世界自動存檔間隔	World auto-save interval	ワールド自動保存間隔	Интервал автосохранения мира	월드 자동 저장 간격	Intervalo de autoguardado de mundo	Intervalo de autosave de mundo	Intervalle de sauvegarde auto du monde	Welt-Auto-Speicherintervall	Intervallo autosalvataggio mondo	Dünya otomatik kayıt aralığı	Przerwa autozapisu świata	ช่วงเวลาเซฟอัตโนมัติของโลก	Khoảng thời gian tự lưu thế giới
-
 不自动存档	不自動存檔	Do not auto-save	自動保存しない	Без автосохранения	자동 저장 안 함	No autoguardar	Não autosavar	Ne pas sauvegarder auto	Nicht autospeichern	Non autosalvare	Otomatik kaydetme	Bez autozapisu	ไม่เซฟอัตโนมัติ	Không tự lưu
-
 分钟	分鐘	minutes	分	минут	분	minutos	minutos	minutes	Minuten	minuti	dakika	minuty	นาที	phút
-
 小时	小時	hours	時間	часов	시간	horas	horas	heures	Stunden	ore	saat	godziny	ชั่วโมง	giờ
-
 时间轴同时触发上限	時間軸同時觸發上限	Timeline simultaneous trigger limit	タイムライン同時トリガー上限	Лимит одновременных срабатываний таймлайна	타임라인 동시 트리거 상한	Límite de disparos simultáneos de la línea de tiempo	Limite de disparos simultâneos da linha do tempo	Limite de déclenchements simultanés de la chronologie	Limit für gleichzeitige Zeitstrahl-Auslöser	Limite di attivazioni simultanee della timeline	Zaman çizelgesi eşzamanlı tetikleme limiti	Limit jednoczesnych wyzwoleń osi czasu	ขีดจำกัดการทริกเกอร์พร้อมกันของไทม์ไลน์	Giới hạn kích hoạt đồng thời của dòng thời gian
-
 退出自动存档	退出自動存檔	Auto-save on exit	終了時自動保存	Автосохранение при выходе	종료 시 자동 저장	Autoguardar al salir	Autosave ao sair	Sauvegarde auto à la fermeture	Autospeichern beim Beenden	Autosalvataggio all'uscita	Çıkışta otomatik kaydet	Autozapis przy wyjściu	เซฟอัตโนมัติเมื่อออก	Tự lưu khi thoát
-
 积木属性	積木屬性	Block properties	ブロックプロパティ	Свойства блока	블록 속성	Propiedades del bloque	Propriedades do bloco	Propriétés du bloc	Block-Eigenschaften	Proprietà blocco	Blok özellikleri	Właściwości bloku	คุณสมบัติบล็อก	Thuộc tính khối
-
 类型名(留空=不入库)	類型名(留空=不入庫)	Type name (empty = not saved)	型名（空＝未登録）	Имя типа (пусто = не сохранять)	타입명(비우면 미등록)	Nombre de tipo (vacío = no guardar)	Nome do tipo (vazio = não salvar)	Nom du type (vide = non enregistré)	Typname (leer = nicht speichern)	Nome tipo (vuoto = non salvare)	Tip adı (boş = kaydedilmez)	Nazwa typu (puste = nie zapisuj)	ชื่อประเภท (เว้นว่าง = ไม่บันทึก)	Tên loại (để trống = không lưu)
-
-宽(width,像素)	寬(width,像素)	Width (px)	幅（ピクセル）	Ширина (px)	너비(픽셀)	Ancho (px)	Largura (px)	Largeur (px)	Breite (px)	Larghezza (px)	Genişlik (px)	Szerokość (px)	ความกว้าง (px)	Chiều rộng (px)
-
-高(height,像素)	高(height,像素)	Height (px)	高さ（ピクセル）	Высота (px)	높이(픽셀)	Alto (px)	Altura (px)	Hauteur (px)	Höhe (px)	Altezza (px)	Yükseklik (px)	Wysokość (px)	ความสูง (px)	Chiều cao (px)
-
 显示图层	顯示圖層	Display layer	表示レイヤー	Слой отображения	표시 레이어	Capa de visualización	Camada de exibição	Calque d'affichage	Anzeige-Ebene	Livello visualizzazione	Görüntü katmanı	Warstwa wyświetlania	เลเยอร์แสดงผล	Lớp hiển thị
-
 碰撞图层(逗号分隔)	碰撞圖層(逗號分隔)	Collision layers (comma-separated)	衝突レイヤー（カンマ区切り）	Слои столкновений (через запятую)	충돌 레이어(쉼표 구분)	Capas de colisión (separadas por coma)	Camadas de colisão (separadas por vírgula)	Calques de collision (séparés par des virgules)	Kollisionsebenen (durch Komma getrennt)	Livelli di collisione (separati da virgole)	Çarpışma katmanları (virgülle ayrılmış)	Warstwy kolizji (oddzielone przecinkami)	เลเยอร์ชนกัน (คั่นด้วยคอมม่า)	Lớp va chạm (phân tách bằng dấu phẩy)
-
 边框宽度	邊框寬度	Border width	枠の幅	Ширина рамки	테두리 두께	Ancho de borde	Largura da borda	Largeur de bordure	Rahmenbreite	Larghezza bordo	Kenarlık kalınlığı	Grubość obramowania	ความหนากรอบ	Độ dày viền
-
 边框色(#RRGGBBAA)	邊框色(#RRGGBBAA)	Border color (#RRGGBBAA)	枠の色（#RRGGBBAA）	Цвет рамки (#RRGGBBAA)	테두리 색(#RRGGBBAA)	Color de borde (#RRGGBBAA)	Cor da borda (#RRGGBBAA)	Couleur de bordure (#RRGGBBAA)	Rahmenfarbe (#RRGGBBAA)	Colore bordo (#RRGGBBAA)	Kenarlık rengi (#RRGGBBAA)	Kolor obramowania (#RRGGBBAA)	สีกรอบ (#RRGGBBAA)	Màu viền (#RRGGBBAA)
-
 填充色(#RRGGBBAA)	填充色(#RRGGBBAA)	Fill color (#RRGGBBAA)	塗りつぶし色（#RRGGBBAA）	Цвет заливки (#RRGGBBAA)	채우기 색(#RRGGBBAA)	Color de relleno (#RRGGBBAA)	Cor de preenchimento (#RRGGBBAA)	Couleur de remplissage (#RRGGBBAA)	Füllfarbe (#RRGGBBAA)	Colore riempimento (#RRGGBBAA)	Dolgu rengi (#RRGGBBAA)	Kolor wypełnienia (#RRGGBBAA)	สีเติม (#RRGGBBAA)	Màu tô (#RRGGBBAA)
-
 标签(逗号分隔)	標籤(逗號分隔)	Tags (comma-separated)	タグ（カンマ区切り）	Теги (через запятую)	태그(쉼표 구분)	Etiquetas (separadas por coma)	Tags (separados por vírgula)	Tags (séparés par des virgules)	Tags (durch Komma getrennt)	Tag (separati da virgole)	Etiketler (virgülle ayrılmış)	Tagi (oddzielone przecinkami)	แท็ก (คั่นด้วยคอมม่า)	Thẻ (phân tách bằng dấu phẩy)
-
 旋转角度(度)	旋轉角度(度)	Rotation (degrees)	回転角度（度）	Угол поворота (градусы)	회전 각도(도)	Ángulo de rotación (grados)	Ângulo de rotação (graus)	Angle de rotation (degrés)	Rotationswinkel (Grad)	Angolo di rotazione (gradi)	Dönüş açısı (derece)	Kąt obrotu (stopnie)	มุมหมุน (องศา)	Góc xoay (độ)
-
 朝向(1右/-1左)	朝向(1右/-1左)	Facing (1 right / -1 left)	向き（1右/-1左）	Направление (1 вправо / -1 влево)	방향(1 오른쪽/-1 왼쪽)	Orientación (1 derecha / -1 izquierda)	Orientação (1 direita / -1 esquerda)	Orientation (1 droite / -1 gauche)	Blickrichtung (1 rechts / -1 links)	Orientamento (1 destra / -1 sinistra)	Yön (1 sağ / -1 sol)	Kierunek (1 prawo / -1 lewo)	ทิศทาง (1 ขวา / -1 ซ้าย)	Hướng (1 phải / -1 trái)
-
 基础攻击力	基礎攻擊力	Base attack	基礎攻撃力	Базовая атака	기본 공격력	Ataque base	Ataque básico	Attaque de base	Basisangriff	Attacco base	Temel saldırı	Podstawowy atak	โจมตีพื้นฐาน	Sát thương cơ bản
-
 积木ID	積木ID	Block ID	ブロックID	ID блока	블록 ID	ID de bloque	ID do bloco	ID de bloc	Block-ID	ID blocco	Blok kimliği	ID bloku	ID บล็อก	ID khối
-
 字符串ID(可空)	字串ID(可空)	String ID (optional)	文字列ID（任意）	Строковый ID (необязательно)	문자열 ID(선택)	ID de texto (opcional)	ID de string (opcional)	ID de chaîne (optionnel)	String-ID (optional)	ID stringa (opzionale)	Metin kimliği (isteğe bağlı)	ID tekstowy (opcjonalny)	ID สตริง (ไม่บังคับ)	ID chuỗi (tùy chọn)
-
 父级ID(0=无)	父級ID(0=無)	Parent ID (0 = none)	親ID（0＝なし）	ID родителя (0 = нет)	부모 ID(0=없음)	ID de padre (0 = ninguno)	ID do pai (0 = nenhum)	ID parent (0 = aucun)	Eltern-ID (0 = keine)	ID genitore (0 = nessuno)	Üst kimliği (0 = yok)	ID rodzica (0 = brak)	ID แม่ (0 = ไม่มี)	ID cha (0 = không có)
-
 子级ID(逗号分隔)	子級ID(逗號分隔)	Child IDs (comma-separated)	子ID（カンマ区切り）	ID дочерних (через запятую)	자식 ID(쉼표 구분)	IDs de hijos (separados por coma)	IDs dos filhos (separados por vírgula)	IDs enfants (séparés par des virgules)	Kinder-IDs (durch Komma getrennt)	ID figli (separati da virgole)	Alt kimlikler (virgülle ayrılmış)	ID dzieci (oddzielone przecinkami)	ID ลูก (คั่นด้วยคอมม่า)	ID con (phân tách bằng dấu phẩy)
-
 填充图片路径	填充圖片路徑	Fill image path	画像パス	Путь к картинке заливки	채우기 이미지 경로	Ruta de la imagen de relleno	Caminho da imagem de preenchimento	Chemin de l'image de remplissage	Füllbildpfad	Percorso immagine riempimento	Dolgu görseli yolu	Ścieżka obrazu wypełnienia	เส้นทางรูปภาพเติม	Đường dẫn ảnh tô
-
 填充模式	填充模式	Fill mode	塗りつぶしモード	Режим заливки	채우기 모드	Modo de relleno	Modo de preenchimento	Mode de remplissage	Füllmodus	Modalità riempimento	Dolgu modu	Tryb wypełnienia	โหมดเติม	Chế độ tô
-
 最大原比例	最大原比例	Max original ratio	最大原寸比率	Максимальное исходное соотношение	최대 원본 비율	Proporción original máxima	Proporção original máxima	Proportion maximale	Max. Originalverhältnis	Proporzione originale massima	Maksimum orijinal oran	Maksymalna oryginalna proporcja	อัตราส่วนต้นฉบับสูงสุด	Tỷ lệ gốc tối đa
-
 拉伸铺满	拉伸鋪滿	Stretch to fill	引き伸ばして敷き詰め	Растянуть	늘려서 채우기	Estirar para llenar	Esticar para preencher	Étirer pour remplir	Strecken zum Füllen	Allunga per riempire	Doldurarak uzat	Rozciągnij, aby wypełnić	ยืดให้เต็ม	Kéo giãn lấp đầy
-
 居中	置中	Center	中央揃え	По центру	중앙	Centrar	Centralizar	Centrer	Zentrieren	Centra	Ortala	Wyśrodkuj	จัดกึ่งกลาง	Căn giữa
-
 平铺	平鋪	Tile	タイル	Плитка	바둑판	Mosaico	Tile	Mosaïque	Kacheln	Affianca	Döşe	Kafelek	เรียงแผ่น	Lát
-
 原尺寸	原尺寸	Original size	原寸サイズ	Исходный размер	원본 크기	Tamaño original	Tamanho original	Taille d'origine	Originalgröße	Dimensione originale	Orijinal boyut	Oryginalny rozmiar	ขนาดต้นฉบับ	Kích thước gốc
-
 动画类型	動畫類型	Animation type	アニメーションタイプ	Тип анимации	애니메이션 유형	Tipo de animación	Tipo de animação	Type d'animation	Animationstyp	Tipo di animazione	Animasyon türü	Typ animacji	ประเภทแอนิเมชัน	Loại hoạt ảnh
-
 静态图	靜態圖	Static image	静止画	Статичное изображение	정적 이미지	Imagen estática	Imagem estática	Image statique	Statisches Bild	Immagine statica	Statik görsel	Obraz statyczny	รูปภาพนิ่ง	Hình tĩnh
-
 动图(预留)	動圖(預留)	Animated (reserved)	動画（予約）	Анимация (зарезервировано)	동적 이미지(예약)	Animado (reservado)	Animado (reservado)	Animé (réservé)	Animiert (reserviert)	Animato (riservato)	Hareketli (ayrılmış)	Animowany (zarezerwowany)	ภาพเคลื่อนไหว (สำรอง)	Hoạt hình (dự trữ)
-
 骨骼(预留)	骨骼(預留)	Skeleton (reserved)	スケルトン（予約）	Скелет (зарезервировано)	골격(예약)	Esqueleto (reservado)	Esqueleto (reservado)	Squelette (réservé)	Skelett (reserviert)	Scheletro (riservato)	İskelet (ayrılmış)	Szkielet (zarezerwowany)	โครงกระดูก (สำรอง)	Bộ xương (dự trữ)
-
 文本框列表	文字框列表	Text box list	テキストボックス一覧	Список текстовых полей	텍스트 상자 목록	Lista de cajas de texto	Lista de caixas de texto	Liste des zones de texte	Textfeld-Liste	Elenco caselle di testo	Metin kutusu listesi	Lista pól tekstowych	รายการกล่องข้อความ	Danh sách ô văn bản
-
 空（全空文本框）	空（全空文字框）	Empty (blank text box)	空（完全な空テキストボックス）	Пустое (пустое текстовое поле)	비어 있음(완전 빈 텍스트 상자)	Vacío (caja de texto vacía)	Vazio (caixa de texto em branco)	Vide (zone de texte vide)	Leer (leeres Textfeld)	Vuoto (casella di testo vuota)	Boş (boş metin kutusu)	Puste (puste pole tekstowe)	ว่าง (กล่องข้อความเปล่า)	Trống (ô văn bản trống)
-
 内部显示框	內部顯示框	Internal display box	内部表示枠	Внутренняя рамка отображения	내부 표시 상자	Caja de visualización interna	Caixa de exibição interna	Zone d'affichage interne	Internes Anzeigefeld	Casella di visualizzazione interna	İç görüntü kutusu	Wewnętrzne pole wyświetlania	กล่องแสดงผลภายใน	Ô hiển thị bên trong
-
 顶部显示框	頂部顯示框	Top display box	上部表示枠	Верхняя рамка отображения	상단 표시 상자	Caja de visualización superior	Caixa de exibição superior	Zone d'affichage supérieure	Oberes Anzeigefeld	Casella di visualizzazione superiore	Üst görüntü kutusu	Górne pole wyświetlania	กล่องแสดงผลด้านบน	Ô hiển thị trên
-
 底部显示框	底部顯示框	Bottom display box	下部表示枠	Нижняя рамка отображения	하단 표시 상자	Caja de visualización inferior	Caixa de exibição inferior	Zone d'affichage inférieure	Unteres Anzeigefeld	Casella di visualizzazione inferiore	Alt görüntü kutusu	Dolne pole wyświetlania	กล่องแสดงผลด้านล่าง	Ô hiển thị dưới
-
 冒泡对话框	冒泡對話框	Bubble dialog	吹き出しダイアログ	Пузырьковый диалог	말풍선 대화	Diálogo de burbuja	Diálogo de balão	Dialogue en bulle	Sprechblasen-Dialog	Dialogo a fumetto	Balon diyalog	Dialog dymkowy	กล่องสนทนาลูกโป่ง	Hộp thoại bong bóng
-
 添加文本框	新增文字框	Add text box	テキストボックスを追加	Добавить текстовое поле	텍스트 상자 추가	Añadir caja de texto	Adicionar caixa de texto	Ajouter une zone de texte	Textfeld hinzufügen	Aggiungi casella di testo	Metin kutusu ekle	Dodaj pole tekstowe	เพิ่มกล่องข้อความ	Thêm ô văn bản
-
 文本框名	文字框名稱	Text box name	テキストボックス名	Название текстового поля	텍스트 상자 이름	Nombre de la caja de texto	Nome da caixa de texto	Nom de la zone de texte	Textfeldname	Nome casella di testo	Metin kutusu adı	Nazwa pola tekstowego	ชื่อกล่องข้อความ	Tên ô văn bản
-
 宽	寬	Width	幅	Ширина	너비	Ancho	Largura	Largeur	Breite	Larghezza	Genişlik	Szerokość	ความกว้าง	Chiều rộng
-
 高	高	Height	高さ	Высота	높이	Alto	Altura	Hauteur	Höhe	Altezza	Yükseklik	Wysokość	ความสูง	Chiều cao
-
 中心X	中心X	Center X	中心X	Центр X	중심 X	Centro X	Centro X	Centre X	Mitte X	Centro X	Merkez X	Środek X	กลาง X	Tâm X
-
 中心Y	中心Y	Center Y	中心Y	Центр Y	중심 Y	Centro Y	Centro Y	Centre Y	Mitte Y	Centro Y	Merkez Y	Środek Y	กลาง Y	Tâm Y
-
 旋转	旋轉	Rotation	回転	Поворот	회전	Rotación	Rotação	Rotation	Drehung	Rotazione	Dönüş	Obrót	หมุน	Xoay
-
 随积木旋转	隨積木旋轉	Rotate with block	ブロックと一緒に回転	Поворачивать с блоком	블록과 함께 회전	Girar con el bloque	Girar com o bloco	Rotation avec le bloc	Mit Block drehen	Ruota con il blocco	Blokla dön	Obracaj z blokiem	หมุนตามบล็อก	Xoay theo khối
-
 边框色	邊框色	Border color	枠の色	Цвет рамки	테두리 색	Color de borde	Cor da borda	Couleur de bordure	Rahmenfarbe	Colore bordo	Kenarlık rengi	Kolor obramowania	สีกรอบ	Màu viền
-
 填充色	填充色	Fill color	塗りつぶし色	Цвет заливки	채우기 색	Color de relleno	Cor de preenchimento	Couleur de remplissage	Füllfarbe	Colore riempimento	Dolgu rengi	Kolor wypełnienia	สีเติม	Màu tô
-
 填充来源	填充來源	Fill source	塗りつぶし元	Источник заливки	채우기 원본	Fuente de relleno	Fonte de preenchimento	Source de remplissage	Füllquelle	Origine riempimento	Dolgu kaynağı	Źródło wypełnienia	แหล่งเติม	Nguồn tô
-
 纯色	純色	Solid	単色	Сплошной	단색	Sólido	Sólido	Uni	Einfarbig	Tinta unita	Düz renk	Jednolity	สีทึบ	Màu đặc
-
 图片	圖片	Image	画像	Изображение	이미지	Imagen	Imagem	Image	Bild	Immagine	Görsel	Obraz	รูปภาพ	Ảnh
-
 图片路径	圖片路徑	Image path	画像パス	Путь к изображению	이미지 경로	Ruta de la imagen	Caminho da imagem	Chemin de l'image	Bildpfad	Percorso immagine	Görsel yolu	Ścieżka obrazu	เส้นทางรูปภาพ	Đường dẫn ảnh
-
 文本(修饰)[内容]	文本(修飾)[內容]	Text (format)[content]	テキスト（書式）[内容]	Текст (формат)[содержимое]	텍스트(서식)[내용]	Texto (formato)[contenido]	Texto (formato)[conteúdo]	Texte (format)[contenu]	Text (Format)[Inhalt]	Testo (formato)[contenuto]	Metin (biçim)[içerik]	Tekst (format)[treść]	ข้อความ (รูปแบบ)[เนื้อหา]	Văn bản (định dạng)[nội dung]
-
 内容为空时隐藏(无文本且无图片)	內容為空時隱藏(無文字且無圖片)	Hide when content is empty (no text and image)	内容が空のとき非表示（テキストも画像もない）	Скрывать, когда содержимое пусто (нет текста и картинки)	내용이 비면 숨기기(텍스트도 이미지도 없음)	Ocultar cuando el contenido esté vacío (sin texto e imagen)	Ocultar quando o conteúdo estiver vazio (sem texto e imagem)	Masquer quand le contenu est vide (pas de texte ni d'image)	Verbergen wenn leer (kein Text und kein Bild)	Nascondi quando il contenuto è vuoto (niente testo né immagine)	İçerik boşken gizle (metin ve görsel yok)	Ukryj, gdy zawartość pusta (bez tekstu i obrazu)	ซ่อนเมื่อเนื้อหาว่าง (ไม่มีข้อความและภาพ)	Ẩn khi nội dung trống (không có văn bản và ảnh)
-
 删除此文本框	刪除此文字框	Delete this text box	このテキストボックスを削除	Удалить это текстовое поле	이 텍스트 상자 삭제	Eliminar esta caja de texto	Excluir esta caixa de texto	Supprimer cette zone de texte	Dieses Textfeld löschen	Elimina questa casella di testo	Bu metin kutusunu sil	Usuń to pole tekstowe	ลบกล่องข้อความนี้	Xóa ô văn bản này
-
 攻击判定框列表（近战）	攻擊判定框列表（近戰）	Attack box list (melee)	攻撃判定枠一覧（近接）	Список областей атаки (ближний бой)	공격 판정 상자 목록(근접)	Lista de cajas de ataque (cuerpo a cuerpo)	Lista de caixas de ataque (corpo a corpo)	Liste des zones d'attaque (mêlée)	Angriffsbereich-Liste (Nahkampf)	Elenco aree d'attacco (mischia)	Saldırı alanı listesi (yakın dövüş)	Lista pól ataku (walka wręcz)	รายการกล่องโจมตี (ประชิด)	Danh sách vùng tấn công (cận chiến)
-
 空（全空判定框）	空（全空判定框）	Empty (blank attack box)	空（完全な空の判定枠）	Пустое (пустое поле атаки)	비어 있음(완전 빈 판정 상자)	Vacío (caja de ataque vacía)	Vazio (caixa de ataque em branco)	Vide (zone d'attaque vide)	Leer (leerer Angriffsbereich)	Vuoto (area d'attacco vuota)	Boş (boş saldırı alanı)	Puste (puste pole ataku)	ว่าง (กล่องโจมตีเปล่า)	Trống (vùng tấn công trống)
-
 水平普攻	水平普攻	Horizontal normal attack	水平通常攻撃	Горизонтальный обычный удар	수평 일반 공격	Ataque normal horizontal	Ataque normal horizontal	Attaque normale horizontale	Horizontale Normalattacke	Attacco normale orizzontale	Yatay normal saldırı	Poziomy zwykły atak	โจมตีปกติแนวนอน	Tấn công thường ngang
-
 下落攻击框	下落攻擊框	Falling attack box	落下攻撃枠	Падающее поле атаки	낙하 공격 상자	Caja de ataque en caída	Caixa de ataque em queda	Zone d'attaque en chute	Fallender Angriffsbereich	Area d'attacco in caduta	Düşen saldırı alanı	Pole ataku opadającego	กล่องโจมตีร่วงหล่น	Vùng tấn công rơi
-
 添加判定框	新增判定框	Add attack box	判定枠を追加	Добавить область атаки	판정 상자 추가	Añadir caja de ataque	Adicionar caixa de ataque	Ajouter une zone d'attaque	Angriffsbereich hinzufügen	Aggiungi area d'attacco	Saldırı alanı ekle	Dodaj pole ataku	เพิ่มกล่องโจมตี	Thêm vùng tấn công
-
 框名	框名	Box name	枠名	Название области	상자 이름	Nombre de la caja	Nome da caixa	Nom de la zone	Bereichsname	Nome area	Alan adı	Nazwa pola	ชื่อกล่อง	Tên vùng
-
 启用条件	啟用條件	Enable condition	有効条件	Условие включения	활성 조건	Condición de activación	Condição de ativação	Condition d'activation	Aktivierungsbedingung	Condizione di attivazione	Etkinleştirme koşulu	Warunek aktywacji	เงื่อนไขเปิดใช้	Điều kiện kích hoạt
-
 攻击力函数	攻擊力函數	Attack power function	攻撃力関数	Функция силы атаки	공격력 함수	Funkción de poder de ataque	Função de poder de ataque	Fonction de puissance d'attaque	Angriffsstärkefunktion	Funzione potenza attacco	Saldırı gücü fonksiyonu	Funkcja siły ataku	ฟังก์ชันพลังโจมตี	Hàm sát thương
-
 删除此判定框	刪除此判定框	Delete this attack box	この判定枠を削除	Удалить эту область	이 판정 상자 삭제	Eliminar esta caja de ataque	Excluir esta caixa de ataque	Supprimer cette zone d'attaque	Diesen Angriffsbereich löschen	Elimina questa area d'attacco	Bu saldırı alanını sil	Usuń to pole ataku	ลบกล่องโจมตีนี้	Xóa vùng tấn công này
-
 积木ID(正整数)	積木ID(正整數)	Block ID (positive integer)	ブロックID（正の整数）	ID блока (положительное целое)	블록 ID(양의 정수)	ID de bloque (entero positivo)	ID do bloco (inteiro positivo)	ID de bloc (entier positif)	Block-ID (positive Ganzzahl)	ID blocco (intero positivo)	Blok kimliği (pozitif tam sayı)	ID bloku (liczba dodatnia)	ID บล็อก (จำนวนเต็มบวก)	ID khối (số nguyên dương)
-
 （仅单块编辑可改）	（僅單塊編輯可改）	(editable only for single block)	（単一ブロック編集のみ変更可）	(только для одного блока)	(단일 블록 편집만 변경 가능)	(solo editable en un solo bloque)	(editável apenas para um bloco)	(modifiable uniquement pour un seul bloc)	(nur bei Einzelblock änderbar)	(modificabile solo per un blocco)	(yalnızca tek blokta değiştirilebilir)	(tylko dla pojedynczego bloku)	(แก้ไขได้เฉพาะบล็อกเดียว)	(chỉ chỉnh sửa được cho một khối)
-
 字符串ID(可空,仅单块可改)	字串ID(可空,僅單塊可改)	String ID (optional, single block only)	文字列ID（任意、単一ブロックのみ）	Строковый ID (необязательно, только для одного блока)	문자열 ID(선택, 단일 블록만)	ID de texto (opcional, solo un bloque)	ID de string (opcional, apenas um bloco)	ID de chaîne (optionnel, un bloc uniquement)	String-ID (optional, nur Einzelblock)	ID stringa (opzionale, solo un blocco)	Metin kimliği (isteğe bağlı, yalnızca tek blok)	ID tekstowy (opcjonalny, tylko jeden blok)	ID สตริง (ไม่บังคับ เฉพาะบล็อกเดียว)	ID chuỗi (tùy chọn, chỉ một khối)
-
 长文本	長文本	Long text	長文	Длинный текст	긴 텍스트	Texto largo	Texto longo	Texte long	Langtext	Testo lungo	Uzun metin	Długi tekst	ข้อความยาว	Văn bản dài
-
 调整标签	調整標籤	Adjust tags	タグを調整	Настроить теги	태그 조정	Ajustar etiquetas	Ajustar tags	Régler les tags	Tags anpassen	Regola tag	Etiketleri ayarla	Dostosuj tagi	ปรับแท็ก	Điều chỉnh thẻ
-
 另存为新类型	另存為新類型	Save as new type	新規タイプとして保存	Сохранить как новый тип	새 유형으로 저장	Guardar como nuevo tipo	Salvar como novo tipo	Enregistrer comme nouveau type	Als neuen Typ speichern	Salva come nuovo tipo	Yeni tür olarak kaydet	Zapisz jako nowy typ	บันทึกเป็นประเภทใหม่	Lưu thành loại mới
-
 复制为命令	複製為指令	Copy as command	コマンドとしてコピー	Копировать как команду	명령으로 복사	Copiar como comando	Copiar como comando	Copier en commande	Als Befehl kopieren	Copia come comando	Komut olarak kopyala	Kopiuj jako polecenie	คัดลอกเป็นคำสั่ง	Sao chép thành lệnh
-
 把当前属性生成 /create_block { ... } 文本并复制到剪贴板，可在控制台粘贴回放	把當前屬性生成 /create_block { ... } 文本並複製到剪貼簿，可在主控台貼上播放	Generate /create_block { ... } from current properties and copy to clipboard, paste in console to replay	現在のプロパティから /create_block { ... } を生成してクリップボードにコピー、コンソールに貼り付けて再生できます	Создать /create_block { ... } из текущих свойств и скопировать в буфер обмена, можно вставить в консоль	현재 속성에서 /create_block { ... }를 생성하여 클립보드에 복사, 콘솔에 붙여넣어 재생 가능	Genera /create_block { ... } a partir de las propiedades actuales y cópialo al portapapeles, pégalo en la consola para reproducir	Gera /create_block { ... } a partir das propriedades atuais e copia para a área de transferência, cole no console para reproduzir	Génère /create_block { ... } à partir des propriétés actuelles et copie dans le presse-papiers, colle dans la console pour rejouer	Erzeugt /create_block { ... } aus den aktuellen Eigenschaften und kopiert in die Zwischenablage, zum Wiedergeben in der Konsole einfügen	Genera /create_block { ... } dalle proprietà attuali e copia negli appunti, incollabile nella console per riprodurre	Mevcut özelliklerden /create_block { ... } üret ve panoya kopyala, konsola yapıştırarak oynatabilirsin	Generuj /create_block { ... } z bieżących właściwości i skopiuj do schowka, wklej w konsoli, aby odtworzyć	สร้าง /create_block { ... } จากคุณสมบัติปัจจุบันและคัดลอกไปยังคลิปบอร์ด วางในคอนโซลเพื่อเล่นซ้ำ	Tạo /create_block { ... } từ thuộc tính hiện tại và sao chép vào clipboard, dán vào console để phát lại
-
-宽必须在 1..4096 之间	寬必須在 1..4096 之間	Width must be between 1 and 4096	幅は 1..4096 の範囲で	Ширина должна быть от 1 до 4096	너비는 1..4096 사이여야 합니다	El ancho debe estar entre 1 y 4096	A largura deve estar entre 1 e 4096	La largeur doit être entre 1 et 4096	Die Breite muss zwischen 1 und 4096 liegen	La larghezza deve essere tra 1 e 4096	Genişlik 1 ile 4096 arasında olmalı	Szerokość musi wynosić od 1 do 4096	ความกว้างต้องอยู่ระหว่าง 1 ถึง 4096	Chiều rộng phải từ 1 đến 4096
-
-高必须在 1..4096 之间	高必須在 1..4096 之間	Height must be between 1 and 4096	高さは 1..4096 の範囲で	Высота должна быть от 1 до 4096	높이는 1..4096 사이여야 합니다	El alto debe estar entre 1 y 4096	A altura deve estar entre 1 e 4096	La hauteur doit être entre 1 et 4096	Die Höhe muss zwischen 1 und 4096 liegen	L'altezza deve essere tra 1 e 4096	Yükseklik 1 ile 4096 arasında olmalı	Wysokość musi wynosić od 1 do 4096	ความสูงต้องอยู่ระหว่าง 1 ถึง 4096	Chiều cao phải từ 1 đến 4096
-
 边框色必须是 #RRGGBB 或 #RRGGBBAA	邊框色必須是 #RRGGBB 或 #RRGGBBAA	Border color must be #RRGGBB or #RRGGBBAA	枠の色は #RRGGBB か #RRGGBBAA でなければなりません	Цвет рамки должен быть #RRGGBB или #RRGGBBAA	테두리 색은 #RRGGBB 또는 #RRGGBBAA여야 합니다	El color de borde debe ser #RRGGBB o #RRGGBBAA	A cor da borda deve ser #RRGGBB ou #RRGGBBAA	La couleur de bordure doit être #RRGGBB ou #RRGGBBAA	Die Rahmenfarbe muss #RRGGBB oder #RRGGBBAA sein	Il colore del bordo deve essere #RRGGBB o #RRGGBBAA	Kenarlık rengi #RRGGBB veya #RRGGBBAA olmalı	Kolor obramowania musi być #RRGGBB lub #RRGGBBAA	สีกรอบต้องเป็น #RRGGBB หรือ #RRGGBBAA	Màu viền phải là #RRGGBB hoặc #RRGGBBAA
-
 填充色必须是 #RRGGBB 或 #RRGGBBAA	填充色必須是 #RRGGBB 或 #RRGGBBAA	Fill color must be #RRGGBB or #RRGGBBAA	塗りつぶし色は #RRGGBB か #RRGGBBAA でなければなりません	Цвет заливки должен быть #RRGGBB или #RRGGBBAA	채우기 색은 #RRGGBB 또는 #RRGGBBAA여야 합니다	El color de relleno debe ser #RRGGBB o #RRGGBBAA	A cor de preenchimento deve ser #RRGGBB ou #RRGGBBAA	La couleur de remplissage doit être #RRGGBB ou #RRGGBBAA	Die Füllfarbe muss #RRGGBB oder #RRGGBBAA sein	Il colore di riempimento deve essere #RRGGBB o #RRGGBBAA	Dolgu rengi #RRGGBB veya #RRGGBBAA olmalı	Kolor wypełnienia musi być #RRGGBB lub #RRGGBBAA	สีเติมต้องเป็น #RRGGBB หรือ #RRGGBBAA	Màu tô phải là #RRGGBB hoặc #RRGGBBAA
-
 朝向必须是 1(右) 或 -1(左)	朝向必須是 1(右) 或 -1(左)	Facing must be 1 (right) or -1 (left)	向きは 1（右）か -1（左）でなければなりません	Направление должно быть 1 (вправо) или -1 (влево)	방향은 1(오른쪽) 또는 -1(왼쪽)이어야 합니다	La orientación debe ser 1 (derecha) o -1 (izquierda)	A orientação deve ser 1 (direita) ou -1 (esquerda)	L'orientation doit être 1 (droite) ou -1 (gauche)	Die Blickrichtung muss 1 (rechts) oder -1 (links) sein	L'orientamento deve essere 1 (destra) o -1 (sinistra)	Yön 1 (sağ) veya -1 (sol) olmalı	Kierunek musi wynosić 1 (prawo) lub -1 (lewo)	ทิศทางต้องเป็น 1 (ขวา) หรือ -1 (ซ้าย)	Hướng phải là 1 (phải) hoặc -1 (trái)
-
 父级不能是自己	父級不能是自己	Parent cannot be itself	親は自分自身にできません	Родитель не может быть самим собой	부모는 자신일 수 없습니다	El padre no puede ser él mismo	O pai não pode ser ele mesmo	Le parent ne peut pas être lui-même	Das Elternteil kann nicht sich selbst sein	Il genitore non può essere se stesso	Üst kendisi olamaz	Rodzic nie może być sobą	แม่เป็นตัวเองไม่ได้	Cha không thể là chính nó
-
 积木ID必须为正整数	積木ID必須為正整數	Block ID must be a positive integer	ブロックIDは正の整数でなければなりません	ID блока должен быть положительным целым	블록 ID는 양의 정수여야 합니다	El ID de bloque debe ser un entero positivo	O ID do bloco deve ser um inteiro positivo	L'ID de bloc doit être un entier positif	Die Block-ID muss eine positive Ganzzahl sein	L'ID blocco deve essere un intero positivo	Blok kimliği pozitif tam sayı olmalı	ID bloku musi być liczbą dodatnią	ID บล็อกต้องเป็นจำนวนเต็มบวก	ID khối phải là số nguyên dương
-
 积木ID %d 已被其它积木占用	積木ID %d 已被其他積木佔用	Block ID %d is already used by another block	ブロックID %d は他のブロックで使用されています	ID блока %d уже занят другим блоком	블록 ID %d는 다른 블록에 사용 중입니다	El ID de bloque %d ya lo usa otro bloque	O ID do bloco %d já é usado por outro bloco	L'ID de bloc %d est déjà utilisé par un autre bloc	Die Block-ID %d wird bereits von einem anderen Block verwendet	L'ID blocco %d è già usato da un altro blocco	Blok kimliği %d başka bir blok tarafından kullanılıyor	ID bloku %d jest już używany przez inny blok	ID บล็อก %d ถูกใช้โดยบล็อกอื่นแล้ว	ID khối %d đã được khối khác dùng
-
 字符串ID '%s' 已被其它积木占用	字串ID '%s' 已被其他積木佔用	String ID '%s' is already used by another block	文字列ID '%s' は他のブロックで使用されています	Строковый ID '%s' уже занят другим блоком	문자열 ID '%s'는 다른 블록에 사용 중입니다	El ID de texto '%s' ya lo usa otro bloque	O ID de string '%s' já é usado por outro bloco	L'ID de chaîne '%s' est déjà utilisé par un autre bloc	Die String-ID '%s' wird bereits von einem anderen Block verwendet	L'ID stringa '%s' è già usato da un altro blocco	Metin kimliği '%s' başka bir blok tarafından kullanılıyor	ID tekstowy '%s' jest już używany przez inny blok	ID สตริง '%s' ถูกใช้โดยบล็อกอื่นแล้ว	ID chuỗi '%s' đã được khối khác dùng
-
 内部错误: 批量上下文里没有有效积木	內部錯誤: 批次上下文裡沒有有效積木	Internal error: no valid blocks in the batch context	内部エラー: バッチコンテキストに有効なブロックがありません	Внутренняя ошибка: в пакетном контексте нет корректных блоков	내부 오류: 배치 컨텍스트에 유효한 블록이 없습니다	Error interno: no hay bloques válidos en el contexto de lote	Erro interno: não há blocos válidos no contexto de lote	Erreur interne : aucun bloc valide dans le contexte de lot	Interner Fehler: keine gültigen Blöcke im Stapelkontext	Errore interno: nessun blocco valido nel contesto batch	İç hata: toplu bağlamda geçerli blok yok	Błąd wewnętrzny: brak prawidłowych bloków w kontekście wsadowym	ข้อผิดพลาดภายใน: ไม่มีบล็อกที่ถูกต้องในบริบทชุด	Lỗi nội bộ: không có khối hợp lệ trong ngữ cảnh lô
-
 传送门入口	傳送門入口	Portal entrance	ポータル入口	Вход портала	포털 입구	Entrada de portal	Entrada de portal	Entrée de portail	Portal-Eingang	Ingresso portale	Portal girişi	Wejście portalu	ทางเข้าพอร์ทัล	Lối vào cổng
-
 传送门出口	傳送門出口	Portal exit	ポータル出口	Выход портала	포털 출구	Salida de portal	Saída de portal	Sortie de portail	Portal-Ausgang	Uscita portale	Portal çıkışı	Wyjście portalu	ทางออกพอร์ทัล	Lối ra cổng
-
 可传送	可傳送	Teleportable	転送可能	Телепортируемый	텔레포트 가능	Teletransportable	Teletransportável	Téléportable	Teleportierbar	Teletrasportabile	Işınlanabilir	Teleportowalny	เทเลพอร์ตได้	Có thể dịch chuyển
-
 内部错误: 缺少 block 上下文	內部錯誤: 缺少 block 上下文	Internal error: missing block context	内部エラー: block コンテキストがありません	Внутренняя ошибка: нет контекста блока	내부 오류: 블록 컨텍스트 누락	Error interno: falta el contexto de bloque	Erro interno: falta o contexto do bloco	Erreur interne : contexte de bloc manquant	Interner Fehler: Block-Kontext fehlt	Errore interno: manca il contesto del blocco	İç hata: blok bağlamı eksik	Błąd wewnętrzny: brak kontekstu bloku	ข้อผิดพลาดภายใน: ไม่มีบริบทของบล็อก	Lỗi nội bộ: thiếu ngữ cảnh khối
-
 重播语音	重播語音	Replay Voice	音声を再生	Повторить озвучку	음성 다시 재생	Reproducir voz	Reproduzir voz	Rejouer la voix	Stimme erneut abspielen	Riproduci voce	Sesi yeniden oynat	Odtwórz głos	เล่นเสียงอีกครั้ง	Phát lại giọng nói
 台词记录	台詞記錄	Dialogue Log	台詞ログ	Журнал реплик	대사 기록	Registro de diálogo	Registro de diálogo	Journal de dialogue	Dialogprotokoll	Registro dialoghi	Diyalog kaydı	Dziennik dialogów	บันทึกบทสนทนา	Nhật ký hội thoại
-
-标签选择（勾选=启用；动态标签按 + 添加）	標籤選擇（勾選=啟用；動態標籤按 + 新增）	Tag selection (check to enable; add dynamic tags with +)	タグ選択（チェックで有効、動的タグは + で追加）	Выбор тегов (отметьте для включения; динамические теги — кнопкой +)	태그 선택 (체크하면 활성화; 동적 태그는 +로 추가)	Selección de etiquetas (marca para activar; añade etiquetas dinámicas con +)	Seleção de tags (marque para ativar; adicione tags dinâmicas com +)	Sélection de tags (cochez pour activer ; ajoutez les tags dynamiques avec +)	Tag-Auswahl (ankreuzen zum Aktivieren; dynamische Tags mit + hinzufügen)	Selezione tag (spunta per attivare; aggiungi tag dinamici con +)	Etiket seçimi (etkinleştirmek için işaretle; dinamik etiketleri + ile ekle)	Wybór tagów (zaznacz, aby włączyć; tagi dynamiczne dodaj przez +)	เลือกแท็ก (ติ๊กเพื่อเปิดใช้; เพิ่มแท็กแบบไดนามิกด้วย +)	Chọn thẻ (tích để bật; thêm thẻ động bằng +)
-
 动态标签（按 + 添加，后缀自由填；点 × 移除）	動態標籤（按 + 新增，尾碼自由填；點 × 移除）	Dynamic tags (add with +, free-form suffix; click × to remove)	動的タグ（+ で追加、接尾辞は自由入力、× で削除）	Динамические теги (добавить кнопкой +, произвольный суффикс; × — удалить)	동적 태그 (+로 추가, 접미사 자유 입력; ×로 제거)	Etiquetas dinámicas (añade con +, sufijo libre; pulsa × para quitar)	Tags dinâmicas (adicione com +, sufixo livre; clique em × para remover)	Tags dynamiques (ajoutez avec +, suffixe libre ; cliquez sur × pour supprimer)	Dynamische Tags (mit + hinzufügen, freies Suffix; zum Entfernen × klicken)	Tag dinamici (aggiungi con +, suffisso libero; clicca × per rimuovere)	Dinamik etiketler (+ ile ekle, serbest sonek; kaldırmak için × tıkla)	Tagi dynamiczne (dodaj przez +, dowolny sufiks; kliknij ×, aby usunąć)	แท็กไดนามิก (เพิ่มด้วย +, ตั้งท้ายได้อิสระ; คลิก × เพื่อลบ)	Thẻ động (thêm bằng +, hậu tố tùy ý; bấm × để xóa)
-
 （暂无，按 + 添加）	（暫無，按 + 新增）	(none yet, add with +)	（まだありません。+ で追加）	(пока нет, добавьте кнопкой +)	(아직 없음, +로 추가)	(ninguno aún, añade con +)	(nenhum ainda, adicione com +)	(aucun pour l'instant, ajoutez avec +)	(noch keine, mit + hinzufügen)	(nessuno ancora, aggiungi con +)	(henüz yok, + ile ekle)	(brak, dodaj przez +)	(ยังไม่มี เพิ่มด้วย +)	(chưa có, thêm bằng +)
-
 后缀	尾碼	Suffix	接尾辞	Суффикс	접미사	Sufijo	Sufixo	Suffixe	Suffix	Suffisso	Sonek	Sufiks	ท้าย	Hậu tố
-
 无	無	None	なし	Нет	없음	Ninguno	Nenhum	Aucun	Keine	Nessuno	Yok	Brak	ไม่มี	Không
-
-帧率上限	幀率上限	Frame rate cap												
-
-不限制	不限制	Unlimited												
-
-过高的帧率会影响设备性能，且几乎不会带来观感上的提升	過高的幀率會影響裝置效能，且幾乎不會帶來觀感上的提升	High frame rates strain your device with almost no perceptible gain.												
-
-空闲时会自动降到 15 帧，有操作时按上面的设置运行。	空閒時會自動降到 15 幀，有操作時按上面的設定運行。	Idles down to 15 fps when unused, and follows the setting above while you interact.												
-
+帧率上限	幀率上限	Frame rate cap	フレームレート上限	Ограничение кадровой частоты	프레임 속도 상한	Límite de fps	Limite de fps	Plafond d'images par seconde	Bildrate-Limit	Limite fps	Kare hızı sınırı	Limit klatek	ขีดจำกัดเฟรมเรท	Giới hạn tốc độ khung hình
+不限制	不限制	Unlimited	制限なし	Без ограничений	제한 없음	Ilimitado	Ilimitado	Illimité	Unbegrenzt	Illimitato	Sınırsız	Bez limitu	ไม่จำกัด	Không giới hạn
+过高的帧率会影响设备性能，且几乎不会带来观感上的提升	過高的幀率會影響裝置效能，且幾乎不會帶來觀感上的提升	High frame rates strain your device with almost no perceptible gain.	高いフレームレートはデバイス性能に負荷をかけ、見た目の向上はほぼありません。	Высокая кадровая частота нагружает устройство почти без видимой пользы.	높은 프레임 속도는 기기 성능을 잡아먹고 체감 향상은 거의 없습니다.	Las tasas de fps altas cargan el dispositivo sin casi mejora perceptible.	Taxas de fps altas sobrecarregam o dispositivo sem quase nenhum ganho perceptível.	Les fps élevés fatiguent l'appareil sans aucun gain perceptible.	Hohe Bildraten belasten das Gerät ohne merklichen Gewinn.	Fps elevati caricano il dispositivo senza quasi alcun guadagno percettibile.	Yüksek kare hızı cihazı yorar, algılanabilir bir kazanç neredeyse sağlamaz.	Wysokie fps obciążają urządzenie bez niemal żadnego zysku wizualnego.	เฟรมเรทสูงจะเปลืองประสิทธิภาพโดยแทบไม่มีผลดีด้านการมองเห็น	Tốc độ khung hình cao làm kiệt sức thiết bị mà hầu như không cải thiện trải quan.
+空闲时会自动降到 15 帧，有操作时按上面的设置运行。	空閒時會自動降到 15 幀，有操作時按上面的設定運行。	Idles down to 15 fps when unused, and follows the setting above while you interact.	未使用時は自動的に 15fps まで下がり、操作時は上の設定に従います。	В простое снижается до 15 fps, при работе — по указанной выше настройке.	사용하지 않으면 15fps로 자동 하강, 조작 시 위 설정대로 동작합니다.	En reposo baja a 15 fps; al interactuar sigue el ajuste de arriba.	Em repouso cai para 15 fps; ao interagir segue o ajuste acima.	Au repos, descend à 15 fps ; en interaction, suit le réglage ci-dessus.	Im Leerlauf sinkt es auf 15 fps, bei Bedienung gilt die obige Einstellung.	In idle scende a 15 fps; in uso segue l'impostazione sopra.	Boştayken 15 fps'e düşer, etkileşimde yukarıdaki ayara uyar.	W spoczynku spada do 15 fps, przy użyciu stosuje ustawienie powyżej.	เมื่อว่างจะลดลงอัตโนมัติเป็น 15 เฟรม และทำงานตามการตั้งค่าด้านบนเมื่อมีการใช้งาน	Khi rảnh tự động giảm xuống 15 khung hình, khi thao tác chạy theo cài đặt bên trên.
 帧	幀	fps	fps	fps	fps	fps	fps	fps	fps	fps	fps	fps	fps	fps
-
-桌面自动存档上限	桌面自動存檔上限	Desktop auto-save limit
-
-世界自动存档上限	世界自動存檔上限	World auto-save limit
-
-超过上限时，最旧的自动存档会被移入回收站。	超過上限時，最舊的自動存檔會移入回收站。	When the limit is exceeded, the oldest auto-save is moved to the Recycle Bin.
-
+桌面自动存档上限	桌面自動存檔上限	Desktop auto-save limit	デスクトップの自動保存上限	Лимит автосохранения рабочего стола	바탕화면 자동 저장 한도	Límite de autoguardado del escritorio	Limite de autossalvamento da área de trabalho	Limite de sauvegarde automatique du bureau	Autospeicher-Limit des Desktops	Limite di salvataggio automatico del desktop	Masaüstü otomatik kayıt sınırı	Limit automatycznego zapisu pulpitu	ขีดจำกัดการบันทึกอัตโนมัติของเดสก์ทอป	Giới hạn tự động lưu của màn hình nền
+世界自动存档上限	世界自動存檔上限	World auto-save limit	ワールドの自動保存上限	Лимит автосохранения мира	월드 자동 저장 한도	Límite de autoguardado del mundo	Limite de autossalvamento do mundo	Limite de sauvegarde automatique du monde	Autospeicher-Limit der Welt	Limite di salvataggio automatico del mondo	Dünya otomatik kayıt sınırı	Limit automatycznego zapisu świata	ขีดจำกัดการบันทึกอัตโนมัติของโลก	Giới hạn tự động lưu của thế giới
+超过上限时，最旧的自动存档会被移入回收站。	超過上限時，最舊的自動存檔會移入回收站。	When the limit is exceeded, the oldest auto-save is moved to the Recycle Bin.	上限を超えた場合、最も古い自動保存がごみ箱に移動します。	При превышении лимита самое старое автосохранение перемещается в корзину.	한도를 초과하면 가장 오래된 자동 저장이 휴지통으로 이동합니다.	Cuando se supera el límite, el autoguardado más antiguo se mueve a la Papelera.	Quando o limite é excedido, o autossalvamento mais antigo é movido para a Lixeira.	Lorsque la limite est dépassée, la sauvegarde automatique la plus ancienne est déplacée vers la Corbeille.	Wenn das Limit überschritten wird, wird der älteste Autospeicher in den Papierkorb verschoben.	Quando il limite viene superato, il salvataggio automatico più vecchio viene spostato nel Cestino.	Sınır aşıldığında, en eski otomatik kayıt Geri Dönüşüm Kutusu'na taşınır.	Po przekroczeniu limitu najstarszy automatyczny zapis jest przenoszony do Kosza.	เมื่อเกินขีดจำกัด การบันทึกอัตโนมัติที่เก่าที่สุดจะถูกย้ายไปยังถังขยะ	Khi vượt quá giới hạn, bản lưu tự động cũ nhất sẽ được chuyển vào Thùng rác.
 新建积木	新建積木	Create block	ブロックを作成	Создать блок	블록 생성	Crear bloque	Criar bloco	Créer un bloc	Block erstellen	Crea blocco	Blok oluştur	Utwórz blok	สร้างบล็อก	Tạo khối
-
 删除积木	刪除積木	Delete block	ブロックを削除	Удалить блок	블록 삭제	Eliminar bloque	Excluir bloco	Supprimer un bloc	Block löschen	Elimina blocco	Blok sil	Usuń blok	ลบบล็อก	Xóa khối
-
 设置变量	設定變數	Set variable	変数を設定	Задать переменную	변수 설정	Establecer variable	Definir variável	Définir une variable	Variable setzen	Imposta variabile	Değişken ayarla	Ustaw zmienną	ตั้งค่าตัวแปร	Đặt biến
-
 新增变量	新增變數	Add variable	変数を追加	Добавить переменную	변수 추가	Añadir variable	Adicionar variável	Ajouter une variable	Variable hinzufügen	Aggiungi variabile	Değişken ekle	Dodaj zmienną	เพิ่มตัวแปร	Thêm biến
-
 移除变量	移除變數	Remove variable	変数を取り除く	Убрать переменную	변수 제거	Quitar variable	Remover variável	Retirer une variable	Variable entfernen	Rimuovi variabile	Değişken kaldır	Usuń zmienną	ลบตัวแปร	Xóa biến
-
 加载关卡	載入關卡	Load level	レベルを読み込む	Загрузить уровень	레벨 불러오기	Cargar nivel	Carregar nível	Charger un niveau	Level laden	Carica livello	Seviye yükle	Wczytaj poziom	โหลดด่าน	Tải màn chơi
-
 性能自测量	效能自量測	Self-measurement	自己計測	Самозамер	자체 측정	Automedición	Automedição	Auto-mesure	Selbstmessung	Auto-misura	Öz ölçüm	Samopomiar	วัดเอง	Tự đo
-
 帮助	說明	Help	ヘルプ	Справка	도움말	Ayuda	Ajuda	Aide	Hilfe	Aiuto	Yardım	Pomoc	ช่วยเหลือ	Trợ giúp
-
 清空输出	清空輸出	Clear output	出力を消去	Очистить вывод	출력 지우기	Limpiar salida	Limpar saída	Effacer la sortie	Ausgabe leeren	Pulisci output	Çıktıyı temizle	Wyczyść wynik	ล้างเอาต์พุต	Xóa kết quả
-
 效果编辑	效果編輯	Effect editor	効果エディター	Редактор эффектов	효과 편집기	Editor de efectos	Editor de efeitos	Éditeur d'effets	Effekt-Editor	Editor effetti	Efekt düzenleyici	Edytor efektów	ตัวแก้ไขเอฟเฟกต์	Trình sửa hiệu ứng
-
-
 拖动以移动效果编辑器	拖曳以移動效果編輯器	Drag to move the effect editor	ドラッグして効果エディターを移動	Перетащите, чтобы переместить редактор эффектов	드래그하여 효과 편집기 이동	Arrastra para mover el editor de efectos	Arraste para mover o editor de efeitos	Faites glisser pour déplacer l'éditeur d'effets	Ziehen, um den Effekt-Editor zu verschieben	Trascina per spostare l'editor effetti	Sürükleyerek efekt düzenleyiciyi taşı	Przeciągnij, aby przesunąć edytor efektów	ลากเพื่อย้ายตัวแก้ไขเอฟเฟกต์	Kéo để di chuyển trình sửa hiệu ứng
-
 ＋ 添加命令	＋ 新增指令	+ Add command	＋ コマンドを追加	+ Добавить команду	+ 명령 추가	+ Añadir comando	+ Adicionar comando	+ Ajouter une commande	+ Befehl hinzufügen	+ Aggiungi comando	+ Komut ekle	+ Dodaj polecenie	+ เพิ่มคำสั่ง	+ Thêm lệnh
-
 完成	完成	Done	完了	Готово	완료	Listo	Concluir	Terminé	Fertig	Fine	Bitti	Gotowe	เสร็จสิ้น	Xong
-
-自定义文件名（如 player_profile.json）	自訂檔名（如 player_profile.json）	Custom file name (e.g. player_profile.json)	カスタムファイル名（例：player_profile.json）	Своё имя файла (напр. player_profile.json)	사용자 지정 파일 이름 (예: player_profile.json)	Nombre de archivo personalizado (p. ej. player_profile.json)	Nome de arquivo personalizado (ex.: player_profile.json)	Nom de fichier personnalisé (ex. player_profile.json)	Eigener Dateiname (z. B. player_profile.json)	Nome file personalizzato (es. player_profile.json)	Özel dosya adı (örn. player_profile.json)	Własna nazwa pliku (np. player_profile.json)	ชื่อไฟล์กำหนดเอง (เช่น player_profile.json)	Tên tệp tùy chỉnh (ví dụ player_profile.json)
-
 或手动输入变量名	或手動輸入變數名稱	Or type a variable name	または変数名を直接入力	Или введите имя переменной	또는 변수 이름 직접 입력	O escribe el nombre de la variable	Ou digite o nome da variável	Ou saisissez un nom de variable	Oder Variablennamen eingeben	Oppure digita il nome della variabile	Veya değişken adını yazın	Lub wpisz nazwę zmiennej	หรือพิมพ์ชื่อตัวแปรเอง	Hoặc nhập tên biến
-
-附加（值 / 参数，如 正义 或 100）	附加（值 / 參數，如 正義 或 100）	Extra (value / parameter, e.g. 正义 or 100)	追加（値 / 引数、例：正義 または 100）	Дополнительно (значение / параметр, напр. 正义 или 100)	추가 (값 / 매개변수, 예: 正义 또는 100)	Extra (valor / parámetro, p. ej. 正义 o 100)	Extra (valor / parâmetro, ex.: 正义 ou 100)	Supplément (valeur / paramètre, ex. 正义 ou 100)	Zusatz (Wert / Parameter, z. B. 正义 oder 100)	Extra (valore / parametro, es. 正义 o 100)	Ek (değer / parametre, örn. 正义 veya 100)	Dodatkowo (wartość / parametr, np. 正义 lub 100)	เพิ่มเติม (ค่า / พารามิเตอร์ เช่น 正义 หรือ 100)	Bổ sung (giá trị / tham số, ví dụ 正义 hoặc 100)
-
 (选择变量)	(選擇變數)	(Choose a variable)	（変数を選択）	(Выберите переменную)	(변수 선택)	(Elegir variable)	(Escolher variável)	(Choisir une variable)	(Variable wählen)	(Scegli variabile)	(Değişken seç)	(Wybierz zmienną)	(เลือกตัวแปร)	(Chọn biến)
-
-(自定义文件名…)	(自訂檔名…)	(Custom file name…)	（カスタムファイル名…）	(Своё имя файла…)	(사용자 지정 파일 이름…)	(Nombre de archivo personalizado…)	(Nome de arquivo personalizado…)	(Nom de fichier personnalisé…)	(Eigener Dateiname…)	(Nome file personalizzato…)	(Özel dosya adı…)	(Własna nazwa pliku…)	(ชื่อไฟล์กำหนดเอง…)	(Tên tệp tùy chỉnh…)
-
 积木类型	積木類型	Block type	ブロック種別	Тип блока	블록 유형	Tipo de bloque	Tipo de bloco	Type de bloc	Blocktyp	Tipo di blocco	Blok türü	Typ bloku	ชนิดบล็อก	Loại khối
-
 字符串 ID	字串 ID	String ID	文字列 ID	Строковый ID	문자열 ID	ID de cadena	ID de string	ID de chaîne	String-ID	ID stringa	Metin kimliği	ID tekstowy	ID ข้อความ	ID chuỗi
-
 位置	位置	Position	位置	Позиция	위치	Posición	Posição	Position	Position	Posizione	Konum	Pozycja	ตำแหน่ง	Vị trí
-
 目标引用	目標參照	Target reference	対象の参照	Ссылка на цель	대상 참조	Referencia objetivo	Referência de destino	Référence cible	Zielreferenz	Riferimento destinazione	Hedef başvurusu	Odniesienie docelowe	การอ้างอิงเป้าหมาย	Tham chiếu đích
-
 变量名	變數名稱	Variable name	変数名	Имя переменной	변수 이름	Nombre de variable	Nome da variável	Nom de variable	Variablenname	Nome variabile	Değişken adı	Nazwa zmiennej	ชื่อตัวแปร	Tên biến
-
 操作	操作	Operation	操作	Операция	연산	Operación	Operação	Opération	Operation	Operazione	İşlem	Operacja	การดำเนินการ	Thao tác
-
 模式	模式	Mode	モード	Режим	모드	Modo	Modo	Mode	Modus	Modalità	Mod	Tryb	โหมด	Chế độ
-
 值类型	值類型	Value type	値の型	Тип значения	값 유형	Tipo de valor	Tipo de valor	Type de valeur	Werttyp	Tipo di valore	Değer türü	Typ wartości	ชนิดค่า	Kiểu giá trị
-
 值	值	Value	値	Значение	값	Valor	Valor	Valeur	Wert	Valore	Değer	Wartość	ค่า	Giá trị
-
 删除条件	刪除條件	Delete condition	削除条件	Условие удаления	삭제 조건	Condición de borrado	Condição de exclusão	Condition de suppression	Löschbedingung	Condizione di eliminazione	Silme koşulu	Warunek usuwania	เงื่อนไขลบ	Điều kiện xóa
-
 关卡名	關卡名稱	Level name	レベル名	Имя уровня	레벨 이름	Nombre del nivel	Nome do nível	Nom du niveau	Levelname	Nome del livello	Seviye adı	Nazwa poziomu	ชื่อระดับ	Tên màn
-
 参数	參數	Parameter	引数	Параметр	매개변수	Parámetro	Parâmetro	Paramètre	Parameter	Parametro	Parametre	Parametr	พารามิเตอร์	Tham số
-
 帮助的命令	說明的指令	Command for help	ヘルプ対象のコマンド	Команда для справки	도움말 대상 명령	Comando para ayuda	Comando para ajuda	Commande d'aide	Befehl für Hilfe	Comando per la guida	Yardım komutu	Polecenie pomocy	คำสั่งช่วยเหลือ	Lệnh trợ giúp
-
 其他参数	其他參數	Other parameters	その他の引数	Прочие параметры	기타 매개변수	Otros parámetros	Outros parâmetros	Autres paramètres	Weitere Parameter	Altri parametri	Diğer parametreler	Inne parametry	พารามิเตอร์อื่น ๆ	Tham số khác
-
 留空 = 自动生成	留空 = 自動產生	Empty = auto-generated	空欄 = 自動生成	Пусто = автосоздание	비우면 자동 생성	Vacío = generado automáticamente	Vazio = gerado automaticamente	Vide = généré automatiquement	Leer = automatisch erzeugt	Vuoto = generato automaticamente	Boş = otomatik oluşturulur	Puste = generowane automatycznie	ว่าง = สร้างอัตโนมัติ	Trống = tự tạo
-
 留空 = 桌面中心；也可写 100,200	留空 = 桌面中心；也可寫 100,200	Empty = desktop center; or write 100,200	空欄 = デスクトップ中央；100,200 でも可	Пусто = центр рабочего стола; можно указать 100,200	비우면 데스크톱 중앙, 100,200 형식도 가능	Vacío = centro del escritorio; o escribe 100,200	Vazio = centro da área de trabalho; ou escreva 100,200	Vide = centre du bureau ; ou saisir 100,200	Leer = Desktop-Mitte; oder 100,200 angeben	Vuoto = centro del desktop; oppure scrivi 100,200	Boş = masaüstü merkezi; 100,200 de yazılabilir	Puste = środek pulpitu; można wpisać 100,200	ว่าง = กลางเดสก์ท็อป หรือพิมพ์ 100,200	Trống = giữa màn hình; hoặc nhập 100,200
-
 自定义引用（文件名 / 积木 ID / 全局变量）	自訂參照（檔名 / 積木 ID / 全域變數）	Custom reference (file / block ID / global var)	カスタム参照（ファイル名 / ブロック ID / グローバル変数）	Своя ссылка (файл / ID блока / глобальная переменная)	사용자 지정 참조(파일 / 블록 ID / 전역 변수)	Referencia personalizada (archivo / ID de bloque / variable global)	Referência personalizada (arquivo / ID do bloco / variável global)	Référence personnalisée (fichier / ID de bloc / variable globale)	Eigene Referenz (Datei / Block-ID / globale Variable)	Riferimento personalizzato (file / ID blocco / variabile globale)	Özel başvuru (dosya / blok kimliği / genel değişken)	Własne odniesienie (plik / ID bloku / zmienna globalna)	การอ้างอิงกำหนดเอง (ไฟล์ / ID บล็อก / ตัวแปรส่วนกลาง)	Tham chiếu tùy chỉnh (tệp / ID khối / biến toàn cục)
-
 值（文本 / 数字 / true/false）	值（文字 / 數字 / true/false）	Value (text / number / true/false)	値（文字列 / 数値 / true/false）	Значение (текст / число / true/false)	값(텍스트 / 숫자 / true/false)	Valor (texto / número / true/false)	Valor (texto / número / true/false)	Valeur (texte / nombre / true/false)	Wert (Text / Zahl / true/false)	Valore (testo / numero / true/false)	Değer (metin / sayı / true/false)	Wartość (tekst / liczba / true/false)	ค่า (ข้อความ / ตัวเลข / true/false)	Giá trị (văn bản / số / true/false)
-
 条件表达式（如 this:width > 100）	條件運算式（如 this:width > 100）	Condition (e.g. this:width > 100)	条件式（例：this:width > 100）	Условие (напр. this:width > 100)	조건식(예: this:width > 100)	Expresión de condición (p. ej. this:width > 100)	Expressão de condição (ex.: this:width > 100)	Expression de condition (ex. this:width > 100)	Bedingungsausdruck (z. B. this:width > 100)	Espressione di condizione (es. this:width > 100)	Koşul ifadesi (örn. this:width > 100)	Wyrażenie warunku (np. this:width > 100)	นิพจน์เงื่อนไข (เช่น this:width > 100)	Biểu thức điều kiện (vd: this:width > 100)
-
 或手动输入关卡名	或手動輸入關卡名稱	Or type a level name	またはレベル名を直接入力	Или введите имя уровня	또는 레벨 이름 직접 입력	O escribe un nombre de nivel	Ou digite um nome de nível	Ou saisir un nom de niveau	Oder Levelname eingeben	Oppure digita un nome di livello	Veya seviye adı yazın	Lub wpisz nazwę poziomu	หรือพิมพ์ชื่อระดับ	Hoặc nhập tên màn
-
 其他参数（原样保留，如 width=120, tags={gravity}）	其他參數（原樣保留，如 width=120, tags={gravity}）	Other parameters (kept as-is, e.g. width=120, tags={gravity})	その他の引数（そのまま保持、例：width=120, tags={gravity}）	Прочие параметры (как есть, напр. width=120, tags={gravity})	기타 매개변수(그대로 유지, 예: width=120, tags={gravity})	Otros parámetros (se conservan, p. ej. width=120, tags={gravity})	Outros parâmetros (mantidos, ex.: width=120, tags={gravity})	Autres paramètres (conservés, ex. width=120, tags={gravity})	Weitere Parameter (unverändert, z. B. width=120, tags={gravity})	Altri parametri (mantenuti, es. width=120, tags={gravity})	Diğer parametreler (korunur, örn. width=120, tags={gravity})	Inne parametry (bez zmian, np. width=120, tags={gravity})	พารามิเตอร์อื่น ๆ (ตามเดิม เช่น width=120, tags={gravity})	Tham số khác (giữ nguyên, vd: width=120, tags={gravity})
-
 其他判定（如 width=120）	其他判定（如 width=120）	Other predicates (e.g. width=120)	その他の判定（例：width=120）	Другие условия (напр. width=120)	기타 판정(예: width=120)	Otros criterios (p. ej. width=120)	Outros critérios (ex.: width=120)	Autres critères (ex. width=120)	Weitere Bedingungen (z. B. width=120)	Altri criteri (es. width=120)	Diğer ölçütler (örn. width=120)	Inne kryteria (np. width=120)	เงื่อนไขอื่น ๆ (เช่น width=120)	Tiêu chí khác (vd: width=120)
-
 (自定义引用…)	(自訂參照…)	(Custom reference…)	（カスタム参照…）	(Своя ссылка…)	(사용자 지정 참조…)	(Referencia personalizada…)	(Referência personalizada…)	(Référence personnalisée…)	(Eigene Referenz…)	(Riferimento personalizzato…)	(Özel başvuru…)	(Własne odniesienie…)	(การอ้างอิงกำหนดเอง…)	(Tham chiếu tùy chỉnh…)
-
 (选择关卡)	(選擇關卡)	(Choose a level)	（レベルを選択）	(Выберите уровень)	(레벨 선택)	(Elegir nivel)	(Escolher nível)	(Choisir un niveau)	(Level wählen)	(Scegli livello)	(Seviye seç)	(Wybierz poziom)	(เลือกระดับ)	(Chọn màn)
-
 (空白积木)	(空白積木)	(Blank block)	（空白ブロック）	(Пустой блок)	(빈 블록)	(Bloque en blanco)	(Bloco vazio)	(Bloc vide)	(Leerer Block)	(Blocco vuoto)	(Boş blok)	(Pusty blok)	(บล็อกว่าง)	(Khối trống)
-
 (全部命令)	(全部指令)	(All commands)	（すべてのコマンド）	(Все команды)	(모든 명령)	(Todos los comandos)	(Todos os comandos)	(Toutes les commandes)	(Alle Befehle)	(Tutti i comandi)	(Tüm komutlar)	(Wszystkie polecenia)	(คำสั่งทั้งหมด)	(Tất cả lệnh)
-
 (切换)	(切換)	(Toggle)	（切り替え）	(Переключить)	(전환)	(Alternar)	(Alternar)	(Basculer)	(Umschalten)	(Attiva/disattiva)	(Değiştir)	(Przełącz)	(สลับ)	(Bật/tắt)
-
 覆盖（=）	覆蓋（=）	Overwrite (=)	上書き（=）	Перезаписать (=)	덮어쓰기 (=)	Sobrescribir (=)	Substituir (=)	Écraser (=)	Überschreiben (=)	Sovrascrivi (=)	Üzerine yaz (=)	Nadpisz (=)	เขียนทับ (=)	Ghi đè (=)
-
 累加（+=）	累加（+=）	Add (+=)	加算（+=）	Прибавить (+=)	더하기 (+=)	Sumar (+=)	Somar (+=)	Ajouter (+=)	Addieren (+=)	Somma (+=)	Ekle (+=)	Dodaj (+=)	บวกเพิ่ม (+=)	Cộng (+=)
-
 累减（-=）	累減（-=）	Subtract (-=)	減算（-=）	Вычесть (-=)	빼기 (-=)	Restar (-=)	Subtrair (-=)	Soustraire (-=)	Subtrahieren (-=)	Sottrai (-=)	Çıkar (-=)	Odejmij (-=)	ลบออก (-=)	Trừ (-=)
-
 累乘（*=）	累乘（*=）	Multiply (*=)	乗算（*=）	Умножить (*=)	곱하기 (*=)	Multiplicar (*=)	Multiplicar (*=)	Multiplier (*=)	Multiplizieren (*=)	Moltiplica (*=)	Çarp (*=)	Pomnóż (*=)	คูณ (*=)	Nhân (*=)
-
 累除（/=）	累除（/=）	Divide (/=)	除算（/=）	Разделить (/=)	나누기 (/=)	Dividir (/=)	Dividir (/=)	Diviser (/=)	Dividieren (/=)	Dividi (/=)	Böl (/=)	Podziel (/=)	หาร (/=)	Chia (/=)
-
 移除该键 / 清空	移除該鍵 / 清空	Remove the key / clear	キーを削除 / 空にする	Удалить ключ / очистить	키 제거 / 비우기	Quitar la clave / vaciar	Remover a chave / limpar	Supprimer la clé / vider	Schlüssel entfernen / leeren	Rimuovi la chiave / svuota	Anahtarı kaldır / temizle	Usuń klucz / wyczyść	ลบ 키 / ล้าง	Xóa khóa / làm trống
-
 移除集合中的指定元素	移除集合中的指定元素	Remove a specific element	コレクション内の指定要素を削除	Удалить указанный элемент	컬렉션에서 지정 요소 제거	Quitar un elemento concreto	Remover um elemento específico	Supprimer un élément précis	Bestimmtes Element entfernen	Rimuovi un elemento specifico	Belirli bir öğeyi kaldır	Usuń konkretny element	ลบองค์ประกอบที่ระบุ	Xóa một phần tử cụ thể
-
 自动（按内容判断）	自動（依內容判斷）	Auto (by content)	自動（内容から判定）	Авто (по содержимому)	자동(내용 기준)	Automático (según contenido)	Automático (pelo conteúdo)	Auto (selon le contenu)	Automatisch (nach Inhalt)	Automatico (dal contenuto)	Otomatik (içeriğe göre)	Automatycznie (z treści)	อัตโนมัติ (ตามเนื้อหา)	Tự động (theo nội dung)
-
 文本	文字	Text	文字列	Текст	텍스트	Texto	Texto	Texte	Text	Testo	Metin	Tekst	ข้อความ	Văn bản
-
 整数	整數	Integer	整数	Целое число	정수	Entero	Inteiro	Entier	Ganzzahl	Intero	Tam sayı	Liczba całkowita	จำนวนเต็ม	Số nguyên
-
 小数	小數	Decimal	小数	Дробное число	소수	Decimal	Decimal	Décimal	Dezimalzahl	Decimale	Ondalık	Liczba dziesiętna	ทศนิยม	Số thập phân
-
 布尔	布林	Boolean	真偽値	Логический	불리언	Booleano	Booleano	Booléen	Boolesch	Booleano	Mantıksal	Logiczna	บูลีน	Boolean
-
 空（null）	空（null）	Null	空（null）	Пусто (null)	비어 있음(null)	Nulo (null)	Nulo (null)	Nul (null)	Null	Nullo (null)	Boş (null)	Puste (null)	ว่าง (null)	Rỗng (null)
-
 打开	開啟	Open	開く	Открыть	열기	Abrir	Abrir	Ouvrir	Öffnen	Apri	Aç	Otwórz	เปิด	Mở
-
 导出快照	匯出快照	Export snapshot	スナップショットを書き出す	Экспорт снимка	스냅샷 내보내기	Exportar instantánea	Exportar instantâneo	Exporter un instantané	Snapshot exportieren	Esporta istantanea	Anlık görüntüyü dışa aktar	Eksportuj zrzut	ส่งออกสแนปช็อต	Xuất ảnh chụp
-
 （未完成：请补齐必填项）	（未完成：請補齊必填項）	(Incomplete: fill the required fields)	（未完成：必須項目を入力）	(Не заполнено: обязательные поля)	(미완성: 필수 항목 입력)	(Incompleto: completa los campos)	(Incompleto: preencha os campos)	(Incomplet : champs obligatoires)	(Unvollständig: Pflichtfelder)	(Incompleto: campi obbligatori)	(Eksik: zorunlu alanlar)	(Niekompletne: wymagane pola)	(ไม่สมบูรณ์: กรอกข้อมูลที่จำเป็น)	(Chưa xong: điền mục bắt buộc)
-
-播放事件														
-(同事件链 auto)														
-事件链														
-事件名														
-取反														
-且														
-或														
-添加条件														
-添加分组														
-状态标签														
-数值比较														
-全局变量														
-状态数值字段														
-有标签														
-无标签														
-大于														
-小于														
-大于等于														
-小于等于														
-等于														
-不等于														
-数值														
-标签名（如 happy）														
-预览														
-语法有效														
-语法错误														
-原始文本（无法用可视化编辑器解析，已原样保留；可手动编辑）														
-满足以下条件时显示按钮（空 = 始终显示）														
-拖动以移动显示要求编辑器														
-显示要求编辑														
-玩家状态														
-在忙														
-在闲														
-正在运行某类活动														
-未运行某类活动														
-权重最高的活动是														
-权重最低的活动是														
-某活动权重														
-权重数值														
-是														
-不是														
-添加玩家状态														
-满足以下条件时触发（空 = 不限制）														
-拖动以移动条件编辑器														
-休闲														
-学习														
-社区														
-预计时间														
-时间轴效果														
-触发事件														
-其他属性														
-添加到时间轴														
-添加状态标签														
-移除状态标签														
-清空状态标签														
-(选择状态)														
-(选择标签字段)														
-或手动输入字段名（顶层字符串数组）														
-要添加 / 移除的标签（如 得到钥匙）														
-状态														
-标签字段														
-标签														
-(选择标签)														
-或手填新标签														
+播放事件	播放事件	Play event	イベント再生	Воспроизвести событие	이벤트 재생	Reproducir evento	Reproduzir evento	Lire l'événement	Ereignis abspielen	Riproduci evento	Olayı oynat	Odtwórz wydarzenie	เล่นอีเวนต์	Phát sự kiện
+(同事件链 auto)	(同事件鏈 auto)	(Same as event-chain auto)	(イベントチェーン auto と同じ)	(Как у цепочки событий auto)	(이벤트 체인 auto와 동일)	(Igual que la cadena de eventos auto)	(Igual à cadeia de eventos auto)	(Identique à la chaîne d'événements auto)	(Wie Ereigniskette auto)	(Come la catena eventi auto)	(Olay zinciri auto ile aynı)	(Jak w łańcuchu zdarzeń auto)	(เหมือน event-chain auto)	(Giống chuỗi sự kiện auto)
+事件链	事件鏈	Event chain	イベントチェーン	Цепочка событий	이벤트 체인	Cadena de eventos	Cadeia de eventos	Chaîne d'événements	Ereigniskette	Catena eventi	Olay zinciri	Łańcuch zdarzeń	เชนอีเวนต์	Chuỗi sự kiện
+事件名	事件名	Event name	イベント名	Имя события	이벤트 이름	Nombre del evento	Nome do evento	Nom de l'événement	Ereignisname	Nome evento	Olay adı	Nazwa wydarzenia	ชื่ออีเวนต์	Tên sự kiện
+取反	取反	Negate	反転	Инвертировать	부정	Negación	Negar	Inverser	Negieren	Nega	Olumsuzla	Neguj	เอาตรงข้าม	Phủ định
+且	且	AND	かつ	И	그리고	Y	E	ET	UND	E	VE	ORAZ	และ	VÀ
+或	或	OR	または	ИЛИ	또는	O	Ou	OU	ODER	O	VEYA	LUB	หรือ	HOẶC
+添加条件	新增條件	Add condition	条件を追加	Добавить условие	조건 추가	Añadir condición	Adicionar condição	Ajouter une condition	Bedingung hinzufügen	Aggiungi condizione	Koşul ekle	Dodaj warunek	เพิ่มเงื่อนไข	Thêm điều kiện
+添加分组	新增分組	Add group	グループを追加	Добавить группу	그룹 추가	Añadir grupo	Adicionar grupo	Ajouter un groupe	Gruppe hinzufügen	Aggiungi gruppo	Grup ekle	Dodaj grupę	เพิ่มกลุ่ม	Thêm nhóm
+状态标签	狀態標籤	State tag	状態タグ	Тег состояния	상태 태그	Etiqueta de estado	Tag de estado	Tag d'état	Status-Tag	Tag di stato	Durum etiketi	Tag stanu	แท็กสถานะ	Thẻ trạng thái
+数值比较	數值比較	Numeric comparison	数値比較	Числовое сравнение	수치 비교	Comparación numérica	Comparação numérica	Comparaison numérique	Numerischer Vergleich	Confronto numerico	Sayısal karşılaştırma	Porównanie liczbowe	การเปรียบเทียบตัวเลข	So sánh số
+全局变量	全域變數	Global variable	グローバル変数	Глобальная переменная	전역 변수	Variable global	Variável global	Variable globale	Globale Variable	Variabile globale	Genel değişken	Zmienna globalna	ตัวแปรทั่วไป	Biến toàn cục
+状态数值字段	狀態數值欄位	State numeric field	状態数値フィールド	Числовое поле состояния	상태 수치 필드	Campo numérico de estado	Campo numérico de estado	Champ numérique d'état	Status-Zahlenfeld	Campo numerico di stato	Durum sayısal alanı	Pole liczbowe stanu	ฟิลด์ตัวเลขสถานะ	Trường số trạng thái
+有标签	有標籤	Has tag	タグあり	Есть тег	태그 있음	Tiene etiqueta	Tem tag	A le tag	Hat Tag	Ha tag	Etiketi var	Ma tag	มีแท็ก	Có thẻ
+无标签	無標籤	No tag	タグなし	Нет тега	태그 없음	Sin etiqueta	Sem tag	Sans tag	Kein Tag	Senza tag	Etiketi yok	Bez tagu	ไม่มีแท็ก	Không có thẻ
+大于	大於	Greater than	より大きい	Больше	초과	Mayor que	Maior que	Supérieur à	Größer als	Maggiore di	Büyüktür	Większe niż	มากกว่า	Lớn hơn
+小于	小於	Less than	より小さい	Меньше	미만	Menor que	Menor que	Inférieur à	Kleiner als	Minore di	Küçüktür	Mniejsze niż	น้อยกว่า	Nhỏ hơn
+大于等于	大於等於	Greater than or equal	以上	Больше или равно	이상	Mayor o igual	Maior ou igual	Supérieur ou égal	Größer oder gleich	Maggiore o uguale	Büyük veya eşittir	Większe lub równe	มากกว่าหรือเท่ากับ	Lớn hơn hoặc bằng
+小于等于	小於等於	Less than or equal	以下	Меньше или равно	이하	Menor o igual	Menor ou igual	Inférieur ou égal	Kleiner oder gleich	Minore o uguale	Küçük veya eşittir	Mniejsze lub równe	น้อยกว่าหรือเท่ากับ	Nhỏ hơn hoặc bằng
+等于	等於	Equal	等しい	Равно	같음	Igual	Igual	Égal	Gleich	Uguale	Eşittir	Równe	เท่ากับ	Bằng
+不等于	不等於	Not equal	等しくない	Не равно	같지 않음	Distinto	Diferente	Différent de	Ungleich	Diverso	Eşit değildir	Różne	ไม่เท่ากับ	Không bằng
+数值	數值	Value	数値	Число	수치	Valor	Valor	Valeur	Wert	Valore	Değer	Wartość	ค่า	Giá trị
+预览	預覽	Preview	プレビュー	Предпросмотр	미리보기	Vista previa	Pré-visualização	Aperçu	Vorschau	Anteprima	Önizleme	Podgląd	ตัวอย่าง	Xem trước
+语法有效	語法有效	Syntax valid	構文有効	Синтаксис верен	구문 유효	Sintaxis válida	Sintaxe válida	Syntaxe valide	Syntax gültig	Sintassi valida	Sözdizimi geçerli	Składnia poprawna	ไวยากรณ์ถูกต้อง	Cú pháp hợp lệ
+语法错误	語法錯誤	Syntax error	構文エラー	Ошибка синтаксиса	구문 오류	Error de sintaxis	Erro de sintaxe	Erreur de syntaxe	Syntaxfehler	Errore di sintassi	Sözdizimi hatası	Błąd składni	ข้อผิดพลาดไวยากรณ์	Lỗi cú pháp
+原始文本（无法用可视化编辑器解析，已原样保留；可手动编辑）	原始文本（無法用視覺化編輯器解析，已原樣保留；可手動編輯）	Raw text (cannot be parsed by the visual editor, kept as-is; editable manually)	元のテキスト（ビジュアルエディタで解析不可、そのまま保持、手動編集可）	Исходный текст (не разбирается визуальным редактором, сохранён как есть; можно править вручную)	원본 텍스트 (시각 편집기로 파싱 불가, 그대로 보존, 수동 편집 가능)	Texto original (no se puede analizar con el editor visual, se conserva; editable manualmente)	Texto original (não pode ser analisado pelo editor visual, mantido como está; editável manualmente)	Texte brut (non analysable par l'éditeur visuel, conservé tel quel ; modifiable manuellement)	Rohtext (vom visuellen Editor nicht parsebar, unverändert beibehalten; manuell editierbar)	Testo originale (non analizzabile dall'editor visuale, mantenuto com'è; modificabile manualmente)	Ham metin (görsel düzenleyiciyle ayrıştırılamaz, olduğu gibi korunur; elle düzenlenebilir)	Tekst surowy (nieanalizowalny przez edytor wizualny, zachowany; można edytować ręcznie)	ข้อความดิบ (แยกวิเคราะห์ด้วยตัวแก้ไขภาพไม่ได้ คงไว้ตามเดิม; แก้ไขด้วยมือได้)	Văn bản gốc (không thể phân tích bằng trình chỉnh sửa trực quan, giữ nguyên; có thể sửa thủ công)
+满足以下条件时显示按钮（空 = 始终显示）	滿足以下條件時顯示按鈕（空 = 始終顯示）	Show button when conditions are met (empty = always show)	条件を満たすときボタンを表示（空＝常に表示）	Показывать кнопку при выполнении условий (пусто = всегда)	조건 충족 시 버튼 표시 (빈칸 = 항상 표시)	Mostrar botón si se cumplen las condiciones (vacío = siempre)	Mostrar botão se as condições forem atendidas (vazio = sempre)	Afficher le bouton si les conditions sont remplies (vide = toujours)	Button anzeigen wenn Bedingungen erfüllt (leer = immer)	Mostra il pulsante se le condizioni sono soddisfatte (vuoto = sempre)	Koşullar sağlanınca düğmeyi göster (boş = her zaman)	Pokaż przycisk gdy warunki spełnione (puste = zawsze)	แสดงปุ่มเมื่อตรงเงื่อนไข (ว่าง = แสดงเสมอ)	Hiện nút khi thỏa điều kiện (trống = luôn hiện)
+玩家状态	玩家狀態	Player state	プレイヤー状態	Состояние игрока	플레이어 상태	Estado del jugador	Estado do jogador	État du joueur	Spielerzustand	Stato del giocatore	Oyuncu durumu	Stan gracza	สถานะผู้เล่น	Trạng thái người chơi
+在忙	在忙	Busy	忙しい	Занят	바쁨	Ocupado	Ocupado	Occupé	Beschäftigt	Occupato	Meşgul	Zajęty	ยุ่ง	Đang bận
+在闲	在閒	Idle	暇	Свободен	한가함	Libre	Livre	Disponible	Frei	Libero	Boş	Wolny	ว่าง	Rảnh
+正在运行某类活动	正在執行某類活動	Running a certain activity	某アクティビティを実行中	Выполняется определённая активность	특정 활동 실행 중	Ejecutando cierta actividad	Executando certa atividade	Exécution d'une certaine activité	Führt eine bestimmte Aktivität aus	Esegue una certa attività	Belirli bir etkinlik çalışıyor	Wykonuje określoną aktywność	กำลังทำกิจกรรมบางประเภท	Đang chạy một hoạt động
+未运行某类活动	未執行某類活動	Not running a certain activity	某アクティビティを実行していない	Определённая активность не выполняется	특정 활동 안 함	No ejecuta cierta actividad	Não executa certa atividade	N'exécute pas une certaine activité	Führt keine bestimmte Aktivität aus	Non esegue una certa attività	Belirli bir etkinlik çalışmıyor	Nie wykonuje określonej aktywności	ไม่ได้ทำกิจกรรมบางประเภท	Không chạy một hoạt động
+权重最高的活动是	權重最高的活動是	Activity with highest weight is	重みが最も高いアクティビティは	Активность с наибольшим весом:	가중치 가장 높은 활동은	La actividad de mayor peso es	A atividade de maior peso é	L'activité au poids le plus élevé est	Aktivität mit höchstem Gewicht:	L'attività con peso maggiore è	En yüksek ağırlıklı etkinlik:	Aktywność o najwyższej wadze to:	กิจกรรมที่มีน้ำหนักสูงสุดคือ	Hoạt động có trọng số cao nhất là
+权重最低的活动是	權重最低的活動是	Activity with lowest weight is	重みが最も低いアクティビティは	Активность с наименьшим весом:	가중치 가장 낮은 활동은	La actividad de menor peso es	A atividade de menor peso é	L'activité au poids le plus faible est	Aktivität mit niedrigstem Gewicht:	L'attività con peso minore è	En düşük ağırlıklı etkinlik:	Aktywność o najniższej wadze to:	กิจกรรมที่มีน้ำหนักต่ำสุดคือ	Hoạt động có trọng số thấp nhất là
+某活动权重	某活動權重	Weight of an activity	あるアクティビティの重み	Вес активности	활동 가중치	Peso de una actividad	Peso de uma atividade	Poids d'une activité	Gewicht einer Aktivität	Peso di un'attività	Bir etkinliğin ağırlığı	Waga aktywności	น้ำหนักของกิจกรรม	Trọng số hoạt động
+权重数值	權重數值	Weight value	重み数値	Числовой вес	가중치 수치	Valor de peso	Valor de peso	Valeur de poids	Gewichtswert	Valore di peso	Ağırlık değeri	Wartość wagi	ค่าน้ำหนัก	Giá trị trọng số
+是	是	Yes	はい	Да	예	Sí	Sim	Oui	Ja	Sì	Evet	Tak	ใช่	Có
+不是	不是	No	いいえ	Нет	아니오	No	Não	Non	Nein	No	Hayır	Nie	ไม่ใช่	Không
+添加玩家状态	新增玩家狀態	Add player state	プレイヤー状態を追加	Добавить состояние игрока	플레이어 상태 추가	Añadir estado del jugador	Adicionar estado do jogador	Ajouter un état du joueur	Spielerzustand hinzufügen	Aggiungi stato del giocatore	Oyuncu durumu ekle	Dodaj stan gracza	เพิ่มสถานะผู้เล่น	Thêm trạng thái người chơi
+满足以下条件时触发（空 = 不限制）	滿足以下條件時觸發（空 = 不限制）	Trigger when conditions are met (empty = no restriction)	条件を満たすとき発動（空＝制限なし）	Срабатывать при выполнении условий (пусто = без ограничений)	조건 충족 시 트리거 (빈칸 = 제한 없음)	Disparar si se cumplen las condiciones (vacío = sin restricción)	Disparar se as condições forem atendidas (vazio = sem restrição)	Déclencher si les conditions sont remplies (vide = sans restriction)	Auslösen wenn Bedingungen erfüllt (leer = keine Einschränkung)	Esegui se le condizioni sono soddisfatte (vuoto = nessuna restrizione)	Koşullar sağlanınca tetikle (boş = kısıt yok)	Wyzwól gdy warunki spełnione (puste = bez ograniczeń)	กระตุ้นเมื่อตรงเงื่อนไข (ว่าง = ไม่จำกัด)	Kích hoạt khi thỏa điều kiện (trống = không giới hạn)
+拖动以移动条件编辑器	拖曳以移動條件編輯器	Drag to move the condition editor	ドラッグして条件エディタを移動	Перетащите, чтобы переместить редактор условий	조건 편집기를 드래그하여 이동	Arrastra para mover el editor de condiciones	Arraste para mover o editor de condições	Faites glisser pour déplacer l'éditeur de conditions	Ziehen, um den Bedingungseditor zu verschieben	Trascina per spostare l'editor di condizioni	Koşul düzenleyiciyi taşımak için sürükleyin	Przeciągnij, aby przesunąć edytor warunków	ลากเพื่อย้ายตัวแก้ไขเงื่อนไข	Kéo để di chuyển trình chỉnh sửa điều kiện
+休闲	休閒	Leisure	リラックス	Отдых	여가	Ocio	Lazer	Loisir	Freizeit	Tempo libero	Boş vakit	Czas wolny	ช่วงว่าง	Giải trí
+学习	學習	Study	学習	Учёба	학습	Estudio	Estudo	Étude	Lernen	Studio	Çalışma	Nauka	เรียน	Học tập
+社区	社群	Community	コミュニティ	Сообщество	커뮤니티	Comunidad	Comunidade	Communauté	Gemeinschaft	Comunità	Topluluk	Społeczność	ชุมชน	Cộng đồng
+预计时间	預計時間	Estimated time	予定時間	Ожидаемое время	예상 시간	Tiempo estimado	Tempo estimado	Temps estimé	Geschätzte Zeit	Tempo stimato	Tahmini süre	Szacowany czas	เวลาที่คาดการณ์	Thời gian dự kiến
+时间轴效果	時間軸效果	Timeline effect	タイムライン効果	Эффект таймлайна	타임라인 효과	Efecto de línea de tiempo	Efeito da linha do tempo	Effet de la chronologie	Zeitstrahl-Effekt	Effetto timeline	Zaman çizelgesi efekti	Efekt osi czasu	เอฟเฟกต์ไทม์ไลน์	Hiệu ứng dòng thời gian
+触发事件	觸發事件	Trigger event	イベント発動	Вызвать событие	이벤트 트리거	Disparar evento	Disparar evento	Déclencher l'événement	Ereignis auslösen	Esegui evento	Olayı tetikle	Wyzwól wydarzenie	กระตุ้นอีเวนต์	Kích hoạt sự kiện
+其他属性	其他屬性	Other attributes	その他の属性	Прочие атрибуты	기타 속성	Otros atributos	Outros atributos	Autres attributs	Andere Attribute	Altri attributi	Diğer öznitelikler	Inne atrybuty	คุณสมบัติอื่น	Thuộc tính khác
+添加到时间轴	新增到時間軸	Add to timeline	タイムラインに追加	Добавить на таймлайн	타임라인에 추가	Añadir a la línea de tiempo	Adicionar à linha do tempo	Ajouter à la chronologie	Zur Zeitachse hinzufügen	Aggiungi alla timeline	Zaman çizelgesine ekle	Dodaj do osi czasu	เพิ่มไปที่ไทม์ไลน์	Thêm vào dòng thời gian
+添加状态标签	新增狀態標籤	Add state tag	状態タグを追加	Добавить тег состояния	상태 태그 추가	Añadir etiqueta de estado	Adicionar tag de estado	Ajouter un tag d'état	Status-Tag hinzufügen	Aggiungi tag di stato	Durum etiketi ekle	Dodaj tag stanu	เพิ่มแท็กสถานะ	Thêm thẻ trạng thái
+移除状态标签	移除狀態標籤	Remove state tag	状態タグを削除	Удалить тег состояния	상태 태그 제거	Quitar etiqueta de estado	Remover tag de estado	Retirer le tag d'état	Status-Tag entfernen	Rimuovi tag di stato	Durum etiketini kaldır	Usuń tag stanu	ลบแท็กสถานะ	Gỡ thẻ trạng thái
+清空状态标签	清空狀態標籤	Clear state tags	状態タグをクリア	Очистить теги состояния	상태 태그 비우기	Borrar etiquetas de estado	Limpar tags de estado	Effacer les tags d'état	Status-Tags leeren	Cancella tag di stato	Durum etiketlerini temizle	Wyczyść tagi stanu	ล้างแท็กสถานะ	Xóa thẻ trạng thái
+(选择状态)	(選擇狀態)	(Select state)	(状態を選択)	(Выбрать состояние)	(상태 선택)	(Seleccionar estado)	(Selecionar estado)	(Choisir l'état)	(Status wählen)	(Seleziona stato)	(Durum seç)	(Wybierz stan)	(เลือกสถานะ)	(Chọn trạng thái)
+(选择标签字段)	(選擇標籤欄位)	(Select tag field)	(タグフィールドを選択)	(Выбрать поле тега)	(태그 필드 선택)	(Seleccionar campo de etiqueta)	(Selecionar campo de tag)	(Choisir le champ de tag)	(Tag-Feld wählen)	(Seleziona campo tag)	(Etiket alanı seç)	(Wybierz pole tagu)	(เลือกฟิลด์แท็ก)	(Chọn trường thẻ)
+或手动输入字段名（顶层字符串数组）	或手動輸入欄位名（頂層字串陣列）	Or type a field name (top-level string array)	またはフィールド名を直接入力（最上位の文字列配列）	Или введите имя поля (верхнеуровневый массив строк)	또는 필드명 직접 입력 (최상위 문자열 배열)	O escribe el nombre del campo (arreglo de cadenas de nivel superior)	Ou digite o nome do campo (matriz de strings de nível superior)	Ou saisissez un nom de champ (tableau de chaînes de niveau supérieur)	Oder Feldnamen eingeben (oberstes Zeichenfolgen-Array)	Oppure digita il nome del campo (array di stringhe al livello superiore)	Veya alan adını yazın (üst düzey dize dizisi)	Lub wpisz nazwę pola (górny zbiór ciągów)	หรือพิมพ์ชื่อฟิลด์เอง (อาร์เรย์สตริงระดับบนสุด)	Hoặc nhập tên trường (mảng chuỗi cấp cao nhất)
+要添加 / 移除的标签（如 得到钥匙）	要新增 / 移除的標籤（如 得到鑰匙）	Tag to add / remove (e.g. get key)	追加/削除するタグ（例：鍵を入手）	Тег для добавления / удаления (напр. получить ключ)	추가/제거할 태그 (예: 열쇠 얻기)	Etiqueta a añadir / quitar (p. ej. obtener llave)	Tag a adicionar / remover (ex.: obter chave)	Tag à ajouter / retirer (ex. obtenir la clé)	Tag zum Hinzufügen / Entfernen (z. B. Schlüssel erhalten)	Tag da aggiungere / rimuovere (es. ottieni chiave)	Eklemek / kaldırmak için etiket (ör. anahtarı al)	Tag do dodania / usunięcia (np. zdobądź klucz)	แท็กที่จะเพิ่ม / ลบ (เช่น ได้กุญแจ)	Thẻ cần thêm / xóa (vd: lấy chìa khóa)
+状态	狀態	State	状態	Состояние	상태	Estado	Estado	État	Status	Stato	Durum	Stan	สถานะ	Trạng thái
+标签字段	標籤欄位	Tag field	タグフィールド	Поле тега	태그 필드	Campo de etiqueta	Campo de tag	Champ de tag	Tag-Feld	Campo tag	Etiket alanı	Pole tagu	ฟิลด์แท็ก	Trường thẻ
+标签	標籤	Tag	タグ	Тег	태그	Etiqueta	Tag	Tag	Tag	Tag	Etiket	Tag	แท็ก	Thẻ
+(选择标签)	(選擇標籤)	(Select tag)	(タグを選択)	(Выбрать тег)	(태그 선택)	(Seleccionar etiqueta)	(Selecionar tag)	(Choisir le tag)	(Tag wählen)	(Seleziona tag)	(Etiket seç)	(Wybierz tag)	(เลือกแท็ก)	(Chọn thẻ)
+或手填新标签	或手填新標籤	Or type a new tag	または新しいタグを入力	Или введите новый тег	또는 새 태그 입력	O escribe una etiqueta nueva	Ou digite uma nova tag	Ou saisissez un nouveau tag	Oder neuen Tag eingeben	Oppure digita un nuovo tag	Veya yeni etiket yazın	Lub wpisz nowy tag	หรือพิมพ์แท็กใหม่	Hoặc nhập thẻ mới
+● 有未保存的更改	● 有未儲存的變更	● Unsaved changes	● 未保存の変更があります	● Есть несохранённые изменения	● 저장되지 않은 변경 사항	● Cambios sin guardar	● Alterações não salvas	● Modifications non enregistrées	● Nicht gespeicherte Änderungen	● Modifiche non salvate	● Kaydedilmemiş değişiklikler	● Niezapisane zmiany	● มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก	● Có thay đổi chưa lưu
+「%s」已设为主力设备（不可下线 · 不可拆解）	「%s」已設為主力設備（不可下線 · 不可拆解）	"%s" is now the primary device (cannot go offline · cannot be disassembled)	「%s」は主力デバイスに設定されました（オフライン不可・分解不可）	«%s» назначено основным устройством (нельзя отключить · нельзя разобрать)	「%s」이(가) 주력 장치로 설정됨 (오프라인 불가 · 분해 불가)	«%s» ahora es el dispositivo principal (no puede desconectarse · no se puede desmontar)	«%s» agora é o dispositivo principal (não pode ficar offline · não pode ser desmontado)	« %s » est maintenant l'appareil principal (ne peut pas passer hors ligne · ne peut pas être démonté)	„%s“ ist jetzt das Hauptgerät (kann nicht offline gehen · kann nicht zerlegt werden)	«%s» è ora il dispositivo principale (non può andare offline · non può essere smontato)	«%s» artık ana cihaz (çevrimdışı olamaz · sökülemez)	„%s” jest teraz głównym urządzeniem (nie może być offline · nie można rozłożyć)	「%s」ถูกตั้งเป็นอุปกรณ์หลัก (ไม่สามารถออฟไลน์ได้ · ไม่สามารถถอดประกอบได้)	«%s» hiện là thiết bị chính (không thể offline · không thể tháo rời)
+「保存」尚未实现	「保存」尚未實作	"Save" is not implemented yet	「保存」はまだ実装されていません	«Сохранить» ещё не реализовано	「保存」은 아직 구현되지 않았습니다	«Guardar» aún no está implementado	«Salvar» ainda não está implementado	« Enregistrer » n'est pas encore implémenté	„Speichern“ ist noch nicht implementiert	«Salva» non è ancora implementato	«Kaydet» henüz uygulanmadı	„Zapisz” nie jest jeszcze zaimplementowane	「保存」ยังไม่ได้นำมาใช้	«Lưu» chưa được triển khai
+「扫描重构」尚未实现	「掃描重構」尚未實作	"Scan Reconstruct" is not implemented yet	「スキャン再構築」はまだ実装されていません	«Сканировать и перестроить» ещё не реализовано	「扫描重构」은 아직 구현되지 않았습니다	«Escanear y reconstruir» aún no está implementado	«Escanear e reconstruir» ainda não está implementado	« Analyser et reconstruire » n'est pas encore implémenté	„Scannen und neu aufbauen“ ist noch nicht implementiert	«Scansione e ricostruzione» non è ancora implementato	«Tara ve yeniden kur» henüz uygulanmadı	„Skanuj i przebuduj” nie jest jeszcze zaimplementowane	「扫描重构」ยังไม่ได้นำมาใช้	«Quét tái cấu trúc» chưa được triển khai
+「清除选择」尚未实现	「清除選擇」尚未實作	"Clear selection" is not implemented yet	「選択をクリア」はまだ実装されていません	«Очистить выбор» ещё не реализовано	「选择清除」은 아직 구현되지 않았습니다	«Borrar selección» aún no está implementado	«Limpar seleção» ainda não está implementado	« Effacer la sélection » n'est pas encore implémenté	„Auswahl löschen“ ist noch nicht implementiert	«Cancella selezione» non è ancora implementato	«Seçimi temizle» henüz uygulanmadı	„Wyczyść zaznaczenie” nie jest jeszcze zaimplementowane	「清除选择」ยังไม่ได้นำมาใช้	«Xóa lựa chọn» chưa được triển khai
+「量子全息」固定为荧光蓝，不使用主题色。	「量子全息」固定為螢光藍，不使用主題色。	"Quantum Hologram" is fixed to fluorescent blue and does not use the theme color.	「量子ホログラム」は蛍光ブルーに固定され、テーマ色は使用されません。	«Квантовая голограмма» зафиксирована в флуоресцентно-голубом и не использует цвет темы.	「量子全息」은 형광 블루로 고정되며 테마 색을 사용하지 않습니다.	«Holograma cuántico» se fija en azul fluorescente y no usa el color del tema.	«Holograma quântico» é fixado em azul fluorescente e não usa a cor do tema.	« Hologramme quantique » est fixé au bleu fluorescent et n'utilise pas la couleur du thème.	„Quanten-Hologramm“ ist auf Fluoreszierend-Blau festgelegt und verwendet keine Theme-Farbe.	«Ologramma quantico» è fisso sul blu fluorescente e non usa il colore del tema.	«Kuantum Hologram» floresan maviye sabitlenir, tema rengini kullanmaz.	„Hologram kwantowy” jest ustalony na fluorescencyjny błękit i nie używa koloru motywu.	「量子全息」ถูกตรึงเป็นสีน้ำเงินเรืองแสง และไม่ใช้สีธีม	«Hologram lượng tử» được cố định thành xanh huỳnh quang và không dùng màu chủ đề.
+上线	上線	Go online	オンラインにする	Включить (в сеть)	온라인 전환	Poner en línea	Colocar online	Mettre en ligne	Online schalten	Metti in linea	Çevrimiçi yap	Przełącz do trybu online	ออนไลน์	Trực tuyến
+下线	下線	Go offline	オフラインにする	Отключить (из сети)	오프라인 전환	Poner fuera de línea	Colocar offline	Mettre hors ligne	Offline schalten	Metti offline	Çevrimdışı yap	Przełącz do trybu offline	ออฟไลน์	Ngoại tuyến
+主力设备不能下线	主力設備不能下線	The primary device cannot go offline	主力デバイスはオフラインにできません	Основное устройство нельзя отключить	주력 장치는 오프라인으로 전환할 수 없습니다	El dispositivo principal no puede desconectarse	O dispositivo principal não pode ficar offline	L'appareil principal ne peut pas passer hors ligne	Das Hauptgerät kann nicht offline gehen	Il dispositivo principale non può andare offline	Ana cihaz çevrimdışı olamaz	Główne urządzenie nie może być offline	อุปกรณ์หลักไม่สามารถออฟไลน์ได้	Thiết bị chính không thể offline
+主力设备不能拆解	主力設備不能拆解	The primary device cannot be disassembled	主力デバイスは分解できません	Основное устройство нельзя разобрать	주력 장치는 분해할 수 없습니다	El dispositivo principal no se puede desmontar	O dispositivo principal não pode ser desmontado	L'appareil principal ne peut pas être démonté	Das Hauptgerät kann nicht zerlegt werden	Il dispositivo principale non può essere smontato	Ana cihaz sökülemez	Główne urządzenie nie może być rozłożone	อุปกรณ์หลักไม่สามารถถอดประกอบได้	Thiết bị chính không thể tháo rời
+主力设备（不可下线 · 不可拆解）	主力設備（不可下線 · 不可拆解）	Primary device (cannot go offline · cannot be disassembled)	主力デバイス（オフライン不可・分解不可）	Основное устройство (нельзя отключить · нельзя разобрать)	주력 장치 (오프라인 불가 · 분해 불가)	Dispositivo principal (no puede desconectarse · no se puede desmontar)	Dispositivo principal (não pode ficar offline · não pode ser desmontado)	Appareil principal (ne peut pas passer hors ligne · ne peut pas être démonté)	Hauptgerät (kann nicht offline gehen · kann nicht zerlegt werden)	Dispositivo principale (non può andare offline · non può essere smontato)	Ana cihaz (çevrimdışı olamaz · sökülemez)	Główne urządzenie (nie może być offline · nie można rozłożyć)	อุปกรณ์หลัก (ไม่สามารถออฟไลน์ได้ · ไม่สามารถถอดประกอบได้)	Thiết bị chính (không thể offline · không thể tháo rời)
+主题色	主題色	Theme color	テーマ色	Цвет темы	테마 색상	Color del tema	Cor do tema	Couleur du thème	Themenfarbe	Colore del tema	Tema rengi	Kolor motywu	สีธีม	Màu chủ đề
+仅在界面主题为「半透明纯色」时生效。	僅在介面主題為「半透明純色」時生效。	Only takes effect when the UI theme is "Semi-transparent Solid".	「半透明ソリッド」の UI テーマの場合のみ有効です。	Действует только при теме интерфейса «Полупрозрачный сплошной».	«반투명 단색» UI 테마일 때만 적용됩니다.	Solo se aplica cuando el tema de la interfaz es «Sólido semitransparente».	Só entra em vigor quando o tema da interface é «Sólido semitransparente».	Ne prend effet que lorsque le thème de l'interface est « Solide semi-transparent ».	Wirkt nur, wenn das UI-Thema „Halbdurchsichtiges Solid“ ist.	Ha effetto solo quando il tema dell'interfaccia è «Solido semitrasparente».	Yalnızca arayüz teması «Yarı saydam düz renk» olduğunda geçerlidir.	Działa tylko gdy motyw interfejsu to „Półprzezroczysty jednolity”.	มีผลเฉพาะเมื่อธีมอินเทอร์เฟซเป็น「สีทึบกึ่งโปร่งใส」	Chỉ có hiệu lực khi chủ đề giao diện là «Màu đặc bán trong suốt».
+其他设备需与主力设备「%s」直接或间接链接才能上线	其他設備需與主力設備「%s」直接或間接連結才能上線	Other devices must be linked to the primary device "%s" (directly or indirectly) to go online	他のデバイスは主力デバイス「%s」に直接または間接的に接続しており、初めてオンラインになります	Прочие устройства должны быть связаны с основным «%s» (прямо или косвенно), чтобы выйти в сеть	다른 장치는 주력 장치「%s」과 직접 또는 간접적으로 연결되어야만 온라인이 될 수 있습니다	Otros dispositivos deben estar enlazados al dispositivo principal «%s» (directa o indirectamente) para ponerse en línea	Outros dispositivos precisam estar ligados ao dispositivo principal «%s» (direta ou indiretamente) para ficar online	Les autres appareils doivent être liés à l'appareil principal « %s » (directement ou indirectement) pour passer en ligne	Andere Geräte müssen mit dem Hauptgerät „%s“ (direkt oder indirekt) verbunden sein, um online zu gehen	Gli altri dispositivi devono essere collegati al dispositivo principale «%s» (direttamente o indirettamente) per andare online	Diğer cihazlar çevrimiçi olmak için ana cihaz «%s» ile (doğrudan veya dolaylı) bağlı olmalıdır	Pozostałe urządzenia muszą być połączone z głównym „%s” (bezpośrednio lub pośrednio), by przejść do trybu online	อุปกรณ์อื่นต้องเชื่อมต่อกับอุปกรณ์หลัก「%s」(โดยตรงหรือโดยอ้อม) จึงจะออนไลน์ได้	Thiết bị khác phải liên kết với thiết bị chính «%s» (trực tiếp hoặc gián tiếp) mới có thể trực tuyến
+剩余	剩餘	Remaining	残り	Осталось	남은	Restante	Restante	Restant	Verbleibend	Rimanente	Kalan	Pozostało	剩余	Còn lại
+半透明纯色	半透明純色	Semi-transparent Solid	半透明ソリッド	Полупрозрачный сплошной	반투명 단색	Sólido semitransparente	Sólido semitransparente	Solide semi-transparent	Halbdurchsichtiges Solid	Solido semitrasparente	Yarı saydam düz renk	Półprzezroczysty jednolity	สีทึบกึ่งโปร่งใส	Màu đặc bán trong suốt
+卸下	卸下	Uninstall	取り外す	Снять	분리	Desinstalar	Desinstalar	Désinstaller	Deinstallieren	Disinstalla	Kaldır	Odinstaluj	ถอดออก	Gỡ bỏ
+取消主力	取消主力	Cancel primary	主力を解除	Отменить основное	주력 해제	Cancelar principal	Cancelar principal	Annuler le principal	Hauptgerät aufheben	Annulla principale	Ana iptal	Anuluj główne	ยกเลิกหลัก	Hủy chính
+口径：容量取【在线】设备合计；已使用 = 背包数字物品「文件大小」×数量（需高速存储的算固态）	口徑：容量取【在線】設備合計；已使用 = 背包數位物品「檔案大小」×數量（需高速儲存的算固態）	Capacity: total of [online] devices; used = backpack digital item "file size" × quantity (those needing fast storage count as SSD)	口径：容量は【オンライン】デバイスの合計。使用済み = バックパックのデジタルアイテム「ファイルサイズ」×個数（高速ストレージが必要なものは SSD として計算）	Объём: сумма [онлайн]-устройств; используется = «размер файла» цифрового предмета из рюкзака × количество (нуждающиеся в быстром хранилище считаются SSD)	용량: [온라인] 장치 합계. 사용됨 = 백팩 디지털 아이템 「파일 크기」×수량 (고속 저장이 필요한 것은 SSD로 계산)	Capacidad: total de dispositivos [en línea]; usado = «tamaño de archivo» del objeto digital de la mochila × cantidad (los que necesitan almacenamiento rápido cuentan como SSD)	Capacidade: total de dispositivos [online]; usado = «tamanho do arquivo» do item digital da mochila × quantidade (os que precisam de armazenamento rápido contam como SSD)	Capacité : total des appareils [en ligne] ; utilisé = « taille du fichier » de l'objet numérique du sac × quantité (ceux nécessitant un stockage rapide comptent comme SSD)	Kapazität: Summe der [online]-Geräte; genutzt = «Dateigröße» des digitalen Rucksack-Items × Menge (schneller Speicher nötig = SSD)	Capacità: totale dei dispositivi [online]; usato = «dimensione file» dell'oggetto digitale nello zaino × quantità (quelli che richiedono storage veloce contano come SSD)	Kapasite: [çevrimiçi] cihazların toplamı; kullanılan = sırt çantası dijital öğesinin «dosya boyutu» × adet (hızlı depolama gerekenler SSD sayılır)	Pojemność: suma urządzeń [online]; użyto = «rozmiar pliku» cyfrowego przedmiotu z plecaka × ilość (wymagające szybkiego magazynu liczone jako SSD)	ความจุ: รวมอุปกรณ์[ออนไลน์]; ที่ใช้ไป = 「ขนาดไฟล์」ของไอเทมดิจิทัลในเป้ × จำนวน (ที่ต้องใช้ที่เก็บความเร็วสูงนับเป็น SSD)	Dung lượng: tổng thiết bị [trực tuyến]; đã dùng = 「kích thước tệp」 vật phẩm số trong balo × số lượng (cần lưu trữ tốc độ cao tính là SSD)
+只有数字物品可移入回收站	只有數位物品可移入回收站	Only digital items can be moved to the Recycle Bin	デジタルアイテムのみ資源ごみ箱に移動できます	Только цифровые предметы можно переместить в корзину	디지털 아이템만 휴지통으로 옮길 수 있습니다	Solo los objetos digitales se pueden mover a la Papelera	Apenas itens digitais podem ser movidos para a Lixeira	Seuls les objets numériques peuvent être déplacés vers la Corbeille	Nur digitale Gegenstände können in den Papierkorb verschoben werden	Solo gli oggetti digitali possono essere spostati nel Cestino	Yalnızca dijital öğeler Geri Dönüşüm Kutusuna taşınabilir	Tylko przedmioty cyfrowe można przenieść do Kosza	เฉพาะไอเทมดิจิทัลเท่านั้นที่ย้ายไปถังขยะได้	Chỉ vật phẩm số mới có thể chuyển vào Thùng rác
+在回收站中	在回收站中	In the Recycle Bin	資源ごみ箱中	В корзине	휴지통에 있음	En la Papelera	Na Lixeira	Dans la Corbeille	Im Papierkorb	Nel Cestino	Geri Dönüşüm Kutusunda	W Koszu	ในถังขยะ	Trong Thùng rác
+安装…	安裝…	Install…	インストール…	Установить…	설치…	Instalar…	Instalar…	Installer…	Installieren…	Installa…	Yükle…	Zainstaluj…	ติดตั้ง…	Cài đặt…
+容量不足，超出 %sGB（可点「文件搬迁」重排）	容量不足，超出 %sGB（可點「檔案搬遷」重排）	Insufficient capacity, exceeds %sGB (click "File Relocation" to rearrange)	容量不足、%sGB を超過（「ファイル再配置」をクリックして並べ替え）	Недостаточно ёмкости, превышено %sGB (нажмите «Перемещение файлов» для перестановки)	용량 부족, %sGB 초과 («파일 이동»을 클릭하여 재배치)	Capacidad insuficiente, supera %sGB (pulse «Reubicación de archivos» para reorganizar)	Capacidade insuficiente, excede %sGB (clique em «Realocação de arquivos» para reordenar)	Capacité insuffisante, dépasse %sGB (cliquez sur « Relocalisation des fichiers » pour réarranger)	Kapazität unzureichend, übersteigt %sGB (klicken Sie auf „Dateiumzug“ zum Neuordnen)	Capacità insufficiente, supera %sGB (clicca «Rilocazione file» per riordinare)	Kapasite yetersiz, %sGB aşıyor (yeniden düzenlemek için «Dosya Taşıma»ya tıklayın)	Pojemność niewystarczająca, przekracza %sGB (kliknij «Przenoszenie plików», by uporządkować)	ความจุไม่พอ เกิน %sGB (คลิก「ย้ายไฟล์」เพื่อเรียงใหม่)	Dung lượng không đủ, vượt %sGB (nhấn «Di chuyển tệp» để sắp xếp lại)
+对外接口	對外介面	External interface	外部インターフェース	Внешний интерфейс	외부 인터페이스	Interfaz externa	Interface externa	Interface externe	Externe Schnittstelle	Interfaccia esterna	Dış arayüz	Interfejs zewnętrzny	อินเทอร์เฟซภายนอก	Giao diện ngoại
+对外接口（显示空闲数）\n左键 → 链接到其他设备	對外介面（顯示空閒數）\n左鍵 → 連結到其他裝置	External interface (shows free slots)\nLeft click → link to another device	外部インターフェース（空き数を表示）\n左クリック → 他のデバイスにリンク	Внешний интерфейс (показывает свободные)\nЛевый клик → связать с другим устройством	외부 인터페이스 (빈 슬롯 표시)\n왼쪽 클릭 → 다른 장치에 연결	Interfaz externa (muestra libres)\nClic izquierdo → enlazar a otro dispositivo	Interface externa (mostra livres)\nClique esquerdo → ligar a outro dispositivo	Interface externe (affiche les libres)\nClic gauche → lier à un autre appareil	Externe Schnittstelle (zeigt freie)\nLinksklick → mit anderem Gerät verbinden	Interfaccia esterna (mostra libere)\nClic sinistro → collega a un altro dispositivo	Dış arayüz (boş olanları gösterir)\nSol tık → başka cihaza bağla	Interfejs zewnętrzny (pokazuje wolne)\nLewy klik → połącz z innym urządzeniem	อินเทอร์เฟซภายนอก (แสดงช่องว่าง)\nคลิกซ้าย → เชื่อมต่อกับอุปกรณ์อื่น	Giao diện ngoại (hiển thị số chỗ trống)\nChuột trái → liên kết với thiết bị khác
+展开	展開	Expand	展開	Развернуть	펼치기	Expandir	Expandir	Déployer	Erweitern	Espandi	Genişlet	Rozwiń	ขยาย	Mở rộng
+已使用	已使用	Used	使用済み	Использовано	사용됨	Usado	Usado	Utilisé	Benutzt	Usato	Kullanıldı	Użyto	ใช้ไปแล้ว	Đã dùng
+已删除	已刪除	Deleted	削除済み	Удалено	삭제됨	Eliminado	Excluído	Supprimé	Gelöscht	Eliminato	Silindi	Usunięto	ลบแล้ว	Đã xóa
+已取消「%s」的主力设备标记	已取消「%s」的主力設備標記	Cancelled the primary-device mark on "%s"	「%s」の主力デバイス标记を解除しました	Снята отметка основного устройства с «%s»	「%s」의 주력 장치 표시를 해제했습니다	Se canceló la marca de dispositivo principal en «%s»	Marca de dispositivo principal cancelada em «%s»	La marque d'appareil principal sur « %s » a été annulée	Hauptgerät-Markierung bei „%s“ aufgehoben	Marca di dispositivo principale su «%s» annullata	«%s» üzerindeki ana cihaz işareti iptal edildi	Anulowano oznaczenie głównego urządzenia w „%s”	ยกเลิกเครื่องหมายอุปกรณ์หลักของ「%s」แล้ว	Đã hủy đánh dấu thiết bị chính trên «%s»
+已同时卸下原拓展件接口上的 %d 个零件	已同時卸下原拓展件介面上的 %d 個零件	Also uninstalled %d parts from the original expansion-slot interface	元の拡張スロットインターフェースから %d 個のパーツを同時に取り外しました	Одновременно сняты %d деталей с исходного интерфейса расширения	원래 확장 슬롯 인터페이스에서 부품 %d개를 동시에 분리했습니다	También se desinstalaron %d piezas de la interfaz de expansión original	Também desinstalou %d peças da interface de expansão original	Ont également été désinstallées %d pièces de l'interface d'expansion d'origine	Gleichzeitig wurden %d Teile vom ursprünglichen Erweiterungs-Slot entfernt	Sono state disinstallate anche %d parti dall'interfaccia di espansione originale	Orijinal genişleme yuvası arayüzünden %d parça da kaldırıldı	Jednocześnie odinstalowano %d części z oryginalnego interfejsu rozszerzenia	ถอดชิ้นส่วน %d ชิ้นออกจากอินเทอร์เฟซช่องขยายเดิมพร้อมกันแล้ว	Đã gỡ %d linh kiện khỏi giao diện khe mở rộng gốc
+已同时卸下拓展接口上的 %d 个零件	已同時卸下拓展介面上的 %d 個零件	Also uninstalled %d parts from the expansion interface	拡張インターフェースから %d 個のパーツを同時に取り外しました	Одновременно сняты %d деталей с интерфейса расширения	확장 인터페이스에서 부품 %d개를 동시에 분리했습니다	También se desinstalaron %d piezas de la interfaz de expansión	Também desinstalou %d peças da interface de expansão	Ont également été désinstallées %d pièces de l'interface d'expansion	Gleichzeitig wurden %d Teile vom Erweiterungs-Interface entfernt	Sono state disinstallate anche %d parti dall'interfaccia di espansione	Genişleme arayüzünden %d parça da kaldırıldı	Jednocześnie odinstalowano %d części z interfejsu rozszerzenia	ถอดชิ้นส่วน %d ชิ้นออกจากอินเทอร์เฟซการขยายพร้อมกันแล้ว	Đã gỡ %d linh kiện khỏi giao diện mở rộng
+已接入	已接入	Connected	接続済み	Подключено	연결됨	Conectado	Conectado	Connecté	Verbunden	Connesso	Bağlandı	Podłączono	เชื่อมต่อแล้ว	Đã kết nối
+已接入全球网络	已接入全球網路	Connected to the global network	グローバルネットワークに接続済み	Подключено к глобальной сети	글로벌 네트워크에 연결됨	Conectado a la red global	Conectado à rede global	Connecté au réseau global	Mit dem globalen Netzwerk verbunden	Connesso alla rete globale	Küresel ağa bağlandı	Podłączono do sieci globalnej	เชื่อมต่อเครือข่ายโลกแล้ว	Đã kết nối mạng toàn cầu
+已放弃未保存的更改	已放棄未儲存的變更	Discarded unsaved changes	未保存の変更を破棄しました	Несохранённые изменения отменены	저장되지 않은 변경 사항을 버렸습니다	Se descartaron los cambios sin guardar	Alterações não salvas descartadas	Modifications non enregistrées abandonnées	Nicht gespeicherte Änderungen verworfen	Modifiche non salvate scartate	Kaydedilmemiş değişiklikler reddedildi	Odrzucono niezapisane zmiany	ละทิ้งการเปลี่ยนแปลงที่ยังไม่ได้บันทึกแล้ว	Đã hủy các thay đổi chưa lưu
+已断开全球网络	已斷開全球網路	Disconnected from the global network	グローバルネットワークから切断済み	Отключено от глобальной сети	글로벌 네트워크 연결 끊김	Desconectado de la red global	Desconectado da rede global	Déconnecté du réseau global	Vom globalen Netzwerk getrennt	Disconnesso dalla rete globale	Küresel ağdan bağlantı kesildi	Rozłączono z siecią globalną	ตัดการเชื่อมต่อเครือข่ายโลกแล้ว	Đã ngắt kết nối mạng toàn cầu
+已断开链接	已斷開連結	Link disconnected	リンクを切断しました	Связь разорвана	링크 끊김	Enlace desconectado	Link desconectado	Lien déconnecté	Verbindung getrennt	Collegamento disconnesso	Bağlantı kesildi	Rozłączono	ตัดการเชื่อมโยงแล้ว	Đã ngắt liên kết
+已满足上线条件，可上线	已滿足上線條件，可上線	Online conditions met, can go online	オンライン条件を満たし、オンライン可	Условия выхода в сеть выполнены, можно включить	온라인 조건 충족, 온라인 가능	Condiciones de línea cumplidas, puede ponerse en línea	Condições de online cumpridas, pode ficar online	Conditions de mise en ligne remplies, peut passer en ligne	Online-Bedingungen erfüllt, kann online gehen	Condizioni online soddisfatte, può andare online	Çevrimiçi koşulları sağlandı, çevrimiçi olabilir	Warunki online spełnione, może przejść do trybu online	满足条件ออนไลน์แล้ว สามารถออนไลน์ได้	Đã thỏa điều kiện trực tuyến, có thể trực tuyến
+已连接（%s）	已連接（%s）	Connected (%s)	接続済み（%s）	Подключено (%s)	연결됨 (%s)	Conectado (%s)	Conectado (%s)	Connecté (%s)	Verbunden (%s)	Connesso (%s)	Bağlandı (%s)	Podłączono (%s)	เชื่อมต่อแล้ว (%s)	Đã kết nối (%s)
+已链接	已連結	Linked	リンク済み	Связано	연결됨	Enlazado	Vinculado	Lié	Verknüpft	Collegato	Bağlandı	Połączono	เชื่อมโยงแล้ว	Đã liên kết
+已链接到「%s」（双方各占用 1 个%s）	已連結到「%s」（雙方各佔用 1 個%s）	Linked to "%s" (each side occupies 1 %s)	「%s」にリンク済み（双方各 1 つの%sを占有）	Связано с «%s» (каждая сторона занимает 1 %s)	「%s」에 연결됨 (양쪽 각 1개의 %s 점유)	Enlazado a «%s» (cada lado ocupa 1 %s)	Vinculado a «%s» (cada lado ocupa 1 %s)	Lié à « %s » (chaque côté occupe 1 %s)	Mit „%s“ verknüpft (jede Seite belegt 1 %s)	Collegato a «%s» (ciascun lato occupa 1 %s)	«%s» ile bağlandı (her iki taraf 1 %s kaplar)	Połączono z „%s” (każda strona zajmuje 1 %s)	เชื่อมโยง到「%s」แล้ว (แต่ละฝ่ายใช้ 1 %s)	Đã liên kết với «%s» (mỗi bên chiếm 1 %s)
+应用并保存	套用並儲存	Apply and save	適用して保存	Применить и сохранить	적용 및 저장	Aplicar y guardar	Aplicar e salvar	Appliquer et enregistrer	Übernehmen und speichern	Applica e salva	Uygula ve kaydet	Zastosuj i zapisz	ใช้งานและบันทึก	Áp dụng và lưu
+开机自启动	開機自動啟動	Launch at startup	起動時に自動起動	Автозапуск при включении	부팅 시 자동 시작	Iniciar con el arranque	Iniciar com o sistema	Lancer au démarrage	Autostart beim Hochfahren	Avvia all'avvio	Açılışta otomatik başlat	Autouruchom przy starcie	เปิดเครื่องแล้วเริ่มอัตโนมัติ	Tự khởi động khi bật máy
+当前为「半透明纯色」：此颜色应用到所有面板，点「确定修改」后生效。	目前為「半透明純色」：此顏色套用到所有面板，點「確定修改」後生效。	Currently "Semi-transparent Solid": this color applies to all panels and takes effect after clicking "Apply".	現在は「半透明ソリッド」：この色は全パネルに適用され、「変更を適用」をクリック後に反映されます。	Сейчас «Полупрозрачный сплошной»: этот цвет применяется ко всем панелям и вступает в силу после нажатия «Применить».	현재 「반투명 단색」: 이 색은 모든 패널에 적용되며 「수정 적용」 클릭 후 적용됩니다.	Ahora «Sólido semitransparente»: este color se aplica a todos los paneles y surte efecto tras pulsar «Aplicar».	Atualmente «Sólido semitransparente»: esta cor se aplica a todos os painéis e entra em vigor após clicar em «Aplicar».	Actuellement « Solide semi-transparent » : cette couleur s'applique à tous les panneaux et prend effet après avoir cliqué sur « Appliquer ».	Momentan „Halbdurchsichtiges Solid“: diese Farbe gilt für alle Panels und wird nach Klick auf „Übernehmen“ wirksam.	Attualmente «Solido semitrasparente»: questo colore si applica a tutti i pannelli ed entra in vigore dopo aver cliccato «Applica».	Şu an «Yarı saydam düz renk»: bu renk tüm panellere uygulanır ve «Uygula»ya tıklayınca geçerli olur.	Obecnie „Półprzezroczysty jednolity”: ten kolor dotyczy wszystkich paneli i wchodzi w życie po kliknięciu „Zastosuj”.	ขณะนี้เป็น「สีทึบกึ่งโปร่งใส」: สีนี้ใช้กับทุกแผง และมีผลหลังคลิก「ใช้งาน」	Hiện là «Màu đặc bán trong suốt»: màu này áp dụng cho mọi bảng và có hiệu lực sau khi nhấn «Áp dụng».
+彻底删除	徹底刪除	Permanently delete	完全に削除	Полностью удалить	완전히 삭제	Eliminar permanentemente	Excluir permanentemente	Supprimer définitivement	Endgültig löschen	Elimina definitivamente	Kalıcı olarak sil	Usuń trwale	ลบอย่างถาวร	Xóa vĩnh viễn
+总容量	總容量	Total capacity	総容量	Общая ёмкость	총 용량	Capacidad total	Capacidade total	Capacité totale	Gesamtkapazität	Capacità totale	Toplam kapasite	Całkowita pojemność	ความจุทั้งหมด	Tổng dung lượng
+总览	總覽	Overview	概要	Обзор	개요	Resumen	Visão geral	Aperçu	Übersicht	Panoramica	Genel bakış	Przegląd	ภาพรวม	Tổng quan
+恢复	恢復	Restore	復元	Восстановить	복원	Restaurar	Restaurar	Restaurer	Wiederherstellen	Ripristina	Geri yükle	Przywróć	กู้คืน	Khôi phục
+所需时间	所需時間	Time required	所要時間	Требуемое время	소요 시간	Tiempo requerido	Tempo necessário	Temps requis	Benötigte Zeit	Tempo richiesto	Gerekli süre	Wymagany czas	เวลาที่ต้องใช้	Thời gian cần thiết
+打开台词记录	打開台詞記錄	Open dialogue log	台詞ログを開く	Открыть журнал реплик	대사 기록 열기	Abrir registro de diálogo	Abrir registro de diálogo	Ouvrir le journal de dialogue	Dialogprotokoll öffnen	Apri registro dialoghi	Diyalog kaydını aç	Otwórz dziennik dialogów	เปิดบันทึกบทสนทนา	Mở nhật ký hội thoại
+打开编辑物品界面	打開編輯物品介面	Open item editor	アイテム編集画面を開く	Открыть редактор предметов	아이템 편집 화면 열기	Abrir editor de objetos	Abrir editor de itens	Ouvrir l'éditeur d'objets	Gegenstandseditor öffnen	Apri editor oggetti	Öğe düzenleyiciyi aç	Otwórz edytor przedmiotów	เปิดหน้าตั้งค่าไอเทม	Mở trình chỉnh sửa vật phẩm
+扫描重构	掃描重構	Scan Reconstruct	スキャン再構築	Сканировать и перестроить	스캔 재구성	Escanear y reconstruir	Escanear e reconstruir	Analyser et reconstruire	Scannen und neu aufbauen	Scansione e ricostruzione	Tara ve yeniden kur	Skanuj i przebuduj	สแกนและสร้างใหม่	Quét tái cấu trúc
+折叠	摺疊	Collapse	折りたたむ	Свернуть	접기	Colapsar	Recolher	Réduire	Einklappen	Comprimi	Daralt	Zwiń	ยุบ	Thu gọn
+拆解	拆解	Disassemble	分解	Разобрать	분해	Desmontar	Desmontar	Démonter	Zerlegen	Smonta	Sök	Rozłóż	ถอดประกอบ	Tháo rời
+按种类筛选	按種類篩選	Filter by type	種類で絞り込む	Фильтр по типу	종류별 필터	Filtrar por tipo	Filtrar por tipo	Filtrer par type	Nach Typ filtern	Filtra per tipo	Türe göre filtrele	Filtruj po typie	กรองตามประเภท	Lọc theo loại
+排序	排序	Sort	並べ替え	Сортировка	정렬	Ordenar	Ordenar	Trier	Sortieren	Ordina	Sırala	Sortuj	เรียงลำดับ	Sắp xếp
+接口	介面	Interface	インターフェース	Интерфейс	인터페이스	Interfaz	Interface	Interface	Schnittstelle	Interfaccia	Arayüz	Interfejs	อินเทอร์เฟซ	Giao diện
+接口值	介面值	Interface value	インターフェース値	Значение интерфейса	인터페이스 값	Valor de interfaz	Valor de interface	Valeur d'interface	Schnittstellenwert	Valore di interfaccia	Arayüz değeri	Wartość interfejsu	ค่าอินเทอร์เฟซ	Giá trị giao diện
+插槽	插槽	Slot	スロット	Слот	슬롯	Ranura	Slot	Emplacement	Steckplatz	Slot	Yuva	Gniazdo	ช่องเสียบ	Khe cắm
+放弃更改	放棄更改	Discard changes	変更を破棄	Отменить изменения	변경 사항 버리기	Descartar cambios	Descartar alterações	Abandonner les modifications	Änderungen verwerfen	Scarta modifiche	Değişiklikleri reddet	Odrzuć zmiany	ละทิ้งการเปลี่ยนแปลง	Hủy thay đổi
+数字物品	數位物品	Digital item	デジタルアイテム	Цифровой предмет	디지털 아이템	Objeto digital	Item digital	Objet numérique	Digitaler Gegenstand	Oggetto digitale	Dijital öğe	Przedmiot cyfrowy	ไอเทมดิจิทัล	Vật phẩm số
+数据仓库	資料倉儲	Data repository	データリポジトリ	Хранилище данных	데이터 저장소	Repositorio de datos	Repositório de dados	Référentiel de données	Datenrepository	Archivio dati	Veri deposu	Repozytorium danych	คลังข้อมูล	Kho dữ liệu
+整机对外接口（零件提供，只读）	整機對外介面（零件提供，唯讀）	Whole-device external interface (provided by parts, read-only)	本体の外部インターフェース（パーツ提供・読み取り専用）	Внешний интерфейс всего устройства (даётся деталями, только чтение)	본체 외부 인터페이스 (부품 제공, 읽기 전용)	Interfaz externa del dispositivo (proporcionada por piezas, solo lectura)	Interface externa do dispositivo (fornecida por peças, somente leitura)	Interface externe de l'appareil (fournie par les pièces, lecture seule)	Geräte-Externschnittstelle (von Teilen geliefert, nur lesen)	Interfaccia esterna del dispositivo (fornita dalle parti, sola lettura)	Cihazın dış arayüzü (parçalar sağlar, salt okunur)	Interfejs zewnętrzny urządzenia (zapewniany przez części, tylko do odczytu)	อินเทอร์เฟซภายนอกทั้งเครื่อง (ส่วนประกอบจัดให้ อ่านอย่างเดียว)	Giao diện ngoại toàn thiết bị (do linh kiện cung cấp, chỉ đọc)
+文件搬迁	檔案搬遷	File Relocation	ファイル再配置	Перемещение файлов	파일 이동	Reubicación de archivos	Realocação de arquivos	Relocalisation des fichiers	Dateiumzug	Rilocazione file	Dosya Taşıma	Przenoszenie plików	การย้ายไฟล์	Di chuyển tệp
+文件搬迁：%d 个文件已重新分配 · 机械 %sGB / 固态 %sGB	檔案搬遷：%d 個檔案已重新分配 · 機械 %sGB / 固態 %sGB	File Relocation: %d files reassigned · HDD %sGB / SSD %sGB	ファイル再配置：%d 個のファイルを再割り当て・HDD %sGB / SSD %sGB	Перемещение файлов: %d файлов перераспределены · HDD %sGB / SSD %sGB	파일 이동: 파일 %d개 재할당됨 · HDD %sGB / SSD %sGB	Reubicación de archivos: %d archivos reasignados · HDD %sGB / SSD %sGB	Realocação de arquivos: %d arquivos realocados · HDD %sGB / SSD %sGB	Relocalisation des fichiers : %d fichiers réattribués · HDD %sGB / SSD %sGB	Dateiumzug: %d Dateien neu zugeordnet · HDD %sGB / SSD %sGB	Rilocazione file: %d file riassegnati · HDD %sGB / SSD %sGB	Dosya Taşıma: %d dosya yeniden atandı · HDD %sGB / SSD %sGB	Przenoszenie plików: %d plików przypisano na nowo · HDD %sGB / SSD %sGB	การย้ายไฟล์: ไฟล์ %d ไฟล์ถูกจัดสรรใหม่ · HDD %sGB / SSD %sGB	Di chuyển tệp: %d tệp được phân bổ lại · HDD %sGB / SSD %sGB
+文件搬迁：没有需要移动的文件（机械已按容量装满）	檔案搬遷：沒有需要移動的檔案（機械已按容量裝滿）	File Relocation: no files need to move (HDD already filled to capacity)	ファイル再配置：移動必要なファイルなし（HDD は容量いっぱい）	Перемещение файлов: нет файлов для перемещения (HDD уже заполнен по ёмкости)	파일 이동: 이동할 파일 없음 (HDD가 용량만큼 가득 참)	Reubicación de archivos: no hay archivos que mover (el HDD ya está lleno)	Realocação de arquivos: nenhum arquivo precisa mover (HDD já está cheio)	Relocalisation des fichiers : aucun fichier à déplacer (le HDD est déjà plein)	Dateiumzug: keine Dateien zu verschieben (HDD bereits voll)	Rilocazione file: nessun file da spostare (HDD già pieno)	Dosya Taşıma: taşınacak dosya yok (HDD zaten dolu)	Przenoszenie plików: brak plików do przeniesienia (HDD już pełny)	การย้ายไฟล์: ไม่มีไฟล์ที่ต้องย้าย (HDD เต็มตามความจุแล้ว)	Di chuyển tệp: không có tệp cần chuyển (HDD đã đầy theo dung lượng)
+断开	斷開	Disconnect	切断	Отключить	연결 끊기	Desconectar	Desconectar	Déconnecter	Trennen	Disconnetti	Bağlantıyı kes	Rozłącz	ตัดการเชื่อมต่อ	Ngắt kết nối
+断开全球网络	斷開全球網路	Disconnect from global network	グローバルネットワークを切断	Отключить от глобальной сети	글로벌 네트워크 연결 끊기	Desconectar de la red global	Desconectar da rede global	Déconnecter du réseau global	Vom globalen Netzwerk trennen	Disconnetti dalla rete globale	Küresel ağdan bağlantıyı kes	Rozłącz z siecią globalną	ตัดการเชื่อมต่อเครือข่ายโลก	Ngắt kết nối mạng toàn cầu
+断开失败：	斷開失敗：	Disconnect failed:	切断失敗：	Ошибка отключения:	연결 끊기 실패:	Error al desconectar:	Falha ao desconectar:	Échec de la déconnexion :	Trennen fehlgeschlagen:	Disconnessione fallita:	Bağlantı kesilemedi:	Rozłączenie nieudane:	ตัดการเชื่อมต่อล้มเหลว:	Ngắt kết nối thất bại:
+新建设备	新建裝置	New device	新規デバイス	Новое устройство	새 장치	Nuevo dispositivo	Novo dispositivo	Nouvel appareil	Neues Gerät	Nuovo dispositivo	Yeni cihaz	Nowe urządzenie	สร้างอุปกรณ์ใหม่	Thiết bị mới
+无法上线：	無法上線：	Cannot go online:	オンライン不可：	Не удалось выйти в сеть:	온라인 불가:	No se puede poner en línea:	Não é possível ficar online:	Impossible de passer en ligne :	Kann nicht online gehen:	Impossibile andare online:	Çevrimiçi olunamıyor:	Nie można przejść do trybu online:	ไม่สามารถออนไลน์ได้:	Không thể trực tuyến:
+无法下线：	無法下線：	Cannot go offline:	オフライン不可：	Не удалось отключить:	오프라인 불가:	No se puede poner fuera de línea:	Não é possível ficar offline:	Impossible de mettre hors ligne :	Kann nicht offline gehen:	Impossibile andare offline:	Çevrimdışı olunamıyor:	Nie można przejść do trybu offline:	ไม่สามารถออฟไลน์ได้:	Không thể ngoại tuyến:
+无限个无线网口	無限個無線網口	Unlimited wireless ports	無限の無線ポート	Бесконечно беспроводных портов	무한 개의 무선 포트	Puertos inalámbricos ilimitados	Portas sem fio ilimitadas	Ports sans fil illimités	Unbegrenzte Funkports	Porte wireless illimitate	Sınırsız kablosuz port	Nieograniczona liczba portów bezprzewodowych	พอร์ตไร้สายไม่จำกัด	Cổng không dây không giới hạn
+是（不可下线 · 不可拆解）	是（不可下線 · 不可拆解）	Yes (cannot go offline · cannot be disassembled)	はい（オフライン不可・分解不可）	Да (нельзя отключить · нельзя разобрать)	예 (오프라인 불가 · 분해 불가)	Sí (no puede desconectarse · no se puede desmontar)	Sim (não pode ficar offline · não pode ser desmontado)	Oui (ne peut pas passer hors ligne · ne peut pas être démonté)	Ja (kann nicht offline gehen · kann nicht zerlegt werden)	Sì (non può andare offline · non può essere smontato)	Evet (çevrimdışı olamaz · sökülemez)	Tak (nie może być offline · nie można rozłożyć)	ใช่ (ไม่สามารถออฟไลน์ได้ · ไม่สามารถถอดประกอบได้)	Có (không thể offline · không thể tháo rời)
+显示调试模式按钮	顯示除錯模式按鈕	Show debug-mode button	デバッグモードボタンを表示	Показать кнопку режима отладки	디버그 모드 버튼 표시	Mostrar botón de modo depuración	Mostrar botão do modo de depuração	Afficher le bouton du mode débogage	Debug-Modus-Schaltfläche anzeigen	Mostra pulsante modalità debug	Hata ayıklama modu düğmesini göster	Pokaż przycisk trybu debug	แสดงปุ่มโหมดดีบัก	Hiện nút chế độ gỡ lỗi
+暂无插槽（先安装主板）	暫無插槽（先安裝主機板）	No slots yet (install the motherboard first)	スロットはまだありません（まず基板を取り付け）	Слотов пока нет (сначала установите материнскую плату)	슬롯 없음 (먼저 메인보드 설치)	Aún no hay ranuras (instale la placa base primero)	Ainda não há slots (instale a placa-mãe primeiro)	Pas encore d'emplacements (installez la carte mère d'abord)	Noch keine Steckplätze (zuert Hauptplatine einbauen)	Ancora nessuno slot (installa prima la scheda madre)	Yuva henüz yok (önce ana kartı takın)	Brak gniazd (najpierw zainstaluj płytę główną)	ยังไม่มีช่องเสียบ (ติดตั้งเมนบอร์ดก่อน)	Chưa có khe cắm (hãy lắp bo mạch chủ trước)
+暂无设备，点上方「新建设备」	暫無裝置，點上方「新建裝置」	No devices yet, click "New device" above	デバイスはまだありません。上の「新規デバイス」をクリック	Устройств пока нет, нажмите «Новое устройство» выше	장치 없음, 위의 「새 장치」 클릭	Aún no hay dispositivos, pulse «Nuevo dispositivo» arriba	Ainda não há dispositivos, clique em «Novo dispositivo» acima	Aucun appareil pour l'instant, cliquez sur « Nouvel appareil » ci-dessus	Noch keine Geräte, klicken Sie oben auf „Neues Gerät“	Ancora nessun dispositivo, clicca «Nuovo dispositivo» in alto	Cihaz yok, yukarıdaki «Yeni cihaz»a tıklayın	Brak urządzeń, kliknij „Nowe urządzenie” powyżej	ยังไม่มีอุปกรณ์ คลิก「สร้างอุปกรณ์ใหม่」ด้านบน	Chưa có thiết bị, nhấn «Thiết bị mới» bên trên
+替换…	替換…	Replace…	置換…	Заменить…	교체…	Reemplazar…	Substituir…	Remplacer…	Ersetzen…	Sostituisci…	Değiştir…	Zastąp…	แทนที่…	Thay thế…
+未接入	未接入	Not connected	未接続	Не подключено	연결 안 됨	No conectado	Não conectado	Non connecté	Nicht verbunden	Non connesso	Bağlı değil	Nie podłączono	ไม่ได้เชื่อมต่อ	Chưa kết nối
+未接入全球网络	未接入全球網路	Not connected to global network	グローバルネットワーク未接続	Не подключено к глобальной сети	글로벌 네트워크 미연결	No conectado a la red global	Não conectado à rede global	Non connecté au réseau global	Nicht mit globalem Netzwerk verbunden	Non connesso alla rete globale	Küresel ağa bağlı değil	Nie podłączono do sieci globalnej	ไม่ได้เชื่อมต่อเครือข่ายโลก	Chưa kết nối mạng toàn cầu
+未连接（%s）	未連接（%s）	Not connected (%s)	未接続（%s）	Не подключено (%s)	연결 안 됨 (%s)	No conectado (%s)	Não conectado (%s)	Non connecté (%s)	Nicht verbunden (%s)	Non connesso (%s)	Bağlı değil (%s)	Nie podłączono (%s)	ไม่ได้เชื่อมต่อ (%s)	Chưa kết nối (%s)
+机械硬盘	機械硬碟	Hard disk drive	HDD（ハードディスク）	Жёсткий диск	HDD	Disco duro	Disco rígido	Disque dur	Festplatte	Disco rigido	Sabit disk	Dysk twardy	ฮาร์ดดิสก์	Ổ cứng
+标签选择	標籤選擇	Tag selection	タグ選択	Выбор тегов	태그 선택	Selección de etiquetas	Seleção de tags	Sélection de tags	Tag-Auswahl	Selezione tag	Etiket seçimi	Wybór tagów	การเลือกแท็ก	Chọn thẻ
+没有兼容的备件	沒有相容的備件	No compatible spare parts	互換の予備パーツがありません	Нет совместимых запчастей	호환 예비 부품 없음	No hay repuestos compatibles	Não há peças sobressalentes compatíveis	Aucune pièce détachée compatible	Keine kompatiblen Ersatzteile	Nessun pezzo di ricambio compatibile	Uyumlu yedek parça yok	Brak kompatybilnych części zamiennych	ไม่มีอะไหล่ที่เข้ากันได้	Không có linh kiện dự phòng tương thích
+没有可链接的设备（需要对方也有空闲的同类接口）	沒有可連結的裝置（需要對方也有空閒的同類介面）	No linkable devices (the other side also needs a free interface of the same type)	リンク可能なデバイスがありません（相手にも空きの同種インターフェースが必要）	Нет устройств для связи (нужен свободный интерфейс того же типа и у другой стороны)	연결 가능한 장치 없음 (상대방에도 같은 종류의 빈 인터페이스 필요)	No hay dispositivos enlazables (el otro lado también necesita una interfaz libre del mismo tipo)	Não há dispositivos para vincular (o outro lado também precisa de uma interface livre do mesmo tipo)	Aucun appareil à lier (l'autre côté a aussi besoin d'une interface libre du même type)	Keine verknüpfbaren Geräte (die andere Seite braucht ebenfalls einen freien Slot desselben Typs)	Nessun dispositivo collegabile (anche l'altro lato richiede un'interfaccia libera dello stesso tipo)	Bağlanabilir cihaz yok (karşı tarafın da aynı türde boş arayüzü olmalı)	Brak urządzeń do połączenia (druga strona też potrzebuje wolnego interfejsu tego samego typu)	ไม่มีอุปกรณ์ที่เชื่อมโยงได้ (ฝ่ายตรงข้าม也需要มีอินเทอร์เฟซว่าง同類)	Không có thiết bị để liên kết (bên kia cũng cần giao diện cùng loại còn trống)
+清除选择	清除選擇	Clear selection	選択をクリア	Очистить выбор	선택 지우기	Borrar selección	Limpar seleção	Effacer la sélection	Auswahl löschen	Cancella selezione	Seçimi temizle	Wyczyść zaznaczenie	ล้างการเลือก	Xóa lựa chọn
+现实物品	現實物品	Real-world item	現実アイテム	Реальный предмет	현실 아이템	Objeto real	Item real	Objet réel	Realgegenstand	Oggetto reale	Gerçek dünya öğesi	Przedmiot rzeczywisty	ไอเทมในโลกจริง	Vật phẩm thực tế
+界面主题	介面主題	UI theme	UI テーマ	Тема интерфейса	UI 테마	Tema de la interfaz	Tema da interface	Thème de l'interface	UI-Thema	Tema dell'interfaccia	Arayüz teması	Motyw interfejsu	ธีมอินเทอร์เฟซ	Chủ đề giao diện
+硬件属性（勾硬件类型；接口可直接改）	硬體屬性（勾硬體類型；介面可直接改）	Hardware attributes (check hardware type; interfaces editable directly)	ハードウェア属性（ハードウェア種別をチェック、インターフェースは直接編集可）	Атрибуты оборудования (отметьте тип; интерфейсы меняются напрямую)	하드웨어 속성 (하드웨어 유형 체크; 인터페이스 직접 수정 가능)	Atributos de hardware (marque el tipo; las interfaces se editan directamente)	Atributos de hardware (marque o tipo; interfaces editáveis diretamente)	Attributs matériels (cochez le type ; les interfaces se modifient directement)	Hardware-Attribute (Hardware-Typ ankreuzen; Schnittstellen direkt editierbar)	Attributi hardware (spunta il tipo; le interfacce si modificano direttamente)	Donanım öznitelikleri (donanım türünü işaretleyin; arayüzler doğrudan düzenlenebilir)	Atrybuty sprzętu (zaznacz typ; interfejsy edytowalne bezpośrednio)	คุณสมบัติฮาร์ดแวร์ (ติ๊กประเภทฮาร์ดแวร์; อินเทอร์เฟซแก้ไขได้โดยตรง)	Thuộc tính phần cứng (tích loại phần cứng; giao diện sửa trực tiếp)
+硬件属性（接口在标签窗改）	硬體屬性（介面在標籤窗改）	Hardware attributes (interfaces edited in the tag window)	ハードウェア属性（インターフェースはタグウィンドウで編集）	Атрибуты оборудования (интерфейсы меняются в окне тегов)	하드웨어 속성 (인터페이스는 태그 창에서 수정)	Atributos de hardware (interfaces editadas en la ventana de etiquetas)	Atributos de hardware (interfaces editadas na janela de tags)	Attributs matériels (interfaces modifiées dans la fenêtre des tags)	Hardware-Attribute (Schnittstellen im Tag-Fenster ändern)	Attributi hardware (interfacce modificate nella finestra dei tag)	Donanım öznitelikleri (arayüzler etiket penceresinde düzenlenir)	Atrybuty sprzętu (interfejsy zmieniane w oknie tagów)	คุณสมบัติฮาร์ดแวร์ (อินเทอร์เฟซแก้ไขในหน้าต่างแท็ก)	Thuộc tính phần cứng (giao diện sửa trong cửa sổ thẻ)
+硬件属性：（空）—— 点「调整标签」在标签选择（物品）页里填写	硬體屬性：（空）—— 點「調整標籤」在標籤選擇（物品）頁裡填寫	Hardware attributes: (empty) — click "Adjust tags" and fill in the tag-selection (item) page	ハードウェア属性：（空）——「タグ調整」をクリックし、タグ選択（アイテム）ページで入力	Атрибуты оборудования: (пусто) — нажмите «Настроить теги» и заполните на странице выбора тегов (предмет)	하드웨어 속성: (빈칸) — 「태그 조정」을 클릭해 태그 선택(아이템) 페이지에서 입력	Atributos de hardware: (vacío) — pulse «Ajustar etiquetas» y rellene en la página de selección de etiquetas (objeto)	Atributos de hardware: (vazio) — clique em «Ajustar tags» e preencha na página de seleção de tags (item)	Attributs matériels : (vide) — cliquez sur « Régler les tags » et remplissez dans la page de sélection des tags (objet)	Hardware-Attribute: (leer) — klicken Sie auf „Tags anpassen“ und füllen Sie die Tag-Auswahl (Objekt) aus	Attributi hardware: (vuoto) — clicca «Regola tag» e compila nella pagina di selezione tag (oggetto)	Donanım öznitelikleri: (boş) — «Etiketleri ayarla»ya tıklayıp etiket seçimi (öğe) sayfasında doldurun	Atrybuty sprzętu: (puste) — kliknij „Dostosuj tagi” i wypełnij na stronie wyboru tagów (przedmiot)	คุณสมบัติฮาร์ดแวร์: (ว่าง) — คลิก「ปรับแท็ก」แล้วกรอกในหน้าเลือกแท็ก (ไอเทม)	Thuộc tính phần cứng: (trống) — nhấn «Điều chỉnh thẻ» và điền vào trang chọn thẻ (vật phẩm)
+确认拆解	確認拆解	Confirm disassembly	分解の確認	Подтвердить разборку	분해 확인	Confirmar desmontaje	Confirmar desmontagem	Confirmer le démontage	Demontage bestätigen	Conferma smontaggio	Sökmeyi onayla	Potwierdź rozłożenie	ยืนยันการถอดประกอบ	Xác nhận tháo rời
+确认拆解？已安装零件将退回背包	確認拆解？已安裝零件將退回背包	Confirm disassembly? Installed parts will return to the backpack	分解しますか？取り付けたパーツはバックパックに戻ります	Подтвердить разборку? Установленные детали вернутся в рюкзак	분해할까요? 설치된 부품은 백팩으로 돌아갑니다	¿Confirmar desmontaje? Las piezas instaladas volverán a la mochila	Confirmar desmontagem? As peças instaladas voltarão à mochila	Confirmer le démontage ? Les pièces installées reviendront dans le sac	Demontage bestätigen? Eingebaute Teile kehren in den Rucksack zurück	Confermi lo smontaggio? Le parti installate torneranno nello zaino	Sökmeyi onaylıyor musunuz? Takılı parçalar sırt çantasına dönecek	Potwierdzić rozłożenie? Zamontowane części wrócą do plecaka	ยืนยันการถอดประกอบ? ชิ้นส่วนที่ติดตั้งจะกลับไปที่เป้	Xác nhận tháo rời? Các linh kiện đã lắp sẽ trả về balo
+移入回收站	移入回收站	Move to Recycle Bin	資源ごみ箱に移動	Переместить в корзину	휴지통으로 이동	Mover a la Papelera	Mover para a Lixeira	Déplacer vers la Corbeille	In den Papierkorb verschieben	Sposta nel Cestino	Geri Dönüşüm Kutusuna taşı	Przenieś do Kosza	ย้ายไปถังขยะ	Chuyển vào Thùng rác
+移除	移除	Remove	削除	Удалить	제거	Quitar	Remover	Retirer	Entfernen	Rimuovi	Kaldır	Usuń	ลบออก	Gỡ bỏ
+网络器材不能设为主力设备（仅笔记本 / 台式机 / 工作站可以）	網路器材不能設為主力裝置（僅筆電 / 桌上型 / 工作站可以）	Network gear cannot be set as the primary device (only laptops / desktops / workstations can)	ネットワーク機器は主力デバイスにできません（ノート / デスクトップ / ワークステーションのみ可）	Сетевое оборудование нельзя сделать основным (только ноутбуки / ПК / рабочие станции)	네트워크 장비는 주력 장치로 설정할 수 없습니다 (노트북 / 데스크톱 / 워크스테이션만 가능)	El equipo de red no puede ser dispositivo principal (solo portátiles / de escritorio / estaciones de trabajo)	Equipamentos de rede não podem ser o dispositivo principal (apenas notebooks / desktops / estações de trabalho)	Le matériel réseau ne peut pas être l'appareil principal (seuls portables / ordinateurs de bureau / stations de travail)	Netzwerkgeräte können nicht das Hauptgerät sein (nur Laptops / Desktop-PCs / Workstations)	L'hardware di rete non può essere il dispositivo principale (solo notebook / desktop / workstation)	Ağ cihazları ana cihaz olamaz (yalnızca dizüstü / masaüstü / iş istasyonu olabilir)	Sprzęt sieciowy nie może być głównym urządzeniem (tylko laptop / komputer stacjonarny / stacja robocza)	อุปกรณ์เครือข่ายไม่สามารถตั้งเป็นอุปกรณ์หลักได้ (เฉพาะโน้ตบุ๊ก / เดสก์ท็อป / เวิร์กสเตชันเท่านั้น)	Thiết bị mạng không thể đặt làm thiết bị chính (chỉ máy tính xách tay / để bàn / trạm làm việc)
+网络器材：按设计不安装零件（不需要主板）	網路器材：按設計不安裝零件（不需要主機板）	Network gear: by design installs no parts (no motherboard needed)	ネットワーク機器：仕様上パーツを取り付けません（基板不要）	Сетевое оборудование: по замыслу не устанавливает детали (материнская плата не нужна)	네트워크 장비: 설계상 부품을 설치하지 않음 (메인보드 불필요)	Equipo de red: por diseño no instala piezas (no necesita placa base)	Equipamentos de rede: por design não instalam peças (não precisam de placa-mãe)	Matériel réseau : par conception n'installe pas de pièces (pas de carte mère nécessaire)	Netzwerkgeräte: laut Design keine Teile (keine Hauptplatine nötig)	Hardware di rete: per design non installa parti (non serve la scheda madre)	Ağ cihazları: tasarıma göre parça takmaz (ana kart gerekmez)	Sprzęt sieciowy: z założenia nie montuje części (nie potrzebuje płyty głównej)	อุปกรณ์เครือข่าย: ตามดีไซน์ไม่ติดตั้งชิ้นส่วน (ไม่ต้องใช้เมนบอร์ด)	Thiết bị mạng: theo thiết kế không lắp linh kiện (không cần bo mạch chủ)
+背包里已没有可用的该零件	背包裡已沒有可用的該零件	No usable such part left in the backpack	バックパックに利用可能なそのパーツはもうありません	В рюкзаке больше нет подходящей детали	백팩에 사용 가능한 해당 부품이 없습니다	No queda ninguna pieza utilizable en la mochila	Não há mais peças utilizáveis na mochila	Aucune pièce utilisable dans le sac	Keine verwendbare Teil mehr im Rucksack	Nessun pezzo utilizzabile nello zaino	Sırt çantasında kullanılabilir böyle bir parça kalmadı	W plecaku nie ma już dostępnych takich części	ในเป้ไม่มีชิ้นส่วนที่ใช้ได้แล้ว	Trong balo không còn linh kiện usable đó
+背包里没有该零件	背包裡沒有該零件	The backpack has no such part	バックパックにそのパーツはありません	В рюкзаке нет такой детали	백팩에 해당 부품이 없습니다	La mochila no tiene esa pieza	A mochila não tem essa peça	Le sac n'a pas cette pièce	Der Rucksack hat kein solches Teil	Lo zaino non ha questa parte	Sırt çantasında böyle parça yok	W plecaku nie ma takiej części	ในเป้ไม่มีชิ้นส่วนนั้น	Balo không có linh kiện đó
+自动载入存档	自動載入存檔	Auto-load save	自動読み込み保存	Автозагрузка сохранения	자동 불러오기	Cargar guardado automáticamente	Carregar save automaticamente	Chargement auto de la sauvegarde	Speicher automatisch laden	Caricamento automatico	Kaydı otomatik yükle	Automatyczne wczytywanie zapisu	โหลดเซฟอัตโนมัติ	Tự động tải bản lưu
+自带 2 个网口	自帶 2 個網口	Has 2 network ports built-in	内蔵ネットワークポート 2 個	Встроено 2 сетевых порта	내장 네트워크 포트 2개	Tiene 2 puertos de red integrados	Possui 2 portas de rede integradas	Comprend 2 ports réseau intégrés	Hat 2 eingebaute Netzwerkports	Ha 2 porte di rete integrate	2 ağ portu dahili	Ma 2 porty sieciowe wbudowane	มีพอร์ตเครือข่ายในตัว 2 พอร์ต	Có 2 cổng mạng tích hợp
+自带 8 个网口	自帶 8 個網口	Has 8 network ports built-in	内蔵ネットワークポート 8 個	Встроено 8 сетевых портов	내장 네ット워ーク 포트 8개	Tiene 8 puertos de red integrados	Possui 8 portas de rede integradas	Comprend 8 ports réseau intégrés	Hat 8 eingebaute Netzwerkports	Ha 8 porte di rete integrate	8 ağ portu dahili	Ma 8 portów sieciowych wbudowanych	มีพอร์ตเครือข่ายในตัว 8 พอร์ต	Có 8 cổng mạng tích hợp
+至少保留一台设备在线	至少保留一台裝置在線	Keep at least one device online	少なくとも 1 台はオンラインに	Держите хотя бы одно устройство в сети	최소 한 대는 온라인 유지	Mantenga al menos un dispositivo en línea	Mantenha pelo menos um dispositivo online	Gardez au moins un appareil en ligne	Mindestens ein Gerät online halten	Mantieni almeno un dispositivo online	En az bir cihazı çevrimiçi tut	Zachowaj co najmniej jedno urządzenie online	รักษาอุปกรณ์อย่างน้อยหนึ่งเครื่องให้ออนไลน์	Giữ ít nhất một thiết bị trực tuyến
+至少保留一台设备在线，无法拆解	至少保留一台裝置在線，無法拆解	Keep at least one device online, cannot be disassembled	少なくとも 1 台はオンライン、分解不可	Держите хотя бы одно устройство в сети, нельзя разобрать	최소 한 대는 온라인, 분해 불가	Mantenga al menos un dispositivo en línea, no se puede desmontar	Mantenha pelo menos um dispositivo online, não pode ser desmontado	Gardez au moins un appareil en ligne, impossible à démonter	Mindestens ein Gerät online halten, nicht zerlegbar	Mantieni almeno un dispositivo online, non smontabile	En az bir cihaz çevrimiçi, sökülemez	Zachowaj co najmniej jedno urządzenie online, nie do rozłożenia	รักษาอุปกรณ์อย่างน้อยหนึ่งเครื่องออนไลน์ ไม่สามารถถอดประกอบได้	Giữ ít nhất một thiết bị trực tuyến, không thể tháo rời
+设为主力设备	設為主力裝置	Set as primary device	主力デバイスに設定	Назначить основным устройством	주력 장치로 설정	Establecer como dispositivo principal	Definir como dispositivo principal	Définir comme appareil principal	Als Hauptgerät festlegen	Imposta come dispositivo principale	Ana cihaz olarak ayarla	Ustaw jako główne urządzenie	ตั้งเป็นอุปกรณ์หลัก	Đặt làm thiết bị chính
+设为主力设备后，其他设备需与它直接或间接链接才能上线	設為主力裝置後，其他裝置需與它直接或間接連結才能上線	After setting as primary, other devices must link to it (directly or indirectly) to go online	主力に設定後、他デバイスは直接または間接的にそれと接続してオンラインになります	После назначения основным, прочие устройства должны быть связаны с ним (прямо/косвенно) для выхода в сеть	주력으로 설정 후, 다른 장치는 직/간접적으로 연결되어야 온라인 가능	Tras fijarlo como principal, los demás deben enlazarse (directa o indirectamente) para ponerse en línea	Após definir como principal, os demais precisam se ligar (direta ou indiretamente) para ficar online	Après l'avoir défini comme principal, les autres appareils doivent lui être liés (directement ou indirectement) pour passer en ligne	Nach Festlegung als Hauptgerät müssen andere Geräte direkt/indirekt damit verbunden sein, um online zu gehen	Dopo averlo impostato come principale, gli altri devono esservi collegati (direttamente o indirettamente) per andare online	Ana cihaz yapıldıktan sonra diğerleri çevrimiçi olmak için doğrudan/dolaylı ona bağlı olmalı	Po ustawieniu jako główne, pozostałe muszą być z nim połączone (bezpośrednio lub pośrednio), by przejść online	หลังตั้งเป็นหลัก อุปกรณ์อื่นต้องเชื่อมต่อกับมันโดยตรงหรือโดยอ้อมจึงจะออนไลน์ได้	Sau khi đặt làm chính, thiết bị khác phải liên kết trực tiếp/gián tiếp với nó mới trực tuyến
+设备不存在	裝置不存在	Device does not exist	デバイスが存在しません	Устройство не существует	장치 없음	El dispositivo no existe	O dispositivo não existe	L'appareil n'existe pas	Gerät existiert nicht	Il dispositivo non esiste	Cihaz yok	Urządzenie nie istnieje	อุปกรณ์ไม่มีอยู่	Thiết bị không tồn tại
+设备名称	裝置名稱	Device name	デバイス名	Имя устройства	장치 이름	Nombre del dispositivo	Nome do dispositivo	Nom de l'appareil	Gerätename	Nome dispositivo	Cihaz adı	Nazwa urządzenia	ชื่ออุปกรณ์	Tên thiết bị
+设备在线	裝置在線	Device online	デバイスオンライン	Устройство в сети	장치 온라인	Dispositivo en línea	Dispositivo online	Appareil en ligne	Gerät online	Dispositivo online	Cihaz çevrimiçi	Urządzenie online	อุปกรณ์ออนไลน์	Thiết bị trực tuyến
+设备工作中	裝置工作中	Device working	デバイス動作中	Устройство работает	장치 작업 중	Dispositivo trabajando	Dispositivo trabalhando	Appareil en fonctionnement	Gerät arbeitet	Dispositivo al lavoro	Cihaz çalışıyor	Urządzenie pracuje	อุปกรณ์ทำงานอยู่	Thiết bị đang làm việc
+设备性能	裝置效能	Device performance	デバイス性能	Производительность устройства	장치 성능	Rendimiento del dispositivo	Desempenho do dispositivo	Performances de l'appareil	Geräteleistung	Prestazioni dispositivo	Cihaz performansı	Wydajność urządzenia	ประสิทธิภาพอุปกรณ์	Hiệu năng thiết bị
+设备硬件	裝置硬體	Device hardware	デバイスハードウェア	Оборудование устройства	장치 하드웨어	Hardware del dispositivo	Hardware do dispositivo	Matériel de l'appareil	Geräte-Hardware	Hardware dispositivo	Cihaz donanımı	Sprzęt urządzenia	ฮาร์ดแวร์อุปกรณ์	Phần cứng thiết bị
+设备离线	裝置離線	Device offline	デバイスオフライン	Устройство отключено	장치 오프라인	Dispositivo fuera de línea	Dispositivo offline	Appareil hors ligne	Gerät offline	Dispositivo offline	Cihaz çevrimdışı	Urządzenie offline	อุปกรณ์ออฟไลน์	Thiết bị ngoại tuyến
+设备管理	裝置管理	Device management	デバイス管理	Управление устройствами	장치 관리	Gestión de dispositivos	Gerenciamento de dispositivos	Gestion des appareils	Geräteverwaltung	Gestione dispositivi	Cihaz yönetimi	Zarządzanie urządzeniami	การจัดการอุปกรณ์	Quản lý thiết bị
+该槽位已满	該插槽已滿	That slot is full	そのスロットは満杯です	Этот слот заполнен	해당 슬롯이 가득 참	Esa ranura está llena	Esse slot está cheio	Cet emplacement est plein	Dieser Steckplatz ist belegt	Quello slot è pieno	O yuva dolu	To gniazdo jest pełne	ช่องเสียบนั้นเต็ม	Khe cắm đó đã đầy
+该槽位是空的	該插槽是空的	That slot is empty	そのスロットは空です	Этот слот пуст	해당 슬롯이 비어 있음	Esa ranura está vacía	Esse slot está vazio	Cet emplacement est vide	Dieser Steckplatz ist leer	Quello slot è vuoto	O yuva boş	To gniazdo jest puste	ช่องเสียบนั้นว่าง	Khe cắm đó trống
+该物品不可删除（带 undeletable 标签）	該物品不可刪除（帶 undeletable 標籤）	This item cannot be deleted (has the undeletable tag)	このアイテムは削除不可（undeletable タグあり）	Этот предмет нельзя удалить (есть тег undeletable)	이 아이템은 삭제할 수 없습니다 (undeletable 태그 보유)	Este objeto no se puede eliminar (tiene la etiqueta undeletable)	Este item não pode ser excluído (tem a tag undeletable)	Cet objet ne peut pas être supprimé (possède le tag undeletable)	Dieser Gegenstand kann nicht gelöscht werden (hat das Tag undeletable)	Questo oggetto non può essere eliminato (ha il tag undeletable)	Bu öğe silinemez (undeletable etiketi var)	Tego przedmiotu nie można usunąć (ma tag undeletable)	ไอเทมนี้ไม่สามารถลบได้ (มีแท็ก undeletable)	Vật phẩm này không thể xóa (có thẻ undeletable)
+该设备没有「全球网络」开关（仅交换机）	該裝置沒有「全球網路」開關（僅交換器）	This device has no "Global Network" switch (only switches do)	このデバイスに「グローバルネットワーク」スイッチはありません（スイッチのみ）	У этого устройства нет переключателя «Глобальная сеть» (только у коммутаторов)	이 장치에는 「글로벌 네트워크」 스위치가 없습니다 (스위치만 해당)	Este dispositivo no tiene interruptor de «Red global» (solo los conmutadores)	Este dispositivo não tem interruptor de «Rede global» (apenas switches)	Cet appareil n'a pas d'interrupteur « Réseau global » (seuls les commutateurs)	Dieses Gerät hat keinen «Globales Netzwerk»-Schalter (nur Switches)	Questo dispositivo non ha l'interruttore «Rete globale» (solo gli switch)	Bu cihazda «Küresel Ağ» anahtarı yok (yalnızca switch'ler)	To urządzenie nie ma przełącznika „Sieć globalna” (tylko switch'e)	อุปกรณ์นี้ไม่มีสวิตช์「เครือข่ายโลก」(เฉพาะสวิตช์เท่านั้น)	Thiết bị này không có công tắc «Mạng toàn cầu» (chỉ switch mới có)
+请先「应用并保存」配置更改，再上下线	請先「套用並儲存」配置更改，再上下線	Please "Apply and save" the config changes before going online/offline	「適用して保存」で設定変更を先に行ってからオンライン/オフラインにしてください	Сначала «Примените и сохраните» изменения конфигурации, затем переключайте сеть	먼저 「적용 및 저장」으로 설정 변경을 한 뒤 온/오프라인 전환하세요	Primero «Aplica y guarda» los cambios de configuración, luego conéctate/desconéctate	Primeiro «Aplicar e salvar» as mudanças, depois fique online/offline	Veuillez d'abord « Appliquer et enregistrer » les changements, puis passez en ligne/hors ligne	Bitte «Übernehmen und speichern» der Konfigurationsänderungen, bevor Sie online/offline gehen	Prima «Applica e salva» le modifiche, poi vai online/offline	Önce yapılandırma değişikliklerini «Uygula ve kaydet», sonra çevrimiçi/çevrimdışı ol	Najpierw „Zastosuj i zapisz” zmiany konfiguracji, potem przejdź online/offline	กรุณา「ใช้งานและบันทึก」การเปลี่ยนแปลงการตั้งค่าก่อน แล้วค่อยออนไลน์/ออฟไลน์	Hãy «Áp dụng và lưu» thay đổi cấu hình trước, rồi mới trực tuyến/ngoại tuyến
+请选择左侧的一台设备	請選擇左側的一台裝置	Please select a device on the left	左側のデバイスを選択してください	Выберите устройство слева	왼쪽에서 장치 하나를 선택하세요	Seleccione un dispositivo a la izquierda	Selecione um dispositivo à esquerda	Veuillez sélectionner un appareil à gauche	Bitte wählen Sie links ein Gerät	Seleziona un dispositivo a sinistra	Soldaki bir cihazı seçin	Wybierz urządzenie po lewej	กรุณาเลือกอุปกรณ์ด้านซ้าย	Hãy chọn một thiết bị bên trái
+输入	輸入	Input	入力	Ввод	입력	Entrada	Entrada	Entrée	Eingabe	Ingresso	Giriş	Wejście	อินพุต	Đầu vào
+输出	輸出	Output	出力	Вывод	출력	Salida	Saída	Sortie	Ausgabe	Uscita	Çıkış	Wyjście	เอาต์พุต	Đầu ra
+连接到全球网络	連接到全球網路	Connect to global network	グローバルネットワークに接続	Подключить к глобальной сети	글로벌 네트워크에 연결	Conectar a la red global	Conectar à rede global	Se connecter au réseau global	Mit globalem Netzwerk verbinden	Connetti alla rete globale	Küresel ağa bağlan	Połącz z siecią globalną	เชื่อมต่อเครือข่ายโลก	Kết nối mạng toàn cầu
+退出调试模式	退出除錯模式	Exit debug mode	デバッグモードを終了	Выйти из режима отладки	디버그 모드 종료	Salir del modo depuración	Sair do modo de depuração	Quitter le mode débogage	Debugmodus beenden	Esci dal modo debug	Hata ayıklama modundan çık	Wyjdź z trybu debug	ออกจากโหมดดีบัก	Thoát chế độ gỡ lỗi
+选择外壳	選擇外殼	Choose chassis	シャーシを選択	Выбрать корпус	섀시 선택	Elegir chasis	Escolher chassi	Choisir le châssis	Gehäuse wählen	Scegli chassis	Kasa seç	Wybierz obudowę	เลือกเคส	Chọn vỏ
+透明液态玻璃	透明液態玻璃	Transparent liquid glass	透明リキッドガラス	Прозрачное жидкое стекло	투명 액체 유리	Vidrio líquido transparente	Vidro líquido transparente	Verre liquide transparent	Transparentes Flüssigglas	Vetro liquido trasparente	Saydam sıvı cam	Przezroczyste szkło ciekłe	กระจกเหลวใส	Thủy tinh lỏng trong suốt
+配置已保存	配置已儲存	Config saved	設定を保存しました	Конфигурация сохранена	구성 저장됨	Configuración guardada	Configuração salva	Configuration enregistrée	Konfiguration gespeichert	Configurazione salvata	Yapılandırma kaydedildi	Konfiguracja zapisana	การตั้งค่าถูกบันทึกแล้ว	Đã lưu cấu hình
+重命名	重新命名	Rename	名前を変更	Переименовать	이름 바꾸기	Renombrar	Renomear	Renommer	Umbenennen	Rinomina	Yeniden adlandır	Zmień nazwę	เปลี่ยนชื่อ	Đổi tên
+量子全息	量子全息	Quantum Hologram	量子ホログラム	Квантовая голограмма	양자 홀로그램	Holograma cuántico	Holograma quântico	Hologramme quantique	Quanten-Hologramm	Ologramma quantico	Kuantum Hologram	Hologram kwantowy	โฮโลแกรมควอนตัม	Hologram lượng tử
+链接失败：	連結失敗：	Link failed:	リンク失敗：	Ошибка связи:	링크 실패:	Error de enlace:	Falha de vínculo:	Échec du lien :	Link fehlgeschlagen:	Collegamento fallito:	Bağlantı başarısız:	Błąd połączenia:	ลิงก์ล้มเหลว:	Liên kết thất bại:
+预期文件大小	預期檔案大小	Expected file size	想定ファイルサイズ	Ожидаемый размер файла	예상 파일 크기	Tamaño de archivo esperado	Tamanho de arquivo esperado	Taille de fichier attendue	Erwartete Dateigröße	Dimensione file attesa	Beklenen dosya boyutu	Oczekiwany rozmiar pliku	ขนาดไฟล์ที่คาดหวัง	Kích thước tệp dự kiến
+预期结束时间	預期結束時間	Expected end time	想定終了時刻	Ожидаемое время окончания	예상 종료 시간	Hora de fin esperada	Hora de término esperada	Heure de fin attendue	Erwartete Endzeit	Orario di fine atteso	Beklenen bitiş zamanı	Oczekiwany czas zakończenia	เวลาสิ้นสุดที่คาดหวัง	Thời gian kết thúc dự kiến
+（关卡环境）	（關卡環境）	(Level environment)	(レベル環境)	(Среда уровня)	(레벨 환경)	(Entorno de nivel)	(Ambiente de nível)	(Environnement de niveau)	(Level-Umgebung)	(Ambiente di livello)	(Seviye ortamı)	(Środowisko poziomu)	(สภาพแวดล้อมด่าน)	(Môi trường màn chơi)
+（勾选=启用）	（勾選=啟用）	(Check = enable)	(チェック = 有効)	(Галочка = включить)	(체크 = 활성화)	(Marca = activar)	(Marca = ativar)	(Coché = activer)	(Häkchen = aktiv)	(Spunta = attiva)	(İşaret = etkin)	(Zaznacz = włącz)	(ติ๊ก = เปิดใช้)	(Tích = bật)
+（勾选=启用；动态标签按 + 添加）	（勾選=啟用；動態標籤按 + 新增）	(Check = enable; add dynamic tags with +)	(チェック = 有効、動的タグは + で追加)	(Галочка = включить; динамические теги по +)	(체크 = 활성화; 동적 태그는 +로 추가)	(Marca = activar; añade tags dinámicos con +)	(Marca = ativar; adicione tags dinâmicas com +)	(Coché = activer ; ajoutez les tags dynamiques avec +)	(Häkchen = aktiv; dynamische Tags mit + hinzufügen)	(Spunta = attiva; aggiungi tag dinamici con +)	(İşaret = etkin; dinamik etiketleri + ile ekle)	(Zaznacz = włącz; dodaj tagi dynamiczne przez +)	(ติ๊ก = เปิดใช้; เพิ่มแท็กแบบไดนามิกด้วย +)	(Tích = bật; thêm thẻ động bằng +)
+（在线·状态不佳）	（在線·狀態不佳）	(Online · poor status)	(オンライン・状態不良)	(В сети · плохой статус)	(온라인 · 상태 불량)	(En línea · estado deficiente)	(Online · estado ruim)	(En ligne · mauvais état)	(Online · schlechter Status)	(Online · stato scadente)	(Çevrimiçi · durum kötü)	(Online · zły stan)	(ออนไลน์·สถานะไม่ดี)	(Trực tuyến · trạng thái kém)
+（拓展接口）	（拓展介面）	(Expansion interface)	(拡張インターフェース)	(Интерфейс расширения)	(확장 인터페이스)	(Interfaz de expansión)	(Interface de expansão)	(Interface d'expansion)	(Erweiterungs-Schnittstelle)	(Interfaccia di espansione)	(Genişleme arayüzü)	(Interfejs rozszerzenia)	(อินเทอร์เฟซขยาย)	(Giao diện mở rộng)
+（无可用备件）	（無可用備件）	(No spare parts available)	(予備パーツなし)	(Нет запчастей)	(예비 부품 없음)	(Sin repuestos)	(Sem peças sobressalentes)	(Pas de pièce disponible)	(Keine Ersatzteile)	(Nessun pezzo disponibile)	(Yedek parça yok)	(Brak części zamiennych)	(ไม่มีอะไหล่)	(Không có linh kiện dự phòng)
+（无）	（無）	(None)	(なし)	(Нет)	(없음)	(Ninguno)	(Nenhum)	(Aucun)	(Keine)	(Nessuno)	(Yok)	(Brak)	(ไม่มี)	(Không)
+（物品）	（物品）	(Item)	(アイテム)	(Предмет)	(아이템)	(Objeto)	(Item)	(Objet)	(Gegenstand)	(Oggetto)	(Öğe)	(Przedmiot)	(ไอเทม)	(Vật phẩm)
+（积木）	（積木）	(Block)	(ブロック)	(Блок)	(블록)	(Bloque)	(Bloco)	(Bloc)	(Block)	(Blocco)	(Blok)	(Blok)	(บล็อก)	(Khối)
+（设备已不在）	（裝置已不在）	(Device no longer present)	(デバイスは既に不在)	(Устройство уже отсутствует)	(장치가 더 이상 없음)	(El dispositivo ya no está)	(O dispositivo já não está)	(L'appareil n'est plus présent)	(Gerät nicht mehr vorhanden)	(Dispositivo non più presente)	(Cihaz artık yok)	(Urządzenie już nie istnieje)	(อุปกรณ์ไม่อยู่แล้ว)	(Thiết bị không còn)
+回收站	資源回收筒	Recycle Bin	ゴミ箱	Корзина	휴지통	Papelera de reciclaje	Lixeira	Corbeille	Papierkorb	Cestino	Geri Dönüşüm Kutusu	Kosz	ถังรีไซเคิล	Thùng rác
+此电脑	本機	This PC	この PC	Этот компьютер	내 PC	Este equipo	Este computador	Ce PC	Dieser PC	Questo PC	Bu Bilgisayar	Ten komputer	พีซีนี้	PC này
+扫描重构器	掃描重構器	Scan Restructurer	スキャン再構築器	Сканер-реструктуризатор	스캔 재구성기	Reestructurador de escaneo	Reestruturador de varredura	Restructurateur de scan	Scan-Restrukturierer	Ristrutturatore di scansione	Tarama Yeniden Yapılandırıcı	Restrukturyzator skanowania	ตัวปรับโครงสร้างการสแกน	Bộ tái cấu trúc quét
+日历	行事曆	Calendar	カレンダー	Календарь	달력	Calendario	Calendário	Calendrier	Kalender	Calendario	Takvim	Kalendarz	ปฏิทิน	Lịch
+课程表	課表	Timetable	時間割	Расписание	시간표	Horario	Horário	Emploi du temps	Stundenplan	Orario	Ders programı	Plan lekcji	ตารางเรียน	Thời khóa biểu
+虚视跳转器	虛視跳轉器	Virtual Jump Device	仮想ジャンプ装置	Устройство виртуального прыжка	가상 점프 장치	Dispositivo de salto virtual	Dispositivo de salto virtual	Appareil de saut virtuel	Virtuelles Sprunggerät	Dispositivo di salto virtuale	Sanal Atlama Cihazı	Wirtualne urządzenie skoku	อุปกรณ์กระโดดเสมือน	Thiết bị nhảy ảo
+全局	全域	Global	グローバル	Общие	전체	Global	Global	Global	Allgemein	Generale	Genel	Ogólne	ทั่วไป	Chung
+世界	世界	World	ワールド	Мир	월드	Mundo	Mundo	Monde	Welt	Mondo	Dünya	Świat	โลก	Thế giới
+反转滚轮	反轉滾輪	Invert scroll wheel	スクロール反転	Инвертировать прокрутку	스크롤 반전	Invertir rueda de desplazamiento	Inverter roda de rolagem	Inverser la molette	Mausrad umkehren	Inverti rotellina	Kaydırmayı ters çevir	Odwróć przewijanie	กลับทิศทางการเลื่อนล้อ	Đảo chiều con lăn
+反转鼠标	反轉滑鼠	Invert mouse	マウス反転	Инвертировать мышь	마우스 반전	Invertir ratón	Inverter mouse	Inverser la souris	Maus umkehren	Inverti mouse	Fareyi ters çevir	Odwróć mysz	กลับทิศทางเมาส์	Đảo chiều chuột

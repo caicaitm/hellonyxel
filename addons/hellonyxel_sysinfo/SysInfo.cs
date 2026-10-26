@@ -594,6 +594,12 @@ public class SysInfo
             j.Append(BuildDesktopIcons());
             j.Append(",\n");
 
+            // 系统常量段（consts）：把设备相关数值以「具名常量」落盘，供 Godot SystemConst
+            // autoload 按名快速调用（积木宽高等可写常量名，跨设备解析成不同实际尺寸）。
+            j.Append("  \"consts\": ");
+            j.Append(BuildConsts());
+            j.Append(",\n");
+
             StringBuilder t = new StringBuilder();
             F(t, "  ", "local", S(DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")), false);
             F(t, "  ", "utc", S(DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss")), false);
@@ -693,6 +699,64 @@ public class SysInfo
         {
             return "{\"edge\":\"bottom\",\"height_px\":0}";
         }
+    }
+
+    // ---------- consts ----------
+    // 系统常量段：只做轻量采集（注册表 / SPI / Screen / GetDpiForSystem），
+    // 不重复 desktop_icons 的重量级图标枚举。各键与原始段的对应：
+    //   icon_size         <-> desktop_icons.icon_size_px
+    //   icon_cell_spacing <-> desktop_icons.icon_cell_spacing
+    //   taskbar_height    <-> taskbar.height_px
+    //   screen_width/height <-> screen.primary_resolution.width/height
+    //   system_dpi        <-> screen.system_dpi
+    // Godot SystemConst 读 consts 优先，缺失时回退原始段（兼容旧 EXE 写出的文件）。
+    static string BuildConsts()
+    {
+        StringBuilder s = new StringBuilder();
+        s.Append("{\n");
+
+        int iconSizePx = 0;
+        try
+        {
+            using (RegistryKey k = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\Shell\Bags\1\Desktop"))
+            {
+                if (k != null)
+                {
+                    object o = k.GetValue("IconSize");
+                    if (o != null) iconSizePx = Convert.ToInt32(o);
+                }
+            }
+        }
+        catch { }
+        if (iconSizePx <= 0) iconSizePx = 48;
+
+        int cellSpacing = 0;
+        try
+        {
+            uint hsp = 0, vsp = 0;
+            if (SystemParametersInfo(SPI_GETICONHORIZONTALSPACING, 0, ref hsp, 0)) cellSpacing = (int)hsp;
+            if (cellSpacing <= 0 && SystemParametersInfo(SPI_GETICONVERTICALSPACING, 0, ref vsp, 0)) cellSpacing = (int)vsp;
+        }
+        catch { }
+        if (cellSpacing <= 0) cellSpacing = iconSizePx * 2;
+
+        Rectangle pb = Screen.PrimaryScreen.Bounds;
+        Rectangle wa = Screen.PrimaryScreen.WorkingArea;
+        // 任务栏厚度：顶/底贴边 = 竖直差；左/右贴边 = 水平差
+        int taskbarH = (wa.Width == pb.Width) ? pb.Height - wa.Height : pb.Width - wa.Width;
+        if (taskbarH < 0) taskbarH = 0;
+
+        int dpi = 96;
+        try { dpi = (int)GetDpiForSystem(); } catch { }
+
+        F(s, "    ", "icon_size", iconSizePx.ToString(), false);
+        F(s, "    ", "icon_cell_spacing", cellSpacing.ToString(), false);
+        F(s, "    ", "taskbar_height", taskbarH.ToString(), false);
+        F(s, "    ", "screen_width", pb.Width.ToString(), false);
+        F(s, "    ", "screen_height", pb.Height.ToString(), false);
+        F(s, "    ", "system_dpi", dpi.ToString(), true);
+        s.Append("  }");
+        return s.ToString();
     }
 
     // ---------- desktop icons ----------

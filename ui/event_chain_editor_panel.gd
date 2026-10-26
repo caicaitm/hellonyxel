@@ -99,6 +99,8 @@ var _title_row: Control
 var _title_edit: LineEdit
 var _image_row: Control
 var _image_edit: LineEdit
+var _bg_image_row: Control       # 头像背景层（仅底部；头像透明处透出；空 = 不绘制背景）
+var _bg_image_edit: LineEdit
 var _block_row: Control
 var _block_edit: LineEdit
 var _wait_row: Control
@@ -249,14 +251,107 @@ func _layout_root() -> void:
 	position = Vector2(maxf(16.0, vs.x - PANEL_W - 24.0), maxf(40.0, (vs.y - size.y) * 0.3))
 
 
-func _section_title(text: String) -> Label:
-	var l := Label.new()
-	l.text = text
-	l.add_theme_color_override("font_color", Color(0.8, 0.94, 1.0))
-	l.add_theme_font_size_override("font_size", UIStyle.FONT_SIZE + 1)
+# ---------------- 分区与折叠（批次 116，用户需求）----------------
+#
+# 需求：事件链配置等内容较长的分区要能**折叠**，收起后不再占高度。
+# 手法与 blocks/level_page.gd 的「▼ 配置」一致 —— **标题本身就是按钮**：点它切换 ▼/▶，
+# 并让该分区的内容容器（body）的 visible 跟着变。
+#   每个分区 = 【标题行：折叠按钮 + 该分区自己的按钮】 + 【body：VBoxContainer】，
+#   两者都直接挂在 _vbox 上（body 不另起缩进层级，层级靠标题前的箭头表达）。
+#
+# ★ 折叠**不重算面板高度**：高度由 _fit_to_content()（建树时算一次 = 内容自然高 × HEIGHT_SCALE(2)）
+#   定下；折叠只让 body 不占高度 → 下面的内容整体上移、底部留白（本来就有 2 倍余量，够用）。
+#   ★★ 刻意**不**在折叠时重跑 _fit_to_content()：那个函数还会重设 position.y，
+#   会把用户用拖动把柄挪到别处的面板**拽回原位**（每点一次折叠就跳一下）。
+var _sections: Dictionary = {}       # key -> { btn:UIBtn, body:VBoxContainer, title:String, open:bool }
+var _sec_head: HBoxContainer = null  # 最近一次 _add_section 建出的标题行（供该分区追加自己的按钮）
+
+
+## 折叠按钮的宽度：**必须显式给**。
+## ★★ UIBtn 是 BaseButton，内部 Label 用 PRESET_FULL_RECT 锚定 → **不计入按钮的最小尺寸**
+##   ⇒ `custom_minimum_size` 只给高、宽度给 0 时，按钮实际宽 = 0：
+##     文字照画（Label 不裁剪、溢出父框）却**点不到**（探针 116 v5 实测 size=(0,28)，
+##     截图里看到的那个小方框其实是紧接着的 `[+]` 按钮）。
+##   本项目所有 UIBtn 都显式给宽（64 / 72 / 96 / 120…），这里按**文字实测宽**给，
+##   取 ▼/▶ 两种箭头里的较宽者 + 左右内边距，保证折叠前后框宽一致、文字不外溢。
+func _toggle_width(title: String) -> float:
+	var w := 0.0
 	if is_instance_valid(_cjk):
-		l.add_theme_font_override("font", _cjk)
-	return l
+		for arrow in ["▼ ", "▶ "]:
+			var m := _cjk.get_string_size(arrow + title, HORIZONTAL_ALIGNMENT_LEFT, -1, UIStyle.FONT_SIZE)
+			w = maxf(w, m.x)
+	if w <= 0.0:
+		w = 120.0
+	return maxf(88.0, w + 22.0)   # +22 = 左右内边距（UIBtn 的 Label 居中对齐）
+
+
+## 建一个可折叠分区，返回**内容容器**（body）—— 调用方把该分区的控件全加进 body。
+## 标题行（含折叠按钮）由本函数挂到 _vbox，并记进 _sec_head。
+func _add_section(key: String, title: String, open: bool = true) -> VBoxContainer:
+	var head := HBoxContainer.new()
+	head.name = "SecHead_" + key
+	head.add_theme_constant_override("separation", 8)
+	head.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var btn := UIBtn.new()
+	btn.name = "SecToggle_" + key
+	btn.set_id("collapse_" + key)
+	# ★ 宽必须与「标题文字」一起算出来（见 _toggle_width）：0 宽 = 看得到、点不到
+	btn.custom_minimum_size = Vector2(_toggle_width(title), UIStyle.BTN_HEIGHT)
+	btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	# ★ 用 lambda 捕获 key（而不是 .bind）：实参个数与 pressed_id(id) 严格 1:1，
+	#   过门④（信号形参审计）时无需额外解释。
+	btn.pressed_id.connect(func(_id: String) -> void: _toggle_section(key))
+	head.add_child(btn)
+	_vbox.add_child(head)
+
+	var body := VBoxContainer.new()
+	body.name = "SecBody_" + key
+	body.add_theme_constant_override("separation", ROW_GAP)
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_vbox.add_child(body)
+
+	_sections[key] = {"btn": btn, "body": body, "title": title, "open": open}
+	_sec_head = head
+	_apply_section_state(key)
+	return body
+
+
+## 点折叠按钮：翻转该分区的开合状态
+func _toggle_section(key: String) -> void:
+	if not _sections.has(key):
+		return
+	var d: Dictionary = _sections[key]
+	d["open"] = not bool(d["open"])
+	_apply_section_state(key)
+
+
+## 按 _sections[key]["open"] 同步 body 可见性与标题箭头
+func _apply_section_state(key: String) -> void:
+	if not _sections.has(key):
+		return
+	var d: Dictionary = _sections[key]
+	var open := bool(d["open"])
+	var title := str(d["title"])
+	var body := d["body"] as Control
+	if body != null and is_instance_valid(body):
+		body.visible = open
+	var btn := d["btn"] as UIBtn
+	if btn != null and is_instance_valid(btn):
+		btn.set_label(("▼ " if open else "▶ ") + title)
+		btn.tooltip_text = ("收起／展开：" + title)
+
+
+## 该分区当前是否展开（探针 / future 用；无此 key → false）
+func is_section_open(key: String) -> bool:
+	if not _sections.has(key):
+		return false
+	return bool((_sections[key] as Dictionary)["open"])
+
+
+## 当前所有分区的 key（顺序 = 构建顺序）
+func section_keys() -> Array:
+	return _sections.keys()
 
 
 func _label(text: String, w: float = 0.0) -> Label:
@@ -511,7 +606,8 @@ func _on_name_menu_selected(idx: int) -> void:
 # 配置以 JSON 落盘到**事件链目录**下（res://events/<链名>/config.json），供其他系统检测。
 
 func _build_chain_config_section() -> void:
-	_vbox.add_child(_section_title("事件链配置"))
+	# ★ 批次 116：本分区带折叠按钮（用户需求）
+	var sec := _add_section("chain_config", "事件链配置")
 
 	# 触发事件：下拉选择「当前事件链内的某个事件」
 	# （与「事件名」下拉同款：点开才遍历该链下的 *.json）
@@ -526,7 +622,7 @@ func _build_chain_config_section() -> void:
 	_trigger_option.get_popup().about_to_popup.connect(_reload_trigger_menu)
 	_trigger_option.item_selected.connect(_on_trigger_menu_selected)
 	r1.add_child(_trigger_option)
-	_vbox.add_child(r1)
+	sec.add_child(r1)
 
 	# 触发条件（可长文本；★ 批次 94：加「编辑」按钮 → 打开统一后的「编辑条件」页）
 	var r2 := HBoxContainer.new()
@@ -535,7 +631,7 @@ func _build_chain_config_section() -> void:
 	r2.add_child(_label("触发条件", 84))
 	_cfg_cond_edit = _edit("触发条件（可空）")
 	r2.add_child(_field_with_long_edit(_cfg_cond_edit, "trigger"))
-	_vbox.add_child(r2)
+	sec.add_child(r2)
 
 	# 权重
 	var r3 := HBoxContainer.new()
@@ -545,7 +641,7 @@ func _build_chain_config_section() -> void:
 	_cfg_weight_edit = _edit("数字，默认 1", false, 120.0)
 	r3.add_child(_cfg_weight_edit)
 	r3.add_child(_label("（数字，默认 1）", 0))
-	_vbox.add_child(r3)
+	sec.add_child(r3)
 
 	# 读取 / 保存配置
 	var r4 := HBoxContainer.new()
@@ -565,13 +661,13 @@ func _build_chain_config_section() -> void:
 	_cfg_save_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_cfg_save_btn.pressed_id.connect(_on_cfg_save_pressed)
 	r4.add_child(_cfg_save_btn)
-	_vbox.add_child(r4)
+	sec.add_child(r4)
 
 	# 状态提示（独占一行，避免把按钮挤窄）
 	_cfg_status = _label("", 0)
 	_cfg_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_cfg_status.add_theme_color_override("font_color", Color(0.80, 0.89, 0.99, 0.85))
-	_vbox.add_child(_cfg_status)
+	sec.add_child(_cfg_status)
 
 
 # 触发事件下拉：点开时才遍历当前事件链下的事件名（懒加载）。
@@ -694,21 +790,23 @@ func _set_cfg_status(text: String) -> void:
 # ---------------- 1) 关闭 / 4) 打开的对话框 ----------------
 
 func _build_close_section() -> void:
-	_vbox.add_child(_section_title("【1】关闭的目标"))
+	# ★ 批次 116：本分区可折叠
+	var sec := _add_section("close", "【1】关闭的目标")
 	_close_list = VBoxContainer.new()
 	_close_list.add_theme_constant_override("separation", ROW_GAP)
-	_vbox.add_child(_close_list)
-	_vbox.add_child(_add_target_button("add_close", "关闭"))
+	sec.add_child(_close_list)
+	sec.add_child(_add_target_button("add_close", "关闭"))
 
 func _build_open_section() -> void:
-	_vbox.add_child(_section_title("【4】打开的目标"))
+	# ★ 批次 116：本分区可折叠
+	var sec := _add_section("open", "【4】打开的目标")
 	_open_list = VBoxContainer.new()
 	_open_list.add_theme_constant_override("separation", ROW_GAP)
-	_vbox.add_child(_open_list)
+	sec.add_child(_open_list)
 	# ★ 默认就带一条「自动(正文对应)」：打开【2】正文里选的那个对话框。
 	#   老行为（有正文就弹面板）由它保住；把它删掉 = 明确声明本次事件不打开任何面板。
 	_open_list.add_child(_make_target_row(true, TARGET_ITEMS.size()))
-	_vbox.add_child(_add_target_button("add_open", "打开"))
+	sec.add_child(_add_target_button("add_open", "打开"))
 	# 格式提示（与【3】同款）：auto 的含义与「删掉就不弹」的语义最容易搞错
 	var hint := Label.new()
 	hint.text = "「自动(正文对应)」= 打开【2】正文里选的那个对话框（弹窗/底部）；\n"
@@ -718,7 +816,7 @@ func _build_open_section() -> void:
 	hint.add_theme_color_override("font_color", Color(0.80, 0.89, 0.99))
 	if is_instance_valid(_cjk):
 		hint.add_theme_font_override("font", _cjk)
-	_vbox.add_child(hint)
+	sec.add_child(hint)
 
 
 func _add_target_button(btn_id: String, label_text: String) -> UIBtn:
@@ -847,12 +945,13 @@ func _add_level_target_row(box: VBoxContainer, level_name: String, with_auto := 
 # ---------------- 2) 正文 ----------------
 
 func _build_content_section() -> void:
-	_vbox.add_child(_section_title("【2】正文"))
+	# ★ 批次 116：本分区可折叠
+	var sec := _add_section("content", "【2】正文")
 
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_vbox.add_child(row)
+	sec.add_child(row)
 
 	_lang_label = _label("语言", 44)
 	row.add_child(_lang_label)
@@ -886,24 +985,32 @@ func _build_content_section() -> void:
 	_content_hint.add_theme_color_override("font_color", Color(0.80, 0.89, 0.99))
 	if is_instance_valid(_cjk):
 		_content_hint.add_theme_font_override("font", _cjk)
-	_vbox.add_child(_content_hint)
+	sec.add_child(_content_hint)
 
 	# 标题 / 配图（弹窗：标题+配图；底部：角色名+头像）
 	_title_row = _make_plain_row("标题(弹窗)", _title_edit, true)
 	_title_edit = _title_row.get_node("Val")
-	_vbox.add_child(_title_row)
+	sec.add_child(_title_row)
 	# ★ 同一行按面板类型改文案：弹窗 = 配图路径 / 底部 = 头像路径 → 两者都是图片，同一个「选图」按钮
 	_image_row = _make_plain_row("配图路径(弹窗)", _image_edit, true)
 	_image_edit = _image_row.get_node("Val")
 	UIPathPicker.attach(_image_edit, UIPathPicker.DIR_TEXTURES,
 		{"exts": UIPathPicker.IMG_EXTS, "label": "图片", "title": "选择配图 / 头像图片"})
-	_vbox.add_child(_image_row)
+	sec.add_child(_image_row)
+
+	# 头像背景层（仅底部）：独立字段 c["bg_image"]；与头像同框重叠，头像透明处透出背景。
+	# ★ 不复用 _image_row（那是弹窗配图 / 底部头像共用的单一字段），避免污染弹窗支线。
+	_bg_image_row = _make_plain_row("头像背景路径(底部)", _bg_image_edit, true)
+	_bg_image_edit = _bg_image_row.get_node("Val")
+	UIPathPicker.attach(_bg_image_edit, UIPathPicker.DIR_TEXTURES,
+		{"exts": UIPathPicker.IMG_EXTS, "label": "图片", "title": "选择头像背景图片"})
+	sec.add_child(_bg_image_row)
 
 	# 冒泡：积木ID
 	_block_row = _make_plain_row("积木ID(冒泡)", _block_edit, true)
 	_block_edit = _block_row.get_node("Val")
 	_block_edit.placeholder_text = "积木ID(冒泡对话框)"
-	_vbox.add_child(_block_row)
+	sec.add_child(_block_row)
 
 	# 通知：等待关闭
 	_wait_row = HBoxContainer.new()
@@ -917,7 +1024,7 @@ func _build_content_section() -> void:
 	if is_instance_valid(_cjk):
 		_wait_check.add_theme_font_override("font", _cjk)
 	_wait_row.add_child(_wait_check)
-	_vbox.add_child(_wait_row)
+	sec.add_child(_wait_row)
 
 	# 声音（底部台词播放）—— 默认 auto：逐字/逐词泡泡声
 	_voice_row = _make_plain_row("声音(底部)", _voice_edit, true)
@@ -927,7 +1034,7 @@ func _build_content_section() -> void:
 	# 右侧文件夹按钮：选音频 → 回填 res:// 相对路径（默认目录 res://audio/）
 	UIPathPicker.attach(_voice_edit, UIPathPicker.DIR_AUDIO,
 		{"exts": UIPathPicker.AUDIO_EXTS, "label": "音频", "title": "选择声音文件"})
-	_vbox.add_child(_voice_row)
+	sec.add_child(_voice_row)
 
 	# 正文效果（仅底部）：点击台词时执行（与按钮 effect 同源的 DSL 串）
 	# ★ 批次 95 去重：「编辑」按钮与按钮条目的「效果」行**走同一条路径、开同一个页** ——
@@ -944,7 +1051,7 @@ func _build_content_section() -> void:
 	eff_edit_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	eff_edit_btn.pressed_id.connect(func(_id: String) -> void: _open_placeholder_editor("effect", _effect_edit))
 	_effect_row.add_child(eff_edit_btn)
-	_vbox.add_child(_effect_row)
+	sec.add_child(_effect_row)
 
 	# 正文文件名 + 内容（「无修改」时两行连同右侧「长文本」按钮一并收起）
 	var tf_row := HBoxContainer.new()
@@ -953,7 +1060,7 @@ func _build_content_section() -> void:
 	tf_row.add_child(_label("正文文件名", 84))
 	_text_file_edit = _edit("不含语言/扩展名，如 greeting")
 	tf_row.add_child(_text_file_edit)
-	_vbox.add_child(tf_row)
+	sec.add_child(tf_row)
 	_tf_row = tf_row
 
 	var content_row := HBoxContainer.new()
@@ -962,7 +1069,7 @@ func _build_content_section() -> void:
 	content_row.add_child(_label("正文内容", 84))
 	_content_edit = _edit("当前语言 txt 正文 ((修饰)[文本])；按钮文字写在同文件 @button 小节")
 	content_row.add_child(_field_with_long(_content_edit))
-	_vbox.add_child(content_row)
+	sec.add_child(content_row)
 	_content_row = content_row
 
 
@@ -1013,6 +1120,8 @@ func _apply_ptype(idx: int) -> void:
 	_voice_row.visible = pt == "bottom"
 	# 正文效果只在「底部」显示：点击底部台词才执行（与按钮 effect 同源）
 	_effect_row.visible = pt == "bottom"
+	# 头像背景层只在「底部」显示（弹窗/冒泡/通知无头像背景）
+	_bg_image_row.visible = pt == "bottom"
 
 
 # 当前选的是不是「无修改」
@@ -1071,10 +1180,10 @@ func _refresh_current_lang_txt() -> void:
 # ---------------- 3) 按钮条目 ----------------
 
 func _build_buttons_section() -> void:
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 8)
-	head.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(_section_title("【3】按钮条目"))
+	# ★ 批次 116：本分区可折叠。折叠按钮**就是标题**，放在标题行里；
+	#   「[+] 新建按钮」跟在标题后（用 _sec_head 拿到刚建出的标题行）。
+	var sec := _add_section("buttons", "【3】按钮条目")
+	var head := _sec_head
 	var add := UIBtn.new()
 	add.set_id("add_btn")
 	add.set_label("[+]")
@@ -1083,7 +1192,6 @@ func _build_buttons_section() -> void:
 	add.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	add.pressed_id.connect(func(_id: String) -> void: _on_add_button())
 	head.add_child(add)
-	_vbox.add_child(head)
 
 	_buttons_box = VBoxContainer.new()
 	_buttons_box.add_theme_constant_override("separation", ROW_GAP)
@@ -1097,8 +1205,8 @@ func _build_buttons_section() -> void:
 	hint.add_theme_color_override("font_color", Color(1.0, 0.85, 0.55))
 	if is_instance_valid(_cjk):
 		hint.add_theme_font_override("font", _cjk)
-	_vbox.add_child(hint)
-	_vbox.add_child(_buttons_box)
+	sec.add_child(hint)
+	sec.add_child(_buttons_box)
 
 
 func _next_button_id() -> String:
@@ -1429,6 +1537,9 @@ func _collect_dict() -> Dictionary:
 			# 正文效果：点击底部台词时执行（与按钮 effect 同源）；仅底部写
 			if pt == "bottom" and _effect_edit != null:
 				c["effect"] = _effect_edit.text.strip_edges()
+			# 头像背景层：仅底部写；空 = 不绘制背景
+			if pt == "bottom" and _bg_image_edit != null:
+				c["bg_image"] = _bg_image_edit.text.strip_edges()
 		elif pt == "bubble":
 			var bv := _block_edit.text.strip_edges()
 			c["block_id"] = int(bv) if bv.is_valid_int() else 0
@@ -1466,6 +1577,9 @@ func _load_from_dict(data: Dictionary) -> void:
 	_text_file_edit.text = str(c.get("text_file", ""))
 	_title_edit.text = str(c.get("title", ""))
 	_image_edit.text = str(c.get("image", ""))
+	# 头像背景层：老事件没有这一项 → 空（不绘制背景）
+	if _bg_image_edit != null:
+		_bg_image_edit.text = str(c.get("bg_image", ""))
 	_block_edit.text = str(c.get("block_id", ""))
 	_wait_check.button_pressed = bool(c.get("notification_buttons", false))
 	# 声音：老事件没有这一项 → 显示默认 auto（保存时会写进 content.voice）

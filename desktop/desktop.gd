@@ -23,6 +23,8 @@ var weather_panel: ApiConfigPanel = null   # 配置天气页面（托盘菜单�
 var ai_panel: ApiConfigPanel = null        # 配置人工智能页面（托盘菜单「配置人工智能」打开，预留占位）
 var mod_list_panel: ModListPanel = null    # MOD 列表页（托盘菜单「打开MOD列表」打开，占位）
 var calendar_panel: CalendarPanel = null     # 日历/日记/备忘录单页（托盘菜单「打开日历」打开）
+var course_schedule_panel: CourseSchedulePanel = null  # 课程表单页（托盘菜单「课程表」/ 双击积木打开）
+var version_panel: VersionAnnouncementPanel = null   # 版本与更新公告（托盘菜单「版本」打开）
 var inventory_panel: InventoryPanel = null # 背包面板（调试面板「背包」打开）
 var device_manager_panel: DeviceManagerPanel = null   # 设备管理面板（双击「设备管理」积木 / 背包「设备管理」打开）
 var scan_reconfigure_panel: ScanReconfigurePanel = null   # 扫描重构面板（双击「扫描重构器」积木打开）
@@ -30,6 +32,10 @@ var _last_mouse_pos: Vector2 = Vector2.ZERO
 var _target_block = null
 # 关卡页面（可交互页面；未来关卡场景投影到此表面，见 blocks/level_page.gd）
 var _level_page: LevelPage = null
+# 家园页面（仿关卡系统的「单一场景家园」；积木随存档保存，见 blocks/home_page.gd）
+var _home_page: HomePage = null
+# 世界页面（3D 宏观世界；3D 落在窗口内嵌的 SubViewport 里，见 the words/world_page.gd）
+var _world_page: WorldPage = null
 
 # 关卡页面的「开关」由这个信号驱动：任意带 button_打开桌面副本 标签的积木双击发出（经 SignalBus）
 const LEVEL_OPEN_SIGNAL := "打开桌面副本"
@@ -47,7 +53,10 @@ const PAGE_LAYER_INDEX := 99
 const ICON_COPY_TYPE := "icon_placeholder"
 const ICON_COPY_FILL := "#3A7BD5AA"
 const ICON_COPY_BORDER := "#2E6BD6FF"
-var _icon_copy_size := 48.0      # 当前桌面图标尺寸（随枚举更新，作为新积木类型的宽高）
+# ★「图标占位」的宽 / 高写**系统常量名**（SystemConst 注册，值 = 桌面图标尺寸），而不是写死数值：
+#   类型定义里存的是名字，创建积木时由 SystemConst 现读 sysinfo.json 解析成当前设备的实际像素
+#   —— 换台设备（图标 32 / 48 / 96 …）占位积木自动跟着变，无需改任何定义。
+const ICON_COPY_SIZE_CONST := "icon_size"
 
 # 「虚视跳转器」积木类型：尺寸对齐桌面图标（= 围住图标的大小）/ 可拖动 / 不受重力 /
 # 底部显示栏写「虚视跳转器」/ 双击（button_open_darknet 标签）打开暗网入口页。
@@ -119,6 +128,16 @@ const CALENDAR_OPEN_SIGNAL := "open_calendar"
 var _cal_size := Vector2(48.0, 48.0)    # 日历当前尺寸（随图标盒子更新）
 var _cal_spawned := false               # 日历实例是否已在场景里
 
+# 「课程表」积木类型（批次 111）：与日历完全同款流程（尺寸 = 图标选择框盒子 / 可拖动 /
+# 不受重力 / 底部显示栏写「课程表」/ 启动时自动放一个实例）。双击 → 打开「课程表」页面。
+const COURSE_SCHEDULE_TYPE := "course_schedule"
+const COURSE_SCHEDULE_FILL := "#2E8B97CC"   # 青蓝半透明填充（与日历暖红 / 设备管理绿蓝区分）
+const COURSE_SCHEDULE_BORDER := "#A8E6F0FF" # 亮青边框
+const COURSE_SCHEDULE_SID := "课程表"       # 自动生成实例的固定字符串 ID（避免重复生成）
+const COURSE_SCHEDULE_OPEN_SIGNAL := "open_course_schedule"
+var _cs_size := Vector2(48.0, 48.0)    # 课程表当前尺寸（随图标盒子更新）
+var _cs_spawned := false               # 课程表实例是否已在场景里
+
 # Tab 键在「桌面穿透未开启」时开启穿透；关闭侧挂在系统托盘右键菜单（见 TrayIcon.cs）
 # （不再用 Ctrl+Shift：部分输入法切换占用该组合，会误触发）
 
@@ -181,7 +200,7 @@ const MOVE_HERE_ID := "move_here"
 const ENUM_EXE := "res://addons/hellonyxel_sysinfo/SysInfo.exe"
 const ENUM_SCRIPT := "res://addons/hellonyxel_sysinfo/enumerate_scene.ps1"   # 仅作 EXE 缺失/失败时的兜底
 const ENUM_DEBUG := true   # 首次枚举把窗口清单（含游戏窗口是否被排除）落盘到 Temp/enum_debug.txt，便于排查"虚视跳转器被盖"
-const ENUM_INTERVAL_SEC := 1.0          # 轮询间隔：窗口/图标变化在 ~1s 内被感知（可调小以更快）
+const ENUM_INTERVAL_SEC := 0.2          # 轮询间隔：窗口/图标变化在 ~0.2s 内被感知（实验值：0.2s=5Hz ⇒ SysInfo.exe scene ~42ms/次 ≈ 0.2 核；活跃拖动期风扇风险，静止靠 ENUM_IDLE 3s 退避兜底）
 
 # ★★ 批次 8：自适应轮询间隔（空闲降频）。
 #   背景：`SysInfo.exe scene` 单次 CPU 46.9 ms（实测 30 次中位）⇒ 1 s 轮询 =
@@ -291,6 +310,18 @@ func _ready() -> void:
 	if not TrayRunner.calendar_requested.is_connected(_open_calendar):
 		TrayRunner.calendar_requested.connect(_open_calendar)
 
+	# 课程表单页：由系统托盘右键菜单「课程表」/ 双击「课程表」积木打开
+	course_schedule_panel = CourseSchedulePanel.new()
+	ui_layer.add_child(course_schedule_panel)
+	if not TrayRunner.course_schedule_requested.is_connected(_open_course_schedule):
+		TrayRunner.course_schedule_requested.connect(_open_course_schedule)
+
+	# 版本与更新公告：由系统托盘右键菜单「版本」打开（读取最新版本号 + 更新公告）
+	version_panel = VersionAnnouncementPanel.new()
+	ui_layer.add_child(version_panel)
+	if not TrayRunner.version_requested.is_connected(_open_version_announcement):
+		TrayRunner.version_requested.connect(_open_version_announcement)
+
 	# 进入/退出调试模式：由系统托盘右键菜单「进入/退出调试模式」触发（切换 Debug.debug_mode）
 	if not TrayRunner.toggle_debug_requested.is_connected(_on_tray_toggle_debug):
 		TrayRunner.toggle_debug_requested.connect(_on_tray_toggle_debug)
@@ -326,6 +357,8 @@ func _ready() -> void:
 #      同时高于桌面世界（主场景）的积木。用**独立 CanvasLayer(99) < ui_layer(100)** 表达，
 #      绘制与输入顺序都由层号唯一确定（不再依赖「同层内 z_index + move_child」那套技巧）。
 	_setup_level_page()
+	_setup_home_page()
+	_setup_world_page()
 
 	# 6) 虚视跳转器：注册类型（落 JSON）；实例在首次窗口枚举后挑「空白处」放置
 	#    （避开窗口，避免一启动就被页面覆盖的 cutout 洞穿透；见 _ensure_virtual_jump_spawned）
@@ -390,6 +423,16 @@ func _ready() -> void:
 	cal_fb.timeout.connect(_spawn_calendar_block)
 	add_child(cal_fb)
 	cal_fb.start()
+
+	# 10b2) 课程表：与「日历」同款流程（注册类型 + 首轮挑空白点放置 + 3s 兜底）。
+	#       ★ 挑点时额外避开 虚视跳转器 / 回收站 / 此电脑 / 设备管理 / 扫描重构器 / 日历（见 _ensure_course_schedule_spawned）。
+	_register_course_schedule_type()
+	var cs_fb := Timer.new()
+	cs_fb.wait_time = 3.0
+	cs_fb.one_shot = true
+	cs_fb.timeout.connect(_spawn_course_schedule_block)
+	add_child(cs_fb)
+	cs_fb.start()
 
 	# 10c) 状态文件自检：**进入游戏前**，Temp 目录下的状态 JSON（玩家画像 / 荧惑日常状态 /
 	#      日历笔记 / 设备清单 / 背包 / 通用状态…）若残缺 → 按各自默认值补建文件。
@@ -476,20 +519,73 @@ func _setup_level_page() -> void:
 	page.set_page_visible(false)
 
 
+# 家园页面接线（仿 _setup_level_page）：复用同一张 page_layer（CanvasLayer 99），
+# 创建 HomePage 并登记到 HomeManager，右键单击经 right_click_at 信号补弹菜单。
+# ★ 家园是单一场景，不需要「打开桌面副本」信号；开关由控制台 /open_home 与事件链 "home" 驱动。
+func _setup_home_page() -> void:
+	if page_layer == null or not is_instance_valid(page_layer):
+		page_layer = CanvasLayer.new()
+		page_layer.layer = PAGE_LAYER_INDEX
+		add_child(page_layer)
+	var rect := _screen_rect_to_page(DesktopShell.get_desktop_rect_f())
+	var page := HomePage.new()
+	page_layer.add_child(page)
+	# ★ 与关卡页错开起点，避免两者同时可见时完全重叠
+	page.origin = Vector2(rect.position.x + 60.0, rect.position.y + 60.0)
+	page.size = Vector2(560.0, 380.0)
+	page.build("home_title")
+	# 注入「桌面世界」= 本场景根（家园积木被传送门送出家园时退回这里）
+	page.desktop_world = self
+	page.origin = Vector2(
+		clampf(page.origin.x, rect.position.x, rect.position.x + rect.size.x - page.size.x),
+		clampf(page.origin.y, rect.position.y, rect.position.y + rect.size.y - page.size.y))
+	_home_page = page
+	# 家园页判定为「右键单击」时补弹右键菜单（同关卡页 right_click_at）
+	if not page.right_click_at.is_connected(_on_home_right_click):
+		page.right_click_at.connect(_on_home_right_click)
+	# 登记到 HomeManager：控制台 /open_home 等入口据此定位家园面板
+	if HomeManager != null:
+		HomeManager.home_page = page
+	# 默认隐藏：由 /open_home 或事件链 "home" 打开
+	page.set_page_visible(false)
+
+
+# 世界页面接线（仿 _setup_home_page）：复用同一张 page_layer（CanvasLayer 99），
+# 创建 WorldPage（3D 宏观世界：内嵌 SubViewport + 左侧「世界节点」列表 + 镜头锚定）。
+# ★ 默认隐藏；开关由调试面板的「世界页面」按钮驱动（desktop.toggle_world_page）。
+func _setup_world_page() -> void:
+	if page_layer == null or not is_instance_valid(page_layer):
+		page_layer = CanvasLayer.new()
+		page_layer.layer = PAGE_LAYER_INDEX
+		add_child(page_layer)
+	var rect := _screen_rect_to_page(DesktopShell.get_desktop_rect_f())
+	var page := WorldPage.new()
+	page_layer.add_child(page)
+	# ★ 与关卡页/家园页错开起点，避免同时可见时完全重叠
+	page.origin = Vector2(rect.position.x + 110.0, rect.position.y + 100.0)
+	page.size = Vector2(660.0, 440.0)
+	page.build("world_title")
+	page.origin = Vector2(
+		clampf(page.origin.x, rect.position.x, rect.position.x + rect.size.x - page.size.x),
+		clampf(page.origin.y, rect.position.y, rect.position.y + rect.size.y - page.size.y))
+	_world_page = page
+	page.set_page_visible(false)
+
+
 # 登记「图标占位」内置类型默认模板（仅内存，绝不写盘）；JSON 在创建时读取、保存时写盘。
-# 宽高随桌面图标尺寸走（overrides 在创建时由代码强制覆盖，符合「尺寸不靠 JSON」）。
+# 宽高写系统常量名（ICON_COPY_SIZE_CONST），由 SystemConst 在创建积木时按当前设备解析。
 func _register_icon_copy_type() -> void:
 	BlockTypes.ensure_builtin_type(ICON_COPY_TYPE, _icon_copy_def(),
-		{"width": _icon_copy_size, "height": _icon_copy_size})
-	print("[desktop] 确保图标占位类型（尺寸=%s）" % str(_icon_copy_size))
+		{"width": ICON_COPY_SIZE_CONST, "height": ICON_COPY_SIZE_CONST})
+	print("[desktop] 确保图标占位类型（宽高 = 常量 %s，当前解析 = %s）"
+		% [ICON_COPY_SIZE_CONST, str(SystemConst.get_value(ICON_COPY_SIZE_CONST))])
 
 
 # 「图标占位」类型定义（默认；首次启动落盘，之后以 JSON 为准）
 func _icon_copy_def() -> Dictionary:
-	var s := _icon_copy_size
 	return {
 		"name": ICON_COPY_TYPE,
-		"width": float(s), "height": float(s),
+		"width": ICON_COPY_SIZE_CONST, "height": ICON_COPY_SIZE_CONST,
 		"display_layer": 0,
 		"collision_layer": BlockLayers.icon_boundary_layers(),
 		"border_width": 2.0,
@@ -504,7 +600,7 @@ func _icon_copy_def() -> Dictionary:
 
 
 # 登记「虚视跳转器」内置类型默认模板（仅内存，绝不写盘）；JSON 在创建时读取、保存时写盘。
-#   · 尺寸 = 桌面图标尺寸（_icon_copy_size）→ 与「围住桌面图标」的大小一致
+#   · 尺寸 = 桌面图标尺寸（系统常量 icon_size）→ 与「围住桌面图标」的大小一致
 #   · 标签：显示/填充/边框/碰撞/文本 + 可拖动(draggable) + 双击按钮(button_open_darknet)
 #            ★ 故意不含 gravity → 不受重力影响（浮在放置处，可自由拖动）
 #   · 底部显示栏：一个贴底文本框，居中写「虚视跳转器」
@@ -531,7 +627,7 @@ func _virtual_jump_def() -> Dictionary:
 		"border_width": 3.0,
 		"border_color": VIRTUAL_JUMP_BORDER,
 		"fill_color": VIRTUAL_JUMP_FILL,
-		"fill_path": "", "fill_mode": 0, "fill_anim": 0,
+		"fill_path": "res://textures/apps/network_globe.png", "fill_mode": 0, "fill_anim": 0,
 		"rotation_deg": 0.0,
 		"text_boxes": [
 			{
@@ -540,20 +636,37 @@ func _virtual_jump_def() -> Dictionary:
 				"height": bar_h,
 				"cx": 0.0,
 				"cy": bar_cy,
-				"border_color": "#FFFFFFFF",
-				"fill_color": "#000000B3",
+				"border_color": "#00000000",
+				"fill_color": "#00000000",
 				"fill_source": 0,
 				"fill_image_path": "",
 				"rotation_deg": 0.0,
 				"follow_block_rotation": false,
 				"text_def": "(C)[虚视跳转器]",
+				"text_defs": {
+					"zh_CN": "(C)[虚视跳转器]",
+					"zh_TW": "(C)[虛視跳轉器]",
+					"en": "(C)[Virtual Jump Device]",
+					"ja": "(C)[仮想ジャンプ装置]",
+					"ru": "(C)[Устройство виртуального прыжка]",
+					"ko": "(C)[가상 점프 장치]",
+					"es": "(C)[Dispositivo de salto virtual]",
+					"pt": "(C)[Dispositivo de salto virtual]",
+					"fr": "(C)[Appareil de saut virtuel]",
+					"de": "(C)[Virtuelles Sprunggerät]",
+					"it": "(C)[Dispositivo di salto virtuale]",
+					"tr": "(C)[Sanal Atlama Cihazı]",
+					"pl": "(C)[Wirtualne urządzenie skoku]",
+					"th": "(C)[อุปกรณ์กระโดดเสมือน]",
+					"vi": "(C)[Thiết bị nhảy ảo]",
+				},
 				"hide_when_empty": false,
 			}
 		],
 		"parent_id": 0, "child_ids": [],
-		"tags": PackedStringArray([BlockTags.SHOW, BlockTags.FILL, BlockTags.BORDER,
+		"tags": PackedStringArray([BlockTags.SHOW, BlockTags.FILL,
 			BlockTags.COLLISION, BlockTags.TEXT, BlockTags.DRAGGABLE, BlockTags.DESKTOP_ICON,
-			BlockTags.button_tag(VIRTUAL_JUMP_BTN_SIGNAL)]),
+			BlockTags.button_tag(VIRTUAL_JUMP_BTN_SIGNAL), BlockTags.SELECTABLE, BlockTags.FILL_IMAGE]),
 	}
 
 
@@ -583,7 +696,7 @@ func _recycle_bin_def() -> Dictionary:
 		"border_width": 3.0,
 		"border_color": RECYCLE_BIN_BORDER,
 		"fill_color": RECYCLE_BIN_FILL,
-		"fill_path": "", "fill_mode": 0, "fill_anim": 0,
+		"fill_path": "res://textures/apps/recycle_bin.png", "fill_mode": 0, "fill_anim": 0,
 		"rotation_deg": 0.0,
 		"text_boxes": [
 			{
@@ -592,21 +705,38 @@ func _recycle_bin_def() -> Dictionary:
 				"height": bar_h,
 				"cx": 0.0,
 				"cy": bar_cy,
-				"border_color": "#FFFFFFFF",
-				"fill_color": "#000000B3",
+				"border_color": "#00000000",
+				"fill_color": "#00000000",
 				"fill_source": 0,
 				"fill_image_path": "",
 				"rotation_deg": 0.0,
 				"follow_block_rotation": false,
 				"text_def": "(C)[回收站]",
+				"text_defs": {
+					"zh_CN": "(C)[回收站]",
+					"zh_TW": "(C)[資源回收筒]",
+					"en": "(C)[Recycle Bin]",
+					"ja": "(C)[ゴミ箱]",
+					"ru": "(C)[Корзина]",
+					"ko": "(C)[휴지통]",
+					"es": "(C)[Papelera de reciclaje]",
+					"pt": "(C)[Lixeira]",
+					"fr": "(C)[Corbeille]",
+					"de": "(C)[Papierkorb]",
+					"it": "(C)[Cestino]",
+					"tr": "(C)[Geri Dönüşüm Kutusu]",
+					"pl": "(C)[Kosz]",
+					"th": "(C)[ถังรีไซเคิล]",
+					"vi": "(C)[Thùng rác]",
+				},
 				"hide_when_empty": false,
 			}
 		],
 		"parent_id": 0, "child_ids": [],
-		"tags": PackedStringArray([BlockTags.SHOW, BlockTags.FILL, BlockTags.BORDER,
+		"tags": PackedStringArray([BlockTags.SHOW, BlockTags.FILL,
 			BlockTags.COLLISION, BlockTags.TEXT, BlockTags.DRAGGABLE, BlockTags.DESKTOP_ICON,
 			BlockTags.pending_detect_tag(BlockTags.DETECT_KEY_RECYCLE_BIN),
-			BlockTags.button_tag(INVENTORY_RECYCLE_SIGNAL)]),
+			BlockTags.button_tag(INVENTORY_RECYCLE_SIGNAL), BlockTags.SELECTABLE, BlockTags.FILL_IMAGE]),
 	}
 
 
@@ -636,7 +766,7 @@ func _this_pc_def() -> Dictionary:
 		"border_width": 3.0,
 		"border_color": THIS_PC_BORDER,
 		"fill_color": THIS_PC_FILL,
-		"fill_path": "", "fill_mode": 0, "fill_anim": 0,
+		"fill_path": "res://textures/apps/computer.png", "fill_mode": 0, "fill_anim": 0,
 		"rotation_deg": 0.0,
 		"text_boxes": [
 			{
@@ -645,20 +775,37 @@ func _this_pc_def() -> Dictionary:
 				"height": bar_h,
 				"cx": 0.0,
 				"cy": bar_cy,
-				"border_color": "#FFFFFFFF",
-				"fill_color": "#000000B3",
+				"border_color": "#00000000",
+				"fill_color": "#00000000",
 				"fill_source": 0,
 				"fill_image_path": "",
 				"rotation_deg": 0.0,
 				"follow_block_rotation": false,
 				"text_def": "(C)[此电脑]",
+				"text_defs": {
+					"zh_CN": "(C)[此电脑]",
+					"zh_TW": "(C)[本機]",
+					"en": "(C)[This PC]",
+					"ja": "(C)[この PC]",
+					"ru": "(C)[Этот компьютер]",
+					"ko": "(C)[내 PC]",
+					"es": "(C)[Este equipo]",
+					"pt": "(C)[Este computador]",
+					"fr": "(C)[Ce PC]",
+					"de": "(C)[Dieser PC]",
+					"it": "(C)[Questo PC]",
+					"tr": "(C)[Bu Bilgisayar]",
+					"pl": "(C)[Ten komputer]",
+					"th": "(C)[พีซีนี้]",
+					"vi": "(C)[PC này]",
+				},
 				"hide_when_empty": false,
 			}
 		],
 		"parent_id": 0, "child_ids": [],
-		"tags": PackedStringArray([BlockTags.SHOW, BlockTags.FILL, BlockTags.BORDER,
+		"tags": PackedStringArray([BlockTags.SHOW, BlockTags.FILL,
 			BlockTags.COLLISION, BlockTags.TEXT, BlockTags.DRAGGABLE, BlockTags.DESKTOP_ICON,
-			BlockTags.button_tag(INVENTORY_OPEN_SIGNAL)]),
+			BlockTags.button_tag(INVENTORY_OPEN_SIGNAL), BlockTags.SELECTABLE, BlockTags.FILL_IMAGE]),
 	}
 
 
@@ -744,7 +891,7 @@ func _device_manager_def() -> Dictionary:
 		"border_width": 3.0,
 		"border_color": DEVICE_MANAGER_BORDER,
 		"fill_color": DEVICE_MANAGER_FILL,
-		"fill_path": "", "fill_mode": 0, "fill_anim": 0,
+		"fill_path": "res://textures/apps/server.png", "fill_mode": 0, "fill_anim": 0,
 		"rotation_deg": 0.0,
 		"text_boxes": [
 			{
@@ -753,20 +900,37 @@ func _device_manager_def() -> Dictionary:
 				"height": bar_h,
 				"cx": 0.0,
 				"cy": bar_cy,
-				"border_color": "#FFFFFFFF",
-				"fill_color": "#000000B3",
+				"border_color": "#00000000",
+				"fill_color": "#00000000",
 				"fill_source": 0,
 				"fill_image_path": "",
 				"rotation_deg": 0.0,
 				"follow_block_rotation": false,
 				"text_def": "(C)[设备管理]",
+				"text_defs": {
+					"zh_CN": "(C)[设备管理]",
+					"zh_TW": "(C)[裝置管理]",
+					"en": "(C)[Device management]",
+					"ja": "(C)[デバイス管理]",
+					"ru": "(C)[Управление устройствами]",
+					"ko": "(C)[장치 관리]",
+					"es": "(C)[Gestión de dispositivos]",
+					"pt": "(C)[Gerenciamento de dispositivos]",
+					"fr": "(C)[Gestion des appareils]",
+					"de": "(C)[Geräteverwaltung]",
+					"it": "(C)[Gestione dispositivi]",
+					"tr": "(C)[Cihaz yönetimi]",
+					"pl": "(C)[Zarządzanie urządzeniami]",
+					"th": "(C)[การจัดการอุปกรณ์]",
+					"vi": "(C)[Quản lý thiết bị]",
+				},
 				"hide_when_empty": false,
 			}
 		],
 		"parent_id": 0, "child_ids": [],
-		"tags": PackedStringArray([BlockTags.SHOW, BlockTags.FILL, BlockTags.BORDER,
+		"tags": PackedStringArray([BlockTags.SHOW, BlockTags.FILL,
 			BlockTags.COLLISION, BlockTags.TEXT, BlockTags.DRAGGABLE, BlockTags.DESKTOP_ICON,
-			BlockTags.button_tag(DEVICE_MANAGER_OPEN_SIGNAL)]),
+			BlockTags.button_tag(DEVICE_MANAGER_OPEN_SIGNAL), BlockTags.SELECTABLE, BlockTags.FILL_IMAGE]),
 	}
 
 
@@ -848,7 +1012,7 @@ func _scan_reconfigure_def() -> Dictionary:
 		"border_width": 3.0,
 		"border_color": SCAN_RECONFIGURE_BORDER,
 		"fill_color": SCAN_RECONFIGURE_FILL,
-		"fill_path": "", "fill_mode": 0, "fill_anim": 0,
+		"fill_path": "res://textures/apps/microscope.png", "fill_mode": 0, "fill_anim": 0,
 		"rotation_deg": 0.0,
 		"text_boxes": [
 			{
@@ -857,20 +1021,37 @@ func _scan_reconfigure_def() -> Dictionary:
 				"height": bar_h,
 				"cx": 0.0,
 				"cy": bar_cy,
-				"border_color": "#FFFFFFFF",
-				"fill_color": "#000000B3",
+				"border_color": "#00000000",
+				"fill_color": "#00000000",
 				"fill_source": 0,
 				"fill_image_path": "",
 				"rotation_deg": 0.0,
 				"follow_block_rotation": false,
 				"text_def": "(C)[扫描重构器]",
+				"text_defs": {
+					"zh_CN": "(C)[扫描重构器]",
+					"zh_TW": "(C)[掃描重構器]",
+					"en": "(C)[Scan Restructurer]",
+					"ja": "(C)[スキャン再構築器]",
+					"ru": "(C)[Сканер-реструктуризатор]",
+					"ko": "(C)[스캔 재구성기]",
+					"es": "(C)[Reestructurador de escaneo]",
+					"pt": "(C)[Reestruturador de varredura]",
+					"fr": "(C)[Restructurateur de scan]",
+					"de": "(C)[Scan-Restrukturierer]",
+					"it": "(C)[Ristrutturatore di scansione]",
+					"tr": "(C)[Tarama Yeniden Yapılandırıcı]",
+					"pl": "(C)[Restrukturyzator skanowania]",
+					"th": "(C)[ตัวปรับโครงสร้างการสแกน]",
+					"vi": "(C)[Bộ tái cấu trúc quét]",
+				},
 				"hide_when_empty": false,
 			}
 		],
 		"parent_id": 0, "child_ids": [],
-		"tags": PackedStringArray([BlockTags.SHOW, BlockTags.FILL, BlockTags.BORDER,
+		"tags": PackedStringArray([BlockTags.SHOW, BlockTags.FILL,
 			BlockTags.COLLISION, BlockTags.TEXT, BlockTags.DRAGGABLE, BlockTags.DESKTOP_ICON,
-			BlockTags.button_tag(SCAN_RECONFIGURE_OPEN_SIGNAL)]),
+			BlockTags.button_tag(SCAN_RECONFIGURE_OPEN_SIGNAL), BlockTags.SELECTABLE, BlockTags.FILL_IMAGE]),
 	}
 
 
@@ -947,7 +1128,7 @@ func _calendar_def() -> Dictionary:
 		"border_width": 3.0,
 		"border_color": CALENDAR_BORDER,
 		"fill_color": CALENDAR_FILL,
-		"fill_path": "", "fill_mode": 0, "fill_anim": 0,
+		"fill_path": "res://textures/apps/empty_calendar_icon.png", "fill_mode": 0, "fill_anim": 0,
 		"rotation_deg": 0.0,
 		"text_boxes": [
 			{
@@ -956,20 +1137,37 @@ func _calendar_def() -> Dictionary:
 				"height": bar_h,
 				"cx": 0.0,
 				"cy": bar_cy,
-				"border_color": "#FFFFFFFF",
-				"fill_color": "#000000B3",
+				"border_color": "#00000000",
+				"fill_color": "#00000000",
 				"fill_source": 0,
 				"fill_image_path": "",
 				"rotation_deg": 0.0,
 				"follow_block_rotation": false,
 				"text_def": "(C)[日历]",
+				"text_defs": {
+					"zh_CN": "(C)[日历]",
+					"zh_TW": "(C)[行事曆]",
+					"en": "(C)[Calendar]",
+					"ja": "(C)[カレンダー]",
+					"ru": "(C)[Календарь]",
+					"ko": "(C)[달력]",
+					"es": "(C)[Calendario]",
+					"pt": "(C)[Calendário]",
+					"fr": "(C)[Calendrier]",
+					"de": "(C)[Kalender]",
+					"it": "(C)[Calendario]",
+					"tr": "(C)[Takvim]",
+					"pl": "(C)[Kalendarz]",
+					"th": "(C)[ปฏิทิน]",
+					"vi": "(C)[Lịch]",
+				},
 				"hide_when_empty": false,
 			}
 		],
 		"parent_id": 0, "child_ids": [],
-		"tags": PackedStringArray([BlockTags.SHOW, BlockTags.FILL, BlockTags.BORDER,
+		"tags": PackedStringArray([BlockTags.SHOW, BlockTags.FILL,
 			BlockTags.COLLISION, BlockTags.TEXT, BlockTags.DRAGGABLE, BlockTags.DESKTOP_ICON,
-			BlockTags.button_tag(CALENDAR_OPEN_SIGNAL)]),
+			BlockTags.button_tag(CALENDAR_OPEN_SIGNAL), BlockTags.SELECTABLE, BlockTags.FILL_IMAGE]),
 	}
 
 
@@ -1019,6 +1217,113 @@ func _ensure_calendar_spawned(windows: Variant) -> void:
 
 func _resize_calendar_block(box: Vector2) -> void:
 	_resize_auto_block(CALENDAR_SID, box)
+
+
+# ───────────────────────── 课程表积木（批次 111，与日历同构） ─────────────────────────
+
+func _register_course_schedule_type() -> void:
+	BlockTypes.ensure_builtin_type(COURSE_SCHEDULE_TYPE, _course_schedule_def())
+	print("[desktop] 确保课程表类型（尺寸=%s）" % str(_cs_size))
+
+
+func _course_schedule_def() -> Dictionary:
+	var s := _cs_size.x
+	var bar_h: float = maxf(22.0, s * 0.34)
+	var bar_cy: float = _cs_size.y * 0.5 - bar_h * 0.5
+	return {
+		"name": COURSE_SCHEDULE_TYPE,
+		"width": _cs_size.x, "height": _cs_size.y,
+		"display_layer": 0,
+		"collision_layer": BlockLayers.icon_boundary_layers(),
+		"border_width": 3.0,
+		"border_color": COURSE_SCHEDULE_BORDER,
+		"fill_color": COURSE_SCHEDULE_FILL,
+		"fill_path": "res://textures/apps/timetable.png", "fill_mode": 0, "fill_anim": 0,
+		"rotation_deg": 0.0,
+		"text_boxes": [
+			{
+				"name": "底部栏",
+				"width": _cs_size.x,
+				"height": bar_h,
+				"cx": 0.0,
+				"cy": bar_cy,
+				"border_color": "#00000000",
+				"fill_color": "#00000000",
+				"fill_source": 0,
+				"fill_image_path": "",
+				"rotation_deg": 0.0,
+				"follow_block_rotation": false,
+				"text_def": "(C)[课程表]",
+				"text_defs": {
+					"zh_CN": "(C)[课程表]",
+					"zh_TW": "(C)[課表]",
+					"en": "(C)[Timetable]",
+					"ja": "(C)[時間割]",
+					"ru": "(C)[Расписание]",
+					"ko": "(C)[시간표]",
+					"es": "(C)[Horario]",
+					"pt": "(C)[Horário]",
+					"fr": "(C)[Emploi du temps]",
+					"de": "(C)[Stundenplan]",
+					"it": "(C)[Orario]",
+					"tr": "(C)[Ders programı]",
+					"pl": "(C)[Plan lekcji]",
+					"th": "(C)[ตารางเรียน]",
+					"vi": "(C)[Thời khóa biểu]",
+				},
+				"hide_when_empty": false,
+			}
+		],
+		"parent_id": 0, "child_ids": [],
+		"tags": PackedStringArray([BlockTags.SHOW, BlockTags.FILL,
+			BlockTags.COLLISION, BlockTags.TEXT, BlockTags.DRAGGABLE, BlockTags.DESKTOP_ICON,
+			BlockTags.button_tag(COURSE_SCHEDULE_OPEN_SIGNAL), BlockTags.SELECTABLE, BlockTags.FILL_IMAGE]),
+	}
+
+
+func _spawn_course_schedule_block(pos: Vector2 = Vector2.ZERO) -> void:
+	if BlockManager.get_block_by_string_id(COURSE_SCHEDULE_SID) != null:
+		_cs_spawned = true
+		return
+	var b := BlockTypes.create_block(COURSE_SCHEDULE_TYPE)
+	if b == null:
+		push_warning("[desktop] 课程表类型尚未注册，无法放置实例")
+		return
+	var rect := DesktopShell.get_desktop_rect_f()
+	var p := pos
+	if p == Vector2.ZERO:
+		p = Vector2(rect.position.x + rect.size.x * 0.5 + 240.0, rect.position.y + 140.0)
+	b.global_position = p
+	add_child(b)
+	BlockManager.set_string_id(b, COURSE_SCHEDULE_SID)
+	_cs_spawned = true
+	print("[desktop] 已放置课程表积木 id=%d pos=%s tags=%s" % [b.id, str(p), str(b.tags)])
+
+
+func _ensure_course_schedule_spawned(windows: Variant) -> void:
+	if _cs_spawned:
+		return
+	if BlockManager.get_block_by_string_id(COURSE_SCHEDULE_SID) != null:
+		_cs_spawned = true
+		return
+	var wins: Array = windows if windows is Array else []
+	var rect := DesktopShell.get_desktop_rect_f()
+	var search: Array = []
+	search.append_array(wins)
+	for r in _icon_boxes:
+		search.append({"x": r.position.x, "y": r.position.y, "w": r.size.x, "h": r.size.y})
+	for sid in [VIRTUAL_JUMP_SID, RECYCLE_BIN_SID, THIS_PC_SID, DEVICE_MANAGER_SID, SCAN_RECONFIGURE_SID, CALENDAR_SID]:
+		var w := _block_as_window(BlockManager.get_block_by_string_id(sid))
+		if not w.is_empty():
+			search.append(w)
+	var pos := _find_free_spot(search, rect, _cs_size)
+	_spawn_course_schedule_block(pos)
+	if BlockManager.get_block_by_string_id(COURSE_SCHEDULE_SID) != null:
+		_resize_course_schedule_block(_cs_size)
+
+
+func _resize_course_schedule_block(box: Vector2) -> void:
+	_resize_auto_block(COURSE_SCHEDULE_SID, box)
 
 
 # 在桌面放置一个「回收站」实例（启动即可见、可拖动；中心点进入它的积木会获得 detected_recycle_bin）
@@ -1272,6 +1577,8 @@ func _on_block_button_signal(signal_name: String) -> void:
 		open_scan_reconfigure()
 	elif signal_name == CALENDAR_OPEN_SIGNAL:
 		open_calendar()
+	elif signal_name == COURSE_SCHEDULE_OPEN_SIGNAL:
+		open_course_schedule()
 	elif signal_name == VIRTUAL_JUMP_BTN_SIGNAL:
 		_open_darknet_entry()
 
@@ -1302,6 +1609,17 @@ func toggle_level_page() -> void:
 # 关卡页面当前是否可见（调试面板显示状态用）
 func level_page_is_visible() -> bool:
 	return _level_page != null and is_instance_valid(_level_page) and _level_page.is_page_visible()
+
+
+# 世界页面开关（调试面板「世界页面」按钮的统一入口）
+func toggle_world_page() -> void:
+	if _world_page != null and is_instance_valid(_world_page):
+		_world_page.toggle_page_visible()
+
+
+# 世界页面当前是否可见（调试面板显示状态用）
+func world_page_is_visible() -> bool:
+	return _world_page != null and is_instance_valid(_world_page) and _world_page.is_page_visible()
 
 
 # 托盘二级菜单「打开设置」→ 打开设置页面
@@ -1354,6 +1672,13 @@ func _open_calendar() -> void:
 		print("[desktop] 打开日历页面")
 
 
+# 托盘右键菜单「版本」→ 打开版本显示 + 更新公告面板
+func _open_version_announcement() -> void:
+	if version_panel != null and is_instance_valid(version_panel) and not version_panel.is_open():
+		version_panel.open()
+		print("[desktop] 打开版本与更新公告")
+
+
 # 「日历」积木双击 / 其它入口的统一公开入口（与托盘菜单同一路径）
 func open_calendar() -> void:
 	_open_calendar()
@@ -1361,6 +1686,22 @@ func open_calendar() -> void:
 
 func calendar_is_open() -> bool:
 	return calendar_panel != null and is_instance_valid(calendar_panel) and calendar_panel.is_open()
+
+
+# 托盘右键菜单「课程表」→ 打开课程表面板
+func _open_course_schedule() -> void:
+	if course_schedule_panel != null and is_instance_valid(course_schedule_panel) and not course_schedule_panel.is_open():
+		course_schedule_panel.open()
+		print("[desktop] 打开课程表面板")
+
+
+# 「课程表」积木双击 / 托盘菜单的统一公开入口
+func open_course_schedule() -> void:
+	_open_course_schedule()
+
+
+func course_schedule_is_open() -> bool:
+	return course_schedule_panel != null and is_instance_valid(course_schedule_panel) and course_schedule_panel.is_open()
 
 
 func saves_list_is_open() -> bool:
@@ -1468,8 +1809,8 @@ func place_inventory_item(item_id: String, category: String, modifiers: String, 
 	# ★ 积木的 `position` 就是**中心**（Block 是 Node2D，_draw 从 (-w/2,-h/2) 起画）→
 	#   落点即中心，**不减 half**（旧写法减 half 会把积木整块推向左上）。
 	var center: Vector2 = _to_screen(drop_pos)
-	# ★ 归属与「右键新建积木」同一条约定：关卡页开着且落点在页面内 → 进关卡，否则进桌面。
-	if not _place_into_open_level(b, center):
+	# ★ 归属与「右键新建积木」同一条约定：关卡页/家园页开着且落点在页面内 → 进对应页，否则进桌面。
+	if not _place_into_open_level(b, center) and not _place_into_open_home(b, center):
 		b.position = center
 		add_child(b)
 	Inventory.remove_item(item_id, 1)
@@ -1490,6 +1831,19 @@ func _place_into_open_level(blk: Block, screen_center: Vector2) -> bool:
 		return false
 	# add_level_block 收的是**页面画布坐标**（页面层自带 transform，见 desktop._to_page）
 	if lp.add_level_block(blk, _to_page(screen_center)):
+		return true
+	return false
+
+
+## 把关卡页的归属逻辑镜像到家园页：家园页开着且落点在页面内 → 进家园，否则交给调用方（桌面/关卡）。
+func _place_into_open_home(blk: Block, screen_center: Vector2) -> bool:
+	if blk == null or blk.is_queued_for_deletion():
+		return false
+	var hp = _home_page
+	if hp == null or not is_instance_valid(hp) or not hp.has_method("add_home_block"):
+		return false
+	# add_home_block 同样收页面画布坐标（见 desktop._to_page）。
+	if hp.add_home_block(blk, _to_page(screen_center)):
 		return true
 	return false
 
@@ -1564,10 +1918,8 @@ func _sync_icon_boundaries_impl(di: Variant) -> void:
 		return
 	var items: Variant = di.get("items", null)
 	var size: float = float(di.get("icon_size_px", 48))
-	# 图标尺寸更新 → 同步「图标占位」积木类型宽高（保持与桌面图标一致）
-	if size != _icon_copy_size:
-		_icon_copy_size = size
-		_register_icon_copy_type()
+	# ★ 图标尺寸变化**不再需要**同步「图标占位」类型：该类型宽高是系统常量名（icon_size），
+	#   创建积木时由 SystemConst 现读 sysinfo.json 解析 —— 天然跟随桌面图标尺寸变化。
 	# 图标网格间距：仅作 items 全缺 w/h 时的兜底尺寸（正常几何直接用各图标的整项矩形，
 	# 统一按众数尺寸处理，见 DesktopIconBoundary._uniform_size）。无该字段时按图标尺寸×2 回退
 	var spacing: float = float(di.get("icon_cell_spacing", 0))
@@ -1606,6 +1958,9 @@ func _sync_icon_boundaries_impl(di: Variant) -> void:
 		_resize_scan_reconfigure_block(box)
 		_cal_size = box
 		_resize_calendar_block(box)
+		# ★ 批次 121：课程表积木此前漏同步，恒为默认 48×48（"大小不正常"根因）
+		_cs_size = box
+		_resize_course_schedule_block(box)
 	var sample: Array[String] = []
 	for i in mini(4, _icon_walls.size()):
 		var wb: Block = _icon_walls[i]
@@ -1620,9 +1975,27 @@ func _sync_icon_boundaries_impl(di: Variant) -> void:
 # 把「桌面伪装图标」积木（带标签 BlockTags.DESKTOP_ICON）的中心吸附到桌面图标网格的最近格位。
 # ★ 供 blocks/block.gd 的 _snap_to_desktop_icon() 在拖动松手时调用（沿父链找宿主，见那里）。
 # ★ 数据源与图标边界墙同源（_icon_items / _icon_spacing）→ 对齐后的位置就是"图标会在的位置"。
+# ★ 批次 114：改走 grid_snap_free —— 最近格位若已被**真实图标**占用，自动跳到最近的**空**格位，
+#   避免"假图标和真图标完全重合"（见 DesktopIconBoundary.grid_snap_free 的说明）。
 # ★ 无图标数据（未枚举到 / 忙闲联动期间收掉了墙）→ 原样返回，调用方据此跳过（不会乱跳）。
-func snap_to_desktop_icon(p: Vector2) -> Vector2:
-	return DesktopIconBoundary.grid_snap(p, _icon_items, _icon_spacing)
+func snap_to_desktop_icon(p: Vector2, mover: Block = null) -> Vector2:
+	# ★ 批次 121：收集其它"桌面伪装图标"积木（标签 BlockTags.DESKTOP_ICON）当前已占据的格位，
+	#   传给 grid_snap_free 的 extra_occupied，使被拖动松手的假图标不会落到另一个假图标之上
+	#   （mover 自身除外，否则它会避开自己当前所在的格位、反而跳走）。
+	var extra: Array[Rect2] = []
+	if BlockManager != null:
+		for id in BlockManager.get_all_ids():
+			var b: Block = BlockManager.get_block(id)
+			if b == null or b == mover:
+				continue
+			if not (BlockTags.DESKTOP_ICON in b.tags):
+				continue
+			var sz := Vector2(b.width, b.height)
+			extra.append(Rect2(b.global_position - sz * 0.5, sz))
+	# ★ 批次 119：传入桌面可用区矩形（屏幕像素口径），约束落点不能跑到屏幕外面
+	#   （真实桌面图标贴着屏幕边时，其上方/左侧"空格位"在屏幕外 → 旧逻辑会选中它导致假图标出屏）。
+	# ★ 批次 124：改用 get_desktop_usable_rect_f() —— 把任务栏条带整段排除，假图标不再吸附到任务栏上。
+	return DesktopIconBoundary.grid_snap_free(p, _icon_items, _icon_spacing, DesktopShell.get_desktop_usable_rect_f(), extra)
 
 
 # ============ 实时内存枚举（程序页面 + 桌面图标）============
@@ -1906,6 +2279,9 @@ func _apply_scene_data_impl(data: Dictionary) -> void:
 	# 3f) 日历：同款流程，挑点时额外避开 虚视跳转器 / 回收站 / 此电脑 / 设备管理 / 扫描重构器。
 	#     ★ 必须在 3e) 之后：避让列表里要拿到扫描重构器的真实矩形。
 	_ensure_calendar_spawned(data.get("windows", []))
+	# 3g) 课程表：同款流程，挑点时额外避开 虚视跳转器 / 回收站 / 此电脑 / 设备管理 / 扫描重构器 / 日历。
+	#     ★ 必须在 3f) 之后：避让列表里要拿到日历的真实矩形。
+	_ensure_course_schedule_spawned(data.get("windows", []))
 
 
 # 类型名 BedRockX / BedRockY：登记内置默认模板（"我的积木类型"里可见；仅内存，不写盘）。
@@ -1988,7 +2364,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			#   → 这次右键归关卡页做摄像头平移，不弹游戏菜单。
 			#   这里**主动询问关卡页**、而不是靠"谁的 _unhandled_input 先跑" →
 			#   与节点遍历顺序无关，右键拖动在任何顺序下都稳定。
-			if _level_page_wants_right_drag(mb.position):
+			if _level_page_wants_right_drag(mb.position) or _home_page_wants_right_drag(mb.position):
 				return
 			# 穿透开启（默认）时，空白处的事件穿到桌面（到不了这里）→ 走 Windows 原生菜单；
 			# 穿透关闭时，空白处的事件也到得了这里 → 弹游戏菜单。
@@ -2128,13 +2504,17 @@ func _blocks_in_rect(rect: Rect2) -> Array[Block]:
 	#   · 关卡页面不可见 → 只框桌面积木（关卡积木藏在页面里，其全局坐标会随页面平移浮动）。
 	#   `global_position` 是**世界坐标**，而关卡积木的坐标会随页面平移/搬运漂移 —— 只用全局矩形
 	#   相交判定会让"看不见的"积木被框进来（同传送/检测的同场景闸门问题）。
-	var want_scene: Node = _level_page if (_level_page != null and is_instance_valid(_level_page) and _level_page.is_page_visible()) else null
+	var want_scenes: Array = []
+	if _level_page != null and is_instance_valid(_level_page) and _level_page.is_page_visible():
+		want_scenes.append(_level_page)
+	if _home_page != null and is_instance_valid(_home_page) and _home_page.is_page_visible():
+		want_scenes.append(_home_page)
 	var blocks: Array = get_tree().get_nodes_in_group("block")
 	for b in blocks:
 		if is_instance_valid(b) and b is Block and (BlockTags.SHOW in b.tags):
 			if not _is_selectable(b):
 				continue
-			if b._scene_of() != want_scene:
+			if not want_scenes.is_empty() and not (b._scene_of() in want_scenes):
 				continue
 			# ★ rect 来自 `event.position`（屏幕像素）→ 积木矩形也必须换算到屏幕像素
 			#   （关卡页面在缩放画布里，直接用 global_position 会框选错位）。
@@ -2376,6 +2756,9 @@ func _scene_and_point(screen_pos: Vector2) -> Array:
 	if _level_page != null and is_instance_valid(_level_page) and _level_page.is_page_visible() \
 			and _level_page.page_contains_global_point(page_pt):
 		return [_level_page, page_pt]
+	if _home_page != null and is_instance_valid(_home_page) and _home_page.is_page_visible() \
+			and _home_page.page_contains_global_point(page_pt):
+		return [_home_page, page_pt]
 	return [null, screen_pos]
 
 
@@ -2385,6 +2768,9 @@ func _scene_of_point(global_pos: Vector2) -> Node:
 	if _level_page != null and is_instance_valid(_level_page) and _level_page.is_page_visible():
 		if _level_page.page_contains_global_point(global_pos):
 			return _level_page
+	if _home_page != null and is_instance_valid(_home_page) and _home_page.is_page_visible():
+		if _home_page.page_contains_global_point(global_pos):
+			return _home_page
 	return null
 
 
@@ -2399,11 +2785,26 @@ func _level_page_wants_right_drag(screen_pos: Vector2) -> bool:
 	return _level_page.wants_right_drag_at(_to_page(screen_pos))
 
 
+# 家园页是否要接手这次右键做「拖动场景」？家园**始终允许**右拖平移（无关卡环境门槛）。
+func _home_page_wants_right_drag(screen_pos: Vector2) -> bool:
+	if _home_page == null or not is_instance_valid(_home_page):
+		return false
+	if not _home_page.has_method("wants_right_drag_at"):
+		return false
+	return _home_page.wants_right_drag_at(_to_page(screen_pos))
+
+
 # 关卡页「右键单击」（屏幕位移未超拖动阈值）→ 由本页补弹右键菜单。
 # ★ 为什么在**抬起**时才弹：右键落在可拖动背景上时，必须等"是不是拖动"判定完（阈值在关卡页里），
 #   按下瞬间无法区分单击/拖动 → 按下时一律不弹（见 _unhandled_input 的 wants_right_drag 早退），
 #   判定为单击后由关卡页发信号过来，这里才弹。screen_pos 是**屏幕像素**（与按下时同一口径）。
 func _on_level_right_click(screen_pos: Vector2) -> void:
+	if _open_context_menu(screen_pos):
+		get_viewport().set_input_as_handled()
+
+
+# 家园页「右键单击」（屏幕位移未超拖动阈值）→ 由本页补弹右键菜单（同 _on_level_right_click）。
+func _on_home_right_click(screen_pos: Vector2) -> void:
 	if _open_context_menu(screen_pos):
 		get_viewport().set_input_as_handled()
 
@@ -2525,7 +2926,11 @@ func _is_level_block(blk) -> bool:
 func _block_under_point(screen_pos: Vector2):
 	# ★★ 点选同样限定在**当前活动场景**内（同 _blocks_in_rect）：关卡页面可见时只点得中关卡积木，
 	#   否则只点得中桌面积木 —— 避免点到"看不见的"另一场景积木。
-	var want_scene: Node = _level_page if (_level_page != null and is_instance_valid(_level_page) and _level_page.is_page_visible()) else null
+	var want_scenes: Array = []
+	if _level_page != null and is_instance_valid(_level_page) and _level_page.is_page_visible():
+		want_scenes.append(_level_page)
+	if _home_page != null and is_instance_valid(_home_page) and _home_page.is_page_visible():
+		want_scenes.append(_home_page)
 	var blocks: Array = get_tree().get_nodes_in_group("block")
 	for b in blocks:
 		# ★ 先 is_instance_valid 再 `is Block`：组快照里可能有已释放积木。
@@ -2534,7 +2939,7 @@ func _block_under_point(screen_pos: Vector2):
 		if BlockTags.SHOW in b.tags:
 			if not _is_selectable(b):
 				continue
-			if b._scene_of() != want_scene:
+			if not want_scenes.is_empty() and not (b._scene_of() in want_scenes):
 				continue
 			# ★ 与框选同一把尺子：换成**屏幕像素** AABB，缩放 ≠ 1 时才点得中画出来的积木
 			var rect := _block_screen_rect(b)
@@ -2630,6 +3035,11 @@ func _host_new_block(blk: Block) -> void:
 	#   桌面世界是默认画布，落点即屏幕像素（下面 else 分支照旧）。
 	if lp != null and is_instance_valid(lp) and lp.has_method("add_level_block"):
 		if lp.add_level_block(blk, _to_page(_last_mouse_pos)):
+			return
+	var hp = _home_page
+	# ★ 家园页同理：开着且右键落点在页面内 → 进家园（落点仍用 _to_page 换算）。
+	if hp != null and is_instance_valid(hp) and hp.has_method("add_home_block"):
+		if hp.add_home_block(blk, _to_page(_last_mouse_pos)):
 			return
 	blk.position = _last_mouse_pos
 	add_child(blk)

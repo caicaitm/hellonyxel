@@ -42,6 +42,31 @@ var _had_visible_text: bool = false
 
 func _ready() -> void:
 	_apply()
+	_connect_language()
+
+
+# ---------- 多语言 ----------
+# 素材来源（优先级从高到低）：
+#   1) data.text_defs[current_lang]  作者为该语言单独配的文本；
+#   2) data.text_def                默认文本（存量存档 / 未配语言时的回落）；
+#   3) 内容级翻译兜底：文本经变量求值后，按翻译表再翻一次（查不到原样返回）。
+#      这一层让「只在属性页写了中文默认文案」的积木（含桌面上那批伪装图标）无需改存档即可跟随语言。
+func _connect_language() -> void:
+	if TranslationManager == null:
+		return
+	if TranslationManager.language_changed.is_connected(_on_language_changed):
+		return
+	TranslationManager.language_changed.connect(_on_language_changed)
+
+
+# ★ 只 refresh()（重取文本 + 重算显隐），绝不 rebuild_text_boxes()：
+#   重建会 free 掉「正在派发信号的调用链上」的节点 → native signal 11（本项目反复踩过）。
+func _on_language_changed(_lang: String) -> void:
+	if is_queued_for_deletion():
+		return
+	if data == null:
+		return
+	refresh()
 
 
 # 外部注入数据后重新应用（Block.rebuild_text_boxes 调用）
@@ -133,7 +158,11 @@ func _apply() -> void:
 	_bg.add_theme_stylebox_override("panel", sb)
 
 	# ---- 文字（BBCode）----
-	_text.text = _to_bbcode(data.text_def)
+	# 按当前语言取文本定义（该语言没配 → 回落 data.text_def，存量数据照样显示）
+	var def: String = data.text_def
+	if TranslationManager != null:
+		def = data.def_for_lang(TranslationManager.current_lang)
+	_text.text = _to_bbcode(def)
 	# 单行时纵向大致居中（RichTextLabel 无纵向对齐属性，用上下偏移模拟）
 	var line_h: float = float(FONT_SIZE) * 1.4
 	var top: float = clampf((size.y - line_h) * 0.5, 2.0, 10.0)
@@ -186,7 +215,7 @@ func _to_bbcode(def: String) -> String:
 	if def.strip_edges().is_empty():
 		return ""
 	# 显式标注 Dictionary，避免推断到 TextRenderer 内部类类型
-	var r: Dictionary = _renderer.to_bbcode(def, _resolver())
+	var r: Dictionary = _renderer.to_bbcode(def, _resolver(), _translator())
 	# 全是空白也算空（免得 hide_when_empty 被一个空格骗过）
 	_had_visible_text = not str(r.get("text", "")).strip_edges().is_empty()
 	return str(r.get("bbcode", ""))
@@ -196,3 +225,14 @@ func _resolver() -> Callable:
 	if block != null:
 		return block.variable_resolver
 	return Callable()
+
+
+# 内容级翻译回调：把「已求值的纯文本」换算成当前语言的译文。
+# to_key 查不到原样返回、t_lang 未知 key 也原样返回 → 未收录的自定义文案不受影响，
+# 因此这一层可以无副作用地叠加在任何文本定义之上。
+func _translator() -> Callable:
+	if TranslationManager == null:
+		return Callable()
+	var lang: String = TranslationManager.current_lang
+	return func(s: String) -> String:
+		return TranslationManager.t_lang(TranslationManager.to_key(s), lang)

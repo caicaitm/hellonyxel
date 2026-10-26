@@ -23,6 +23,7 @@ extends Node
 var _line_text: String = ""           # 中心的台词栏
 var _line_text_def: String = ""        # 台词「原始定义」（含修饰/$变量/#停顿）；空 = 用 line_text 本身
 var _avatar_path: String = ""          # 左侧头像栏（图片路径，预留加载为纹理）
+var _avatar_background_path: String = "" # 头像背景层（图片路径；头像透明处透出背景；空 = 不绘制背景）
 var _character_name: String = ""       # 头像栏下的角色名称栏
 var _bottom_buttons: Array = []        # 右侧按钮选择栏（元素: {"label":String,"id":String}）
 var _voice: String = ""                # 台词语音："auto"=逐字/逐词泡泡声；"auto:路径"=同上换声源；路径=整段播；空=不发声
@@ -92,6 +93,14 @@ var avatar_path: String:
 	set(v):
 		_avatar_path = v
 		variable_changed.emit("avatar_path", v)
+
+# 头像背景层：头像透明的部分透出这一层；空 = 不绘制任何背景
+var avatar_background_path: String:
+	get:
+		return _avatar_background_path
+	set(v):
+		_avatar_background_path = v
+		variable_changed.emit("avatar_background_path", v)
 
 var character_name: String:
 	get:
@@ -207,6 +216,8 @@ func set_value(name: String, value: Variant) -> void:
 			line_text = value
 		"avatar_path":
 			avatar_path = value
+		"avatar_background_path":
+			avatar_background_path = value
 		"character_name":
 			character_name = value
 		"bottom_buttons":
@@ -233,6 +244,8 @@ func get_value(name: String) -> Variant:
 			return line_text
 		"avatar_path":
 			return avatar_path
+		"avatar_background_path":
+			return avatar_background_path
 		"character_name":
 			return character_name
 		"bottom_buttons":

@@ -1,0 +1,78 @@
+{
+	"buttons": [
+		{
+			"effect": "",
+			"id": "b1",
+			"label": "(#ffffffL)[\"按钮一\"]",
+			"show": ""
+		},
+		{
+			"effect": "",
+			"id": "b2",
+			"label": "(#ffffffL)[\"按钮二\"]",
+			"show": ""
+		},
+		{
+			"effect": "",
+			"id": "b3",
+			"label": "(#ffffffL)[\"按钮三\"]",
+			"show": ""
+		},
+		{
+			"effect": "",
+			"id": "b4",
+			"label": "(#ffffffL)[\"按钮四\"]",
+			"show": ""
+		},
+		{
+			"effect": "",
+			"id": "b5",
+			"label": "(#ffffffL)[\"按钮五\"]",
+			"show": ""
+		},
+		{
+			"effect": "",
+			"id": "b6",
+			"label": "(#ffffffL)[\"按钮六\"]",
+			"show": ""
+		},
+		{
+			"effect": "",
+			"id": "b7",
+			"label": "(#ffffffL)[\"按钮七\"]",
+			"show": ""
+		},
+		{
+			"effect": "",
+			"id": "b8",
+			"label": "(#ffffffL)[\"按钮八\"]",
+			"show": ""
+		},
+		{
+			"effect": "",
+			"id": "b9",
+			"label": "(#ffffffL)[\"按钮九\"]",
+			"show": ""
+		},
+		{
+			"effect": "",
+			"id": "b10",
+			"label": "(#ffffffL)[\"按钮十\"]",
+			"show": ""
+		}
+	],
+	"chain": "初次见面",
+	"close": [],
+	"content": {
+		"bg_image": "",
+		"effect": "/play_event \"初次见面.4\"; /add_var story_state.json = \"初次见面\"",
+		"image": "",
+		"panel_type": "bottom",
+		"text_file": "初次见面.3",
+		"title": "",
+		"voice": "auto"
+	},
+	"name": "初次见面.3",
+	"open": [],
+	"version": 1
+}

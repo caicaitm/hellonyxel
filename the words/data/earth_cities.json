@@ -1,0 +1,31 @@
+{
+  "name": "地球城市",
+  "_说明": "★ 第十九轮新增：地球的**城市节点**（原型 · 20 座代表性城市）。独立成文件是因为地球的星体字段已经很多，城市是**另一类**数据（将来会扩到几百条）。由 solar_system.json 的 earth 节点用 `cities` 字段指向本文件。",
+  "_说明_字段": "lat/lon = WGS84 十进制度（北纬 / 东经为正），**直接由经纬度算球面位置**（见 world_node.gd 的 latlon_dir —— 与贴图 / 自转共用同一条约定）。tier = 标识等级：capital 首都/首府(五角星) / metro 大·特大城市(双圈) / medium 中型城市(圈内点) / small 小型城市(单圈)。pop / code 是 GeoNames 原字段，**留作溯源**（不是运行期要用的）。gnid = GeoNamesID，**「本体编辑」（节点属性窗口）定位到这一座城的稳定键**。",
+  "_说明_分级": "tier 按 GeoNames 原字段推：**要素代码 PPLC ⇒ capital（★ 首都优先于规模）**；否则 人口 ≥ 1000 万 ⇒ metro、300 万 ~ 1000 万 ⇒ medium、< 300 万 ⇒ small。★ 这是**写进本文件的最终值**（不是运行期算的）⇒ 想给某座城市手动指定档位，直接改这里的 tier 即可。",
+  "_说明_命名": "★ 第二十四轮：名称从单语 `name` 升级为 **多语言 `names`**（形如 { \"zh_CN\": \"北京\", \"en\": \"Beijing\" }，键 = autoload/translation_manager.gd 的 LANG_CODES）。**空/缺键 = 该语言没有译本**（预留位置、不做翻译）；游戏按玩家语言取显示名，取不到就按回退链（玩家语言 → 同语族 → en → zh_CN → 当地语言名 → 原文名）退。gn_name 记录 GeoNames 里的中文名（原表可能为空、或是另一种译法）。",
+  "_来源": "数据来源：GeoNames 每日导出档（https://download.geonames.org/export/dump/，抓取于 2026-10-18），素材库路径 素材库/世界城市经纬度数据/按国家与行政区划/。**授权 CC-BY 4.0 ⇒ 对外发布必须署名 GeoNames 并附链接**（建议致谢写：GeoNames (https://www.geonames.org), CC BY 4.0）。",
+  "_已知偏差": "★ GeoNames 的人口口径不统一（各条目自报、年份不一），不适合当统计口径。最典型的一例：**纽约 = 880 万（市域五区）⇒ 按本表规则落在 medium（圈内点），而上海 = 2487 万（直辖市全域）落在 metro** —— 两者口径不同。原型阶段先照数据走；要改就是直接改本文件里那一行的 tier。",
+  "cities": [
+    { "names": { "zh_CN": "北京", "en": "Beijing" }, "gnid": 1816670, "gn_name": "北京", "country": "中国", "lat": 39.9075, "lon": 116.39723, "pop": 18960744, "code": "PPLC", "tier": "capital" },
+    { "names": { "zh_CN": "东京", "en": "Tokyo" }, "gnid": 1850147, "gn_name": "东京", "country": "日本", "lat": 35.6895, "lon": 139.69171, "pop": 9733276, "code": "PPLC", "tier": "capital" },
+    { "names": { "zh_CN": "新德里", "en": "New Delhi" }, "gnid": 1273294, "gn_name": "新德里", "country": "印度", "lat": 28.62137, "lon": 77.2148, "pop": 317797, "code": "PPLC", "tier": "capital" },
+    { "names": { "zh_CN": "伦敦", "en": "London" }, "gnid": 2643743, "gn_name": "伦敦", "country": "英国", "lat": 51.50853, "lon": -0.12574, "pop": 8961989, "code": "PPLC", "tier": "capital" },
+    { "names": { "zh_CN": "巴黎", "en": "Paris" }, "gnid": 2988507, "gn_name": "巴黎", "country": "法国", "lat": 48.85341, "lon": 2.3488, "pop": 2138551, "code": "PPLC", "tier": "capital" },
+    { "names": { "zh_CN": "莫斯科", "en": "Moscow" }, "gnid": 524901, "gn_name": "莫斯科", "country": "俄罗斯", "lat": 55.75204, "lon": 37.61781, "pop": 10381222, "code": "PPLC", "tier": "capital" },
+    { "names": { "zh_CN": "开罗", "en": "Cairo" }, "gnid": 360630, "gn_name": "", "country": "埃及", "lat": 30.06263, "lon": 31.24967, "pop": 9606916, "code": "PPLC", "tier": "capital" },
+    { "names": { "zh_CN": "华盛顿", "en": "Washington" }, "gnid": 4140963, "gn_name": "华盛顿特区", "country": "美国", "lat": 38.89511, "lon": -77.03637, "pop": 689545, "code": "PPLC", "tier": "capital" },
+    { "names": { "zh_CN": "上海", "en": "Shanghai" }, "gnid": 1796236, "gn_name": "上海", "country": "中国", "lat": 31.22222, "lon": 121.45806, "pop": 24874500, "code": "PPLA", "tier": "metro" },
+    { "names": { "zh_CN": "孟买", "en": "Mumbai" }, "gnid": 1275339, "gn_name": "孟买", "country": "印度", "lat": 19.07283, "lon": 72.88261, "pop": 12691836, "code": "PPLA", "tier": "metro" },
+    { "names": { "zh_CN": "圣保罗", "en": "Sao Paulo" }, "gnid": 3448439, "gn_name": "圣保罗", "country": "巴西", "lat": -23.5475, "lon": -46.63611, "pop": 12400232, "code": "PPLA", "tier": "metro" },
+    { "names": { "zh_CN": "拉各斯", "en": "Lagos" }, "gnid": 2332459, "gn_name": "拉哥斯", "country": "尼日利亚", "lat": 6.45407, "lon": 3.39467, "pop": 15388000, "code": "PPLA2", "tier": "metro" },
+    { "names": { "zh_CN": "伊斯坦布尔", "en": "Istanbul" }, "gnid": 745044, "gn_name": "伊斯坦堡", "country": "土耳其", "lat": 41.01384, "lon": 28.94966, "pop": 15701602, "code": "PPLA", "tier": "metro" },
+    { "names": { "zh_CN": "纽约", "en": "New York City" }, "gnid": 5099133, "gn_name": "纽约", "country": "美国", "lat": 40.71427, "lon": -74.00597, "pop": 8804190, "code": "PPL", "tier": "medium" },
+    { "names": { "zh_CN": "约翰内斯堡", "en": "Johannesburg" }, "gnid": 993800, "gn_name": "约翰内斯堡", "country": "南非", "lat": -26.20227, "lon": 28.04363, "pop": 9418183, "code": "PPLA", "tier": "medium" },
+    { "names": { "zh_CN": "里约热内卢", "en": "Rio de Janeiro" }, "gnid": 3451190, "gn_name": "里约热内卢", "country": "巴西", "lat": -22.90642, "lon": -43.18223, "pop": 6747815, "code": "PPLA", "tier": "medium" },
+    { "names": { "zh_CN": "墨尔本", "en": "Melbourne" }, "gnid": 2158177, "gn_name": "墨尔本", "country": "澳大利亚", "lat": -37.814, "lon": 144.96332, "pop": 5435590, "code": "PPLA", "tier": "medium" },
+    { "names": { "zh_CN": "迪拜", "en": "Dubai" }, "gnid": 292223, "gn_name": "杜拜", "country": "阿联酋", "lat": 25.07725, "lon": 55.30927, "pop": 3790000, "code": "PPLA", "tier": "medium" },
+    { "names": { "zh_CN": "温哥华", "en": "Vancouver" }, "gnid": 6173331, "gn_name": "温哥华", "country": "加拿大", "lat": 49.24966, "lon": -123.11934, "pop": 662248, "code": "PPL", "tier": "small" },
+    { "names": { "zh_CN": "苏黎世", "en": "Zurich" }, "gnid": 2657896, "gn_name": "苏黎世", "country": "瑞士", "lat": 47.36667, "lon": 8.55, "pop": 415367, "code": "PPLA", "tier": "small" }
+  ]
+}

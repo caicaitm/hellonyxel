@@ -8,9 +8,12 @@
 # 状态来源优先级（高 → 低）：
 #   1) 定时时段（perf_busy.json 的 schedule）：时段内一律「在忙」；
 #      时段内允许手动切换**一次**（立刻生效），之后本次时段锁定、不能再切。
-#   2) 手动：托盘「现在在忙 / 现在空闲」设定，忽略分数/阈值。
+#   2) 上课时段（批次 549：perf_busy.json 的 class_busy_enabled 开关 + 课程表联动）：
+#      开关开启时，「当前时间落在某节有课（且本周生效）的课程时段内」即「在忙」，直到下课。
+#      与定时时段同级（同时命中都显示定时时段；仅上课命中时来源为「上课时段」）。
+#   3) 手动：托盘「现在在忙 / 现在空闲」设定，忽略分数/阈值。
 #      ★ 遇时段开始或结束即被清除（回到分数判定）——手动值不会长期压住自动判定。
-#   3) 自动：PerfMonitor 的「电脑性能使用分数 > 分数判断阈值」（公式与忙闲面板一致）。
+#   4) 自动：PerfMonitor 的「电脑性能使用分数 > 分数判断阈值」（公式与忙闲面板一致）。
 #
 # 托盘是独立进程、读不到 Godot 的内存状态：
 #   本单例每次状态变化都把 "busy|locked" / "idle|unlocked" 写进 TrayRunner 的状态文件；
@@ -21,7 +24,9 @@
 # 对外 API：
 #   is_busy() / state_source() / is_manual_locked() / set_manual(busy) /
 #   reload() / apply_settings(data) / score_busy() / compute_score()
+#   set_class_busy(enabled) / class_busy_enabled() / class_subject()   # 批次549 上课联动
 #   signal state_changed(busy, source)
+#   signal class_busy_changed(enabled)                                 # 批次549 两页同步
 # 纯函数（便于断言）：parse_hhmm / format_hhmm / resolve_window / compute_state
 
 extends Node
@@ -29,9 +34,13 @@ extends Node
 ## 状态变化（忙闲值或来源变了才发）
 signal state_changed(busy: bool, source: String)
 
+## 「上课时为忙」开关变化（两页按钮共同控制；值变了才发）
+signal class_busy_changed(enabled: bool)
+
 const SOURCE_AUTO := "auto"          # 分数/阈值自动判定
 const SOURCE_MANUAL := "manual"      # 托盘手动设定
 const SOURCE_SCHEDULE := "schedule"  # 定时时段
+const SOURCE_CLASS := "class"        # 上课时段（课程表联动，批次 549）
 
 ## 时段边界检查周期（秒）：秒级足够，时段精度只到分钟
 const TICK_INTERVAL: float = 1.0
@@ -67,7 +76,9 @@ var _manual_active: bool = false       # 手动覆盖生效中
 var _manual_value: bool = false        # 手动设定的值
 var _manual_in_window: bool = false    # 本次手动切换发生在「当前时段内」
 var _window_key: String = ""           # 当前生效时段的标识；"" = 时段外
-var _settings: Dictionary = {}         # perf_busy.json 快照（阈值/权重/进程/时段）
+var _settings: Dictionary = {}         # perf_busy.json 快照（阈值/权重/进程/时段/上课开关）
+var _class_busy: bool = false          # 「上课时为忙」开关（课程表联动）
+var _class_subject: String = ""        # 当前命中课时的科目（来源为 class 时供 UI 展示）
 var _last_payload: String = ""         # 上次写给托盘的状态串（变化才写盘）
 var _tick: Timer = null
 
@@ -234,6 +245,29 @@ func activity_label(kind: String) -> String:
 
 # ---------------- 对外操作 ----------------
 
+## 「上课时为忙」开关（课程表 ↔ 忙闲联动；两页按钮共同控制）。
+## 写 perf_busy.json（SaveManager 透传 dict）+ 即刻应用到本单例 → 不必等下一秒 tick。
+## 值没变也照常保存（幂等）；变化时发 class_busy_changed 让两页按钮同步刷新。
+func set_class_busy(enabled: bool) -> void:
+	var v: bool = bool(enabled)
+	var data: Dictionary = _settings.duplicate(true)
+	data["class_busy_enabled"] = v
+	var sm = get_node_or_null("/root/SaveManager")
+	if sm != null and sm.has_method("save_perf_busy_settings"):
+		sm.save_perf_busy_settings(data)
+	apply_settings(data)
+
+
+## 当前「上课时为忙」开关是否开启。
+func class_busy_enabled() -> bool:
+	return _class_busy
+
+
+## 当前命中课时的科目（仅来源为上课时段时有值；供 UI 展示「在忙（上课·语文）」）。
+func class_subject() -> String:
+	return _class_subject
+
+
 ## 手动切换忙闲（托盘「现在在忙 / 现在空闲」）。返回是否被接受。
 ## 时段内已手动切换过一次 → 本次时段锁定，拒绝（见 is_manual_locked）。
 func set_manual(busy: bool) -> bool:
@@ -260,6 +294,7 @@ func reload() -> void:
 		if typeof(got) == TYPE_DICTIONARY:
 			d = got
 	_settings = d
+	_sync_class_busy()
 	_apply()
 
 
@@ -268,7 +303,16 @@ func apply_settings(data: Dictionary) -> void:
 	if typeof(data) != TYPE_DICTIONARY:
 		return
 	_settings = (data as Dictionary).duplicate(true)
+	_sync_class_busy()
 	_apply()
+
+
+## 读取设置里的「上课时为忙」开关；变化时发信号（两页按钮同步）。
+func _sync_class_busy() -> void:
+	var v: bool = bool(_settings.get("class_busy_enabled", false))
+	if v != _class_busy:
+		_class_busy = v
+		class_busy_changed.emit(v)
 
 
 ## 「分数 > 阈值」自动判定；数据不可用 → false（保守，不误判为在忙）
@@ -413,7 +457,21 @@ func compute_state(window_key: String, manual_active: bool, manual_value: bool,
 # ---------------- 内部 ----------------
 
 func _on_tick() -> void:
+	_refresh_qiuming()
 	_apply()
+
+
+# 每个 tick 用 QiumingDLL（procdetect）刷新进程检测结果；EXE/DLL 不可用或调用失败时
+# QiumingLink 自动降级，上层 is_process_running 回退到原有 PowerShell 进程枚举。
+func _refresh_qiuming() -> void:
+	var names := []
+	for row in _proc_rows():
+		if typeof(row) != TYPE_DICTIONARY:
+			continue
+		var nm := str(row.get("name", "")).strip_edges()
+		if not nm.is_empty():
+			names.append(nm)
+	QiumingLink.refresh(names)
 
 
 func _on_perf_updated(_snapshot: Dictionary) -> void:
@@ -434,25 +492,67 @@ func _apply() -> void:
 	var weekday: int = now["weekday"]
 	var minutes: int = now["minutes"]
 	var wk := resolve_window(_periods(), weekday, minutes)
-	if wk != _window_key:
+	# ★ 批次 549：上课时段（课程表联动）——开关开启时，「当前落在某节有课的时段内」即在忙，
+	#   直到下课（时段 key 变化 → 手动状态清除，回到分数/其它来源）。与定时时段同级。
+	var class_hit := false
+	var class_key := ""
+	var class_subj := ""
+	if _class_busy:
+		var cw: Dictionary = _class_window()
+		class_hit = bool(cw.get("active", false))
+		class_key = str(cw.get("key", ""))
+		class_subj = str(cw.get("subject", ""))
+	var from_class: bool = class_hit and wk.is_empty()
+	var eff_wk: String = wk if not wk.is_empty() else class_key
+	if eff_wk != _window_key:
 		# ★ 时段边界（开始或结束）：手动覆盖一律清除 → 回到分数判定
+		#   （eff_wk = 定时时段 key 优先，否则上课时段 key；两者任一「开始/结束」都算边界）
 		if _manual_active:
-			print("[BusyState] 时段边界（%s → %s）→ 清除手动状态" % [_window_key, wk])
-		_window_key = wk
+			print("[BusyState] 时段边界（%s → %s）→ 清除手动状态" % [_window_key, eff_wk])
+		_window_key = eff_wk
 		_manual_active = false
 		_manual_in_window = false
+	_class_subject = class_subj if from_class else ""
 	var st := compute_state(_window_key, _manual_active, _manual_value, _manual_in_window, score_busy())
 	var busy: bool = st["busy"]
 	var source: String = st["source"]
+	if from_class and source == SOURCE_SCHEDULE:
+		source = SOURCE_CLASS   # 仅上课命中（无定时时段）→ 来源标「上课时段」
 	var changed: bool = (busy != _busy) or (source != _source)
 	_busy = busy
 	_source = source
 	_locked = st["locked"]
 	_push_tray_state()
 	if changed:
-		print("[BusyState] 状态 → %s（来源=%s%s）" % [
-			"在忙" if busy else "空闲", source, "，本时段已锁定" if _locked else ""])
+		print("[BusyState] 状态 → %s（来源=%s%s%s）" % [
+			"在忙" if busy else "空闲", _source_tag(source),
+			"，本时段已锁定" if _locked else "",
+			" · " + _class_subject if (source == SOURCE_CLASS and not _class_subject.is_empty()) else ""])
 		state_changed.emit(busy, source)
+
+
+## 来源 → 中文标签（日志/调试/面板共用）。
+func _source_tag(source: String) -> String:
+	match source:
+		SOURCE_SCHEDULE:
+			return "定时时段"
+		SOURCE_CLASS:
+			return "上课时段"
+		SOURCE_MANUAL:
+			return "手动切换"
+		_:
+			return "分数自动"
+
+
+## 向 CourseSchedule 查询「当前是否在有课时段」；单例缺失/无该方法 → 不命中。
+func _class_window() -> Dictionary:
+	var cs = get_node_or_null("/root/CourseSchedule")
+	if cs == null or not cs.has_method("class_window_now"):
+		return {"active": false, "key": "", "subject": ""}
+	var cw: Variant = cs.class_window_now()
+	if typeof(cw) == TYPE_DICTIONARY:
+		return cw
+	return {"active": false, "key": "", "subject": ""}
 
 
 ## 当前本地时间 → { "weekday": 1..7（周一=1）, "minutes": 0..1439 }

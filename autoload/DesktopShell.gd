@@ -453,6 +453,29 @@ func get_taskbar_info() -> Dictionary:
 	return { "edge": get_taskbar_edge(), "height_px": get_taskbar_thickness() }
 
 
+# ★ 批次 124：排除任务栏后的「桌面可用区」矩形（屏幕像素口径，与 get_desktop_rect_f 同坐标系）。
+#   供桌面伪装图标积木的网格吸附 bounds 使用 —— 让假图标不会吸附到任务栏条带上（见 desktop.gd::snap_to_desktop_icon）。
+# ★ 语义：在整屏 get_desktop_rect_f() 基础上，把任务栏所占的那条「贴边带状区域」整段切掉：
+#     bottom → 切掉底部 th 像素；top → 切掉顶部 th 像素；left → 切掉左侧 th 像素；right → 切掉右侧 th 像素。
+#   几何与 desktop_barrier.gd::_place_taskbar 的任务栏屏障一致（屏障 1px 贴任务栏内侧），这里切掉的就是屏障外的任务栏本体。
+# ★ thickness <= 0（无任务栏 / headless 测不到）→ 退回整屏，行为与旧逻辑一致，不引入回归。
+func get_desktop_usable_rect_f() -> Rect2:
+	var full := get_desktop_rect_f()
+	var th: float = get_taskbar_thickness()
+	if th <= 0.0:
+		return full
+	var edge := get_taskbar_edge()
+	match edge:
+		"top":
+			return Rect2(full.position.x, full.position.y + th, full.size.x, full.size.y - th)
+		"left":
+			return Rect2(full.position.x + th, full.position.y, full.size.x - th, full.size.y)
+		"right":
+			return Rect2(full.position.x, full.position.y, full.size.x - th, full.size.y)
+		_:  # "bottom" 或未知 → 默认按底部处理
+			return Rect2(full.position.x, full.position.y, full.size.x, full.size.y - th)
+
+
 # 由原生工作区推算任务栏贴边方向（工作区比屏幕少的那一侧）。判定不出 → ""。
 func _native_taskbar_edge() -> String:
 	var screen := DisplayServer.get_primary_screen()

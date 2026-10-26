@@ -123,7 +123,7 @@ const FONT_SIZE: int = 14
 ## 自动折行的长度上限：折行要逐字量宽度（O(n) 次字形塑形），
 ## 几十万字符时单次折行会到秒级，把整个编辑器卡死 → 超过上限就不再自动折行（保留手动编辑）。
 const MAX_AUTOWRAP_LEN: int = 200000
-const RESIZE_HANDLE_SIZE: float = 24.0
+const RESIZE_HANDLE_SIZE: float = 28.0   # ★ 与 UIDragHandle（移动把柄）/UIDragResizeHandle 家族默认一致
 const RESIZE_HANDLE_INSET: float = 6.0
 const BUTTON_SIZE: float = 28.0
 const INPUT_W: float = 56.0

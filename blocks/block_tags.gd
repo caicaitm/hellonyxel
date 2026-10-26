@@ -16,7 +16,9 @@ const TEXT := "text"              # 文本框绘制生效
 const CHILD_FOLLOW := "child_follow"  # 子级单位跟随父级位移（仅位置；父级移动时子级一并位移）
                                       # bind_child() 会自动补上该标签；删掉它即只保留父子绑定关系而不跟随
 const DRAGGABLE := "draggable"    # 可拖动：鼠标左键按住可拖动本积木（受碰撞阻挡）
-const GRAVITY := "gravity"        # 受重力影响：自然下落（落在带 collision 的积木上停住）
+const GRAVITY := "gravity"        # ★★ 已**从标签系统移除**（2026-10-23）：受重力改由「积木运动」面板
+                                  #   的 gravity_enabled 设置。本常量只用来读旧存档做一次迁移，
+                                  #   迁移后积木身上的这个标签会被剥离（见 block.gd _strip_legacy_motion_tags）。
 const SELECTABLE := "selectable"  # 可被选中：允许被框选 / 左键右键单选选中——**选中与否的唯一闸门**。
                                   # ★ 不带本标签的积木在**非调试模式**下不可被选中（框选与单选都会跳过它）；
                                   #   调试模式下一切**可见**积木照常可选中（便于编辑关卡）。
@@ -26,7 +28,7 @@ const SELECTABLE := "selectable"  # 可被选中：允许被框选 / 左键右�
                                   #   新建积木 / 虚视跳转器 / 图标副本 / 存档恢复 / 关卡积木 / 控制台创建 全都带它
                                   #   —— 否则玩家在游戏态下选不中自己造的积木（2026-09-29 修）。
                                   #   想表达"玩家不能选这块"用 ALWAYS_UNSELECTABLE（删本标签会被自动补回）。
-const CONTROLLED := "controlled"  # 受控状态：WASD/方向键移动，空格跳跃（跳跃需 gravity 标签）
+const CONTROLLED := "controlled"  # 受控状态：WASD/方向键移动，空格跳跃（跳跃需「积木运动」里开启受重力）
                                   # 右键积木（调试模式下）可一键「控制积木 / 解除控制」= 增删本标签
                                   # ★ 其中**竖直**方向（W/S/↑/↓）另需 DETECTED_VERTICAL_MOVE 标签，
                                   #   水平方向（A/D/←/→）只需本标签。
@@ -34,12 +36,17 @@ const COMMANDABLE := "commandable"
                                   # 可命令：**被选中**时右键点空白处 → 右键菜单里出现「移到此处」；
                                   #   下令后本积木沿**直线**移动到该点（全程走碰撞校验，撞墙即停）。
                                   #   · 目标点是"命令下发那一刻右键点到的位置"，移动过程不受鼠标影响。
-                                  #   · 若还带 gravity/controlled：命令期间由命令驱动位移（重力/键盘让位），
+                                  #   · 若还开了受重力 / 带 controlled：命令期间由命令驱动位移（重力/键盘让位），
                                   #     命令结束后照常恢复（否则有重力的积木会被重力拽成弧线、永远到不了目标）。
                                   #   · 多个选中里只有带本标签的会动；不带的不动（见 desktop.gd _command_move_selection）。
                                   # ★ 该菜单项**不受调试模式限制**（非调试 / 游戏态下也显示）——
                                   #   这是右键菜单里唯一"常显"的条目，其余编辑类条目仍只在调试模式出现。
-                                  # ★ 与 draggable/gravity/controlled 同为「能力型」标签：默认不含，需要才加。
+                                  # ★ 与 draggable/controlled 同为「能力型」标签：默认不含，需要才加。
+const ROLLABLE := "rollable"      # ★★ 已**从标签系统移除**（2026-10-23）：可滚动改由「积木运动」面板
+                                  #   的 roll_enabled 设置。本常量只用来读旧存档做一次迁移，
+                                  #   迁移后积木身上的这个标签会被剥离（见 block.gd _strip_legacy_motion_tags）。
+                                  #   开关打开后：圆/椭圆连续滚动；矩形/三角按刚体支点翻滚。
+                                  #   ★ 须同时带 collision 标签才有支撑可托。
 const ALWAYS_UNSELECTABLE := "always_unselectable"
                                   # 始终不可选：**优先级高于调试模式**。带本标签的积木在任何模式
                                   #   （含调试模式）下都不可被选中 / 框选 / 左右键单选。
@@ -70,7 +77,9 @@ const DESKTOP_ICON := "desktop_icon"
                                   #     一个是标签（属性生效与否）。用于"分层"：桌面图标在下属。
                                   #   · 作为**积木标签**（批次 58）：标记"这是伪装成桌面图标的积木"
                                   #     → 拖动**松手**时自动对齐到「桌面图标会在的位置」（桌面图标网格，
-                                  #       由 DesktopIconBoundary.grid_snap 按实时枚举到的图标推算）；
+                                  #       由 DesktopIconBoundary.grid_snap_free 按实时枚举到的图标推算；
+                                  #       ★ 批次 114：最近格位若已被**真实图标**占用 → 自动跳到最近的
+                                  #       **空**格位，避免"假图标和真图标完全重合"）；
                                   #       **按住 Ctrl** 拖动 = 自由摆放，松手停在原地、不对齐。
                                   #     见 blocks/block.gd 的 _snap_to_desktop_icon()。
                                   #   ★ 虚视跳转器 / 回收站 / 此电脑 / 设备管理 / 扫描重构器 / 日历 /
@@ -157,11 +166,29 @@ const LEVEL_ENV_REWARD := "reward"    # 奖励箱
 # ---- 下面两个是「驱动引擎行为」的关卡标签（关卡页摄像头，2026-10-05）----
 const LEVEL_ENV_ALLOW_ZOOM := "allow_zoom"   # 允许缩放场景（载入后滚轮缩放关卡视图）
 const LEVEL_ENV_ALLOW_DRAG := "allow_drag"   # 允许拖动场景（按住右键平移摄像头）
+# ---- 下面六个是「关卡类型」标注标签（纯标注，驱动随机生成器分池；2026-10-14）----
+const LEVEL_ENV_ENTRANCE_LEVEL := "entrance_level"   # 入口关卡：必定携带一个「关卡出口」锚点积木，一般还带一个传送门出口
+const LEVEL_ENV_EXIT_LEVEL := "exit_level"           # 出口关卡：一般携带一个「关卡入口」按钮 + 一个传送门出口按钮
+const LEVEL_ENV_TRAP_LEVEL := "trap_level"           # 陷阱关卡
+const LEVEL_ENV_REWARD_LEVEL := "reward_level"       # 奖励关卡
+const LEVEL_ENV_NORMAL_LEVEL := "normal_level"       # 普通关卡
+const LEVEL_ENV_CHALLENGE_LEVEL := "challenge_level" # 挑战关卡
 # 关卡环境的可选标签清单（顺序即标签选择页的展示顺序）
 const LEVEL_ENV_TAGS := [
 	LEVEL_ENV_UNIT, LEVEL_ENV_START, LEVEL_ENV_END, LEVEL_ENV_REWARD,
 	LEVEL_ENV_ALLOW_ZOOM, LEVEL_ENV_ALLOW_DRAG,
+	LEVEL_ENV_ENTRANCE_LEVEL, LEVEL_ENV_EXIT_LEVEL,
+	LEVEL_ENV_TRAP_LEVEL, LEVEL_ENV_REWARD_LEVEL,
+	LEVEL_ENV_NORMAL_LEVEL, LEVEL_ENV_CHALLENGE_LEVEL,
 ]
+
+# 关卡组组装用的「积木锚点」标签（block 级）：标记单关的「入口/出口」位置积木。
+#   · level_entrance —— 本积木是单关的「关卡入口」锚点（其中心用于和**上一关**的出口对齐）
+#   · level_exit     —— 本积木是单关的「关卡出口」锚点（其中心用于和**下一关**的入口对齐）
+# ★ 单关应**恰有 1 个** level_entrance + 1 个 level_exit（多个岔路会导致关卡重叠 / 路线难汇合）。
+# ★ 它们进 ALL（可在积木标签选择页勾选），但不进 LEVEL_ENV_TAGS（那是关卡级标签）。
+const LEVEL_BLOCK_ENTRANCE := "level_entrance"   # 关卡入口锚点（积木）
+const LEVEL_BLOCK_EXIT := "level_exit"           # 关卡出口锚点（积木）
 
 # ---- 传送门标签（动态、前缀开放，组用英文）----
 # 与 autoload/portal_manager.gd 的标签约定一致。组字符串自由替换（建议英文），同组才互通：
@@ -261,13 +288,15 @@ const DETECT_KEY_NAMES := {
 # ★ 只含**积木**标签。物品的标签（digital_item / real_item / in_recycle_bin /
 #   undeletable / deleted）不在这里 —— 它们归 Inventory.ITEM_TAGS 管，两套清单不混用
 #   （「标签选择」页按（积木）/（物品）拆成两个页面，见 ui/tag_picker_panel.gd）。
-const ALL := ["show", "border", "fill", "fill_image", "collision", "text", "child_follow", "draggable", "gravity", "selectable", "always_unselectable", "controlled", "commandable", "desktop_barrier", "desktop_taskbar", "desktop_icon_boundary", "desktop_icon", "program_page_border", "program_page_cover", "auto_generated", "level_page", "detected_vertical_move", "fill_flip", "lock_facing", "cutout"]
+# ★★ gravity / rollable **不在清单里**（2026-10-23）：受重力 / 可滚动是「积木运动」面板的字段，
+#   不再是标签；旧存档里残留的这两个标签在积木入树时被剥离（见 block.gd _strip_legacy_motion_tags）。
+const ALL := ["show", "border", "fill", "fill_image", "collision", "text", "child_follow", "draggable", "selectable", "always_unselectable", "controlled", "commandable", "desktop_barrier", "desktop_taskbar", "desktop_icon_boundary", "desktop_icon", "program_page_border", "program_page_cover", "auto_generated", "level_page", "detected_vertical_move", "fill_flip", "lock_facing", "cutout", "level_entrance", "level_exit"]
 
 # 标签选择页（ui/tag_picker_panel.gd）**不列出来**的标签：程序自动生成的环境积木所带的
 # 「角色标签」（桌面屏障 / 任务栏屏障 / 图标边界 / 图标层 / 页面边框 / 页面覆盖 / 关卡页面）
 # 以及通用标记 auto_generated。
 # ★ 理由：它们是系统派生标记 —— 玩家既不参与添加，也没有频繁增删的需要。列在勾选框里只会
-#   把真正可用的「能力型」标签（draggable / gravity / controlled / commandable …）淹掉；
+#   把真正可用的「能力型」标签（draggable / selectable / controlled / commandable …）淹掉；
 #   而且误勾上一个（例如 auto_generated）会让这块积木被当成系统内容（存档不保存 / 不可选）。
 # ★ 只影响「可选项清单」：若某积木**已经**带了这些标签，标签选择页仍会把它列出来
 #   （见 tag_picker_panel._rebuild_rows 的第二轮：当前标签集里的非族标签一律展示），
@@ -290,7 +319,6 @@ const DISPLAY_NAMES := {
 	"text": "文本",
 	"child_follow": "跟随父级",
 	"draggable": "可拖动",
-	"gravity": "受重力",
 	"selectable": "可被选中",
 	"always_unselectable": "始终不可选",
 	"controlled": "受控状态",
@@ -314,6 +342,15 @@ const DISPLAY_NAMES := {
 	"reward": "奖励箱",
 	"allow_zoom": "允许缩放场景",
 	"allow_drag": "允许拖动场景",
+	# 关卡组组装：积木锚点 + 关卡类型（2026-10-14）
+	"level_entrance": "关卡入口（锚点）",
+	"level_exit": "关卡出口（锚点）",
+	"entrance_level": "入口关卡",
+	"exit_level": "出口关卡",
+	"trap_level": "陷阱关卡",
+	"reward_level": "奖励关卡",
+	"normal_level": "普通关卡",
+	"challenge_level": "挑战关卡",
 }
 
 # 取标准标签的中文显示名（非标准标签原样返回）。

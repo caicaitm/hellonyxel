@@ -181,9 +181,16 @@ static func uniform_size(items: Variant, cell: float) -> Vector2:
 #   · 原点 = 所有图标选择框中心的 min(x) / min(y)（即左上角那个图标）；
 #   · 单元 = 相邻两列的 x 差 / 相邻两行的 y 差；只有一列/一行时退回 icon_cell_spacing。
 # 无数据 / 退化数据 → 原样返回 p（调用方据此判断"没对齐"）。
-static func grid_snap(p: Vector2, items: Variant, icon_cell_spacing: Variant) -> Vector2:
+# 网格「帧」：把 items 归纳成一条**可外推的网格** —— 原点 + 单元 + 图标选择框统一尺寸。
+#   · ok=false：无数据 / 退化 → 调用方原样返回 p（沿用「没对齐」的既有约定）；
+#   · ox/oy = 左上角那个图标选择框的中心；cw/ch = 相邻列 / 行的中心差（退化退回 cell 兜底）；
+#   · std   = 图标选择框统一尺寸（= 伪装图标的占位大小）。
+# ★ grid_snap / grid_snap_free 共用本函数 —— 网格几何只有这一处定义（原点 / 单元 / 兜底），
+#   改这里两处同时生效（避免"贴格"与"避让贴格"各算一套网格、悄悄漂移）。
+static func _grid_frame(items: Variant, icon_cell_spacing: Variant) -> Dictionary:
+	var frame := {"ok": false}
 	if not (items is Array) or (items as Array).is_empty():
-		return p
+		return frame
 	var cell_fallback := maxf(float(icon_cell_spacing), THICKNESS)
 	var std := _uniform_size(items, cell_fallback)
 	var centers: Array = []
@@ -192,7 +199,7 @@ static func grid_snap(p: Vector2, items: Variant, icon_cell_spacing: Variant) ->
 			centers.append(_box_for(float(it.get("x", 0.0)), float(it.get("y", 0.0)),
 				float(it.get("w", 0.0)), std).get_center())
 	if centers.is_empty():
-		return p
+		return frame
 	var xs := _unique_axis(centers, true)
 	var ys := _unique_axis(centers, false)
 	var ox := float(xs[0])
@@ -207,9 +214,113 @@ static func grid_snap(p: Vector2, items: Variant, icon_cell_spacing: Variant) ->
 		cw = cell_fallback
 	if ch <= 0.5:
 		ch = cell_fallback
+	return {"ok": true, "ox": ox, "oy": oy, "cw": cw, "ch": ch, "std": std}
+
+
+# 「贴格」：把点 p 吸附到网格局里**最近**的那个格位（不看该格位上有无真图标）。
+# ★ 保留为底层原语（grid_snap_free 的第一跳就是它）；需要"避开真图标"请用 grid_snap_free。
+static func grid_snap(p: Vector2, items: Variant, icon_cell_spacing: Variant) -> Vector2:
+	var f := _grid_frame(items, icon_cell_spacing)
+	if not bool(f["ok"]):
+		return p
+	var ox := float(f["ox"])
+	var oy := float(f["oy"])
+	var cw := float(f["cw"])
+	var ch := float(f["ch"])
 	var qx := roundf((p.x - ox) / cw)
 	var qy := roundf((p.y - oy) / ch)
 	return Vector2(ox + qx * cw, oy + qy * ch)
+
+
+# ==================== 避让真实图标（批次 114） ====================
+#
+# 需求：桌面图标**并没有铺满网格** —— 通常只有左上角几列真的摆了图标，其余格位是空的。
+#   而 grid_snap 只看网格就近贴格、**不看格位底下有没有真图标** → 把伪装图标拖到某个真图标
+#   所在格位松手，两者就完全重合（"假图标盖在真图标上"，看到的是两个图标叠一起）。
+#   本函数：先取最近格位；若它被**真实图标的选择框**占用 → 按"距离递增"一圈圈向外找第一个
+#   **空**格位（仍是网格点 → 依旧对齐），即"移动到没有图标的对齐位置"。
+#
+# ★ 占用判定复用 box_rects()（与围墙 / 挑空白落点的避让区**同源同形**）：几何仍只有
+#   _box_for 一处定义。只避让**真实桌面图标**；伪装图标之间（虚视跳转器 / 回收站 …）互不避让。
+# ★ 容差 FREE_SNAP_EPS：格位框与图标框"正好贴合"（相邻格位边界重合）不算占用 ——
+#   否则一行图标排满时会把紧邻的空格位也判成占用、白白多跳一格。
+# ★ 搜索上限 FREE_SNAP_MAX_RING 环；整片被占满（罕见）→ 退回最近格位（宁可叠着也要保持
+#   "对齐"这个第一语义），绝不返回未对齐的原始点。
+# ★ 无数据 / 退化 → 原样返回 p，与 grid_snap 的既有约定一致（调用方据此跳过，不会乱跳）。
+# ★ 批次 119 新增 bounds（可见区矩形，屏幕像素口径）：候选格位（中心 c、统一尺寸 std 的整框）必须
+#   完全落在 bounds 内才被接纳 —— 否则松手处靠近屏幕边缘时，会把假图标推到屏幕外面
+#   （真实桌面图标贴着屏幕边、其上方/左侧"空格位"在屏幕外却被当作空位选中）。
+#   bounds 缺省（空矩形 has_area=false）时行为完全兼容旧版：不做边界约束。
+#   ★ 环耗尽仍找不到「空格且可见」的格位 → 把最近格位夹回可见区（保持"对齐"语义的同时绝不出屏）。
+const FREE_SNAP_MAX_RING := 6        # 最多向外 6 环（13×13 = 169 个候选格位）
+const FREE_SNAP_EPS := 2.0           # 占用判定的"贴合"容差（像素）
+
+static func grid_snap_free(p: Vector2, items: Variant, icon_cell_spacing: Variant, bounds: Rect2 = Rect2(), extra_occupied: Array[Rect2] = []) -> Vector2:
+	var f := _grid_frame(items, icon_cell_spacing)
+	if not bool(f["ok"]):
+		return p
+	var ox := float(f["ox"])
+	var oy := float(f["oy"])
+	var cw := float(f["cw"])
+	var ch := float(f["ch"])
+	var std: Vector2 = f["std"]
+	var occupied := box_rects(items, icon_cell_spacing)
+	# ★ 批次 121：合并其它"桌面伪装图标"积木（DESKTOP_ICON）已占的格位 → 假图标不再叠假图标。
+	#   调用方负责排除"正在拖动松手的那块自身"，否则它会避开自己当前所在的格位、反而跳走。
+	for r in extra_occupied:
+		occupied.append(r)
+	var use_bounds := bounds.has_area()   # 调用方传入了可见区矩形才做边界约束（缺省兼容旧行为）
+	var qx0 := int(roundf((p.x - ox) / cw))
+	var qy0 := int(roundf((p.y - oy) / ch))
+	var nearest := Vector2(ox + qx0 * cw, oy + qy0 * ch)
+	# 最近格位：未被真图标占用、且（启用 bounds 时）整框在可见区内 → 直接采用
+	if not _cell_blocked(nearest, std, occupied) and (not use_bounds or _cell_in_bounds(nearest, std, bounds)):
+		return nearest
+	# 最近格位被占 / 出屏 → 距离递增地向外找第一个「空且可见」的格位（每环内再按与 p 的距离排序）
+	for ring in range(1, FREE_SNAP_MAX_RING + 1):
+		var cands: Array = []
+		for dy in range(-ring, ring + 1):
+			for dx in range(-ring, ring + 1):
+				if maxi(absi(dx), absi(dy)) != ring:
+					continue        # 本环只收"最外圈"，内圈上一轮已判过
+				var cand := Vector2(ox + (qx0 + dx) * cw, oy + (qy0 + dy) * ch)
+				# 屏外候选直接排除（不收纳），避免把假图标推到屏幕外面
+				if use_bounds and not _cell_in_bounds(cand, std, bounds):
+					continue
+				cands.append({"c": cand, "d": cand.distance_squared_to(p)})
+		cands.sort_custom(func(a, b): return float(a["d"]) < float(b["d"]))
+		for e in cands:
+			var cp: Vector2 = e["c"]
+			if not _cell_blocked(cp, std, occupied):
+				return cp
+	# 兜底：圈内找不到「空格且可见」的格位 → 把最近格位夹回可见区（宁可叠着真图标也不出屏）
+	if use_bounds:
+		var cx_min := bounds.position.x + std.x * 0.5
+		var cx_max := bounds.end.x - std.x * 0.5
+		var cy_min := bounds.position.y + std.y * 0.5
+		var cy_max := bounds.end.y - std.y * 0.5
+		nearest.x = cx_min <= cx_max and clampf(nearest.x, cx_min, cx_max) or bounds.get_center().x
+		nearest.y = cy_min <= cy_max and clampf(nearest.y, cy_min, cy_max) or bounds.get_center().y
+		return nearest
+	return nearest        # 兜底（未启用 bounds）：一圈内全是真图标 → 仍是最近格位（保持"对齐"）
+
+
+# 某个「格位」是否被真实图标占用：格位框 = 以 c 为中心、图标选择框统一尺寸 std 的矩形；
+# 任一真实图标选择框与之相交（两侧各内缩 FREE_SNAP_EPS/2 后再判，正好贴合不算占用）即为占用。
+static func _cell_blocked(c: Vector2, std: Vector2, occupied: Array[Rect2]) -> bool:
+	var eps := FREE_SNAP_EPS * 0.5
+	var box := Rect2(c - std * 0.5, std).grow(-eps)
+	for r in occupied:
+		if box.intersects(r.grow(-eps)):
+			return true
+	return false
+
+
+# 候选格位（中心 c、统一尺寸 std）整框是否完全落在可见区 bounds 内（屏幕像素口径）。
+# 用于 grid_snap_free 的边界约束，防止把假图标推到屏幕外面。
+static func _cell_in_bounds(c: Vector2, std: Vector2, bounds: Rect2) -> bool:
+	var box := Rect2(c - std * 0.5, std)
+	return bounds.encloses(box)
 
 
 # 取各中心点的 x（use_x=true）或 y 坐标，去重（容差 1px 视为同一列/行）后升序。

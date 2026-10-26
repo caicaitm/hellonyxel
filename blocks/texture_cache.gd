@@ -44,7 +44,9 @@ static func fetch(path: String) -> Texture2D:
 		return _cache[p]
 	var tex := _load_imported(p)
 	if tex == null:
-		tex = _load_runtime_file(p)
+		tex = _load_res_unimported(p)   # res:// 磁盘有文件但没被 Godot 导入（缺 .import）→ 直读原图兜底
+	if tex == null:
+		tex = _load_runtime_file(p)     # user:// / 绝对路径（玩家自定义，运行期直读）
 	# ★ 成功的**一律缓存**：积木在 _draw() 里每帧调 fetch，不缓存等于每帧读盘。
 	if tex != null:
 		_cache[p] = tex
@@ -79,6 +81,26 @@ static func _load_imported(p: String) -> Texture2D:
 		return res
 	push_warning("[TextureCache] 不是贴图资源：%s" % p)
 	return null
+
+
+## 通道①补充：res:// 下「磁盘有文件、但 Godot 没导入」（缺 .import）的兜底。
+## 典型场景：在 property 编辑器里给积木填了一个 res:// 贴图路径，但该项目还没被 Godot
+##   打开导入过（或导入产物丢失）→ ResourceLoader.exists 返回 false → 通道①返回 null。
+## 这里改用 ProjectSettings.globalize_path 拿真实磁盘绝对路径，Image.load 直读原始图片，
+##   实现「指定路径即生效」，不再依赖「必须先让 Godot 导入一次」。
+## ★ 仅 res:// 走这条路；user:// / 绝对路径仍是通道②。
+## ★ 成功一律缓存（与通道①同待遇）；失败不缓存（保持「补文件后即时可用」的语义）。
+static func _load_res_unimported(p: String) -> Texture2D:
+	if not p.begins_with("res://"):
+		return null
+	var disk := ProjectSettings.globalize_path(p)
+	if disk == "" or not FileAccess.file_exists(disk):
+		return null
+	var img := Image.new()
+	if img.load(disk) != OK:
+		push_warning("[TextureCache] 图片解码失败（res:// 未导入直读）：%s" % p)
+		return null
+	return ImageTexture.create_from_image(img)
 
 
 ## 通道②：运行期直读磁盘（user:// 或绝对路径），**无需 Godot 导入**。

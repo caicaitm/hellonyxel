@@ -1,0 +1,42 @@
+{
+  "name": "反地面城市",
+  "_说明": "★ 反地面（sid = counter_ground）的**虚构城市**。反地面是独立于地球的另一个 WorldNode（inner_surface + interior_of = earth），不在同一个父节点下 ⇒ 城市数据必须单独成文件，绝不能写进 earth_cities.json / earth_cities_bulk.tsv。由 solar_system.json 的 counter_ground 节点用 `cities` 字段指向本文件。",
+  "_说明_坐标": "lat/lon 与地表同一套等距圆柱约定（lat 北纬为正，lon 东经为正）。两座城分别钉在反地面的**北极点 / 南极点**（±90°），极点处经度无意义 ⇒ 统一取 0。",
+  "_说明_字段": "names = 多语言名（键 = TranslationManager.LANG_CODES）；tier = metro（双圈，常显档，保证贴地时不会被小档门控过滤）；gnid 是**负的虚构 ID**（真实 GeoNamesID 全为正）—— 只用来给「本体编辑 / 关注」提供一个稳定的定位键。",
+  "cities": [
+    {
+      "names": {
+        "zh_CN": "长明城",
+        "zh_TW": "長明城",
+        "en": "Everlight",
+        "ja": "長明城",
+        "ru": "Вечный Свет",
+        "ko": "장명성"
+      },
+      "gnid": -1,
+      "local": "长明城",
+      "native": "Everlight",
+      "country": "反地面",
+      "lat": 90.0,
+      "lon": 0.0,
+      "tier": "metro"
+    },
+    {
+      "names": {
+        "zh_CN": "永夜城",
+        "zh_TW": "永夜城",
+        "en": "Everdark",
+        "ja": "永夜城",
+        "ru": "Вечная Ночь",
+        "ko": "영야성"
+      },
+      "gnid": -2,
+      "local": "永夜城",
+      "native": "Everdark",
+      "country": "反地面",
+      "lat": -90.0,
+      "lon": 0.0,
+      "tier": "metro"
+    }
+  ]
+}

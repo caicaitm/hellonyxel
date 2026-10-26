@@ -25,6 +25,8 @@ const TEMP_SUBDIR := "HelloNyxel/Temp"
 const USER_TEX_SUBDIR := "HelloNyxel/Textures"
 # 日历系统的备忘录/日记数据（Temp 目录，随存档一起备份/恢复）
 const CALENDAR_NOTES_PATH := "HelloNyxel/Temp/calendar_notes.json"
+# 课程表数据（Temp 目录；N 周循环模型，随存档一起备份/恢复）
+const COURSE_SCHEDULE_PATH := "HelloNyxel/Temp/course_schedule.json"
 const SETTINGS_PATH := "HelloNyxel/settings/settings.json"
 const PERF_BUSY_PATH := "HelloNyxel/settings/perf_busy.json"
 const AI_CONFIG_PATH := "HelloNyxel/settings/ai.json"
@@ -95,6 +97,13 @@ const MAX_FPS_OPTIONS := [15, 30, 45, 60, 90, 120, 0]
 # 帧率上限变化（应用后广播）
 signal max_fps_changed(fps: int)
 
+## 「周起始」变化（true=周一在前 / false=周日在前）。日历页与课程表页共用同一设置，
+## 任一页的切换按钮写入 SaveManager 后，本信号让两页同步刷新，保证显式一致。
+signal calendar_week_start_changed(on: bool)
+
+# 「页面透明效果」开关变化（开=各浮动主面板改用课程表同款深色背景；默认关=玻璃透出）。
+signal page_dark_bg_changed(on: bool)
+
 var _max_fps: int = MAX_FPS_DEFAULT
 
 # 默认间隔（分钟）：桌面默认 10 分钟，世界默认 1 小时
@@ -114,6 +123,9 @@ var _auto_load_save: bool = false
 # 日历「周起始」开关（默认 true = 周一在前；false = 周日在前，应对文化差异）。落盘 settings.json。
 var _calendar_week_starts_monday: bool = true
 
+# 「页面透明效果」开关（默认 false = 关闭，主面板维持玻璃磨砂透出）。落盘 settings.json。
+var _page_dark_bg: bool = false
+
 # 计时累积（秒）
 var _desktop_accum := 0.0
 var _world_accum := 0.0
@@ -129,8 +141,10 @@ var _location_path: String = ""
 var _local_weather_path: String = ""
 var _device_calendar_path: String = ""
 var _calendar_notes_path: String = ""
+var _course_schedule_path: String = ""
 var _app_settings: Dictionary = {}   # settings.json 全量（与具体存档无关，所有存档通用）
 var _settings_loaded: bool = false   # settings.json 是否已读过（惰性加载用，见 _ensure_settings_loaded）
+var _current_save_name: String = ""   # 当前正在存/读的存档名；供 HomeManager 定位 home.json 落盘目录
 
 
 func _ready() -> void:
@@ -193,6 +207,7 @@ func _resolve_paths() -> void:
 	_local_weather_path = docs.path_join(LOCAL_WEATHER_PATH)
 	_device_calendar_path = docs.path_join(DEVICE_CALENDAR_PATH)
 	_calendar_notes_path = docs.path_join(CALENDAR_NOTES_PATH)
+	_course_schedule_path = docs.path_join(COURSE_SCHEDULE_PATH)
 	_user_tex_dir = docs.path_join(USER_TEX_SUBDIR)
 
 
@@ -296,7 +311,20 @@ func get_calendar_notes_path() -> String:
 	return _calendar_notes_path
 
 
+## 「课程表」数据文件的绝对路径（course_schedule.json，位于 Temp 目录）。
+func get_course_schedule_path() -> String:
+	_ensure_ready()
+	return _course_schedule_path
+
+
 # ============ 对外存档 API ============
+
+## 当前存档名（最近一次 save/load_save 操作的存档）。
+## 供 HomeManager 确定 home.json 落盘目录；未操作过则为空串。
+func get_current_save_name() -> String:
+	_ensure_ready()
+	return _current_save_name
+
 
 ## 手动存档。type 见 TYPE_*。custom_name 空 → 用「前缀 + 时间」默认名。
 ## 命名规则：自动存档 = auto_<type>_…，手动存档 = <type>_…（如 desktop_2026_09_27_20_00_00）；
@@ -321,6 +349,12 @@ func save(type: String, custom_name: String = "", auto: bool = false) -> Diction
 	if not ok:
 		return { "ok": false, "type": type, "name": final_name, "message": "写入 save.json 失败" }
 	_backup_temp_to(folder.path_join("temp"))
+	# ★ 家园积木随存档落盘：HomeManager 把当前家园面板积木序列化进 <folder>/home.json（与桌面 save.json 同目录）。
+	_current_save_name = final_name
+	if HomeManager != null and HomeManager.has_method("save_to_disk"):
+		var herr := HomeManager.save_to_disk(folder)
+		if herr != OK:
+			push_warning("[SaveManager] 家园存档失败（%s）：%s" % [final_name, error_string(herr)])
 	print("[SaveManager] 已存档 [%s] %s （桌面积木 %d 块）"
 		% [type, final_name, (data["blocks"] as Array).size()])
 	# ★ 自动存档：落盘后立刻按上限清理（把最旧的自动存档移入系统回收站）。
@@ -377,6 +411,13 @@ func load_save(name: String) -> Dictionary:
 	_apply_saved_vars(data.get("vars", {}))
 	# 4) 重新摆放/确认系统积木（屏障等由运行时重建；此处只做位置对齐）
 	_after_load_refresh_environment()
+	# 4b) 家园积木随读档还原：HomeManager 读 <folder>/home.json；
+	#     若家园面板当前可见则立即投影；不可见则仅缓存 home_data，下次打开时还原。
+	_current_save_name = name
+	if HomeManager != null and HomeManager.has_method("load_from_disk"):
+		var herr := HomeManager.load_from_disk(folder)
+		if herr != OK:
+			push_warning("[SaveManager] 家园读档失败（%s）：%s" % [name, error_string(herr)])
 	# 5) 预留：时间反应步骤（时间流逝应发生的状态变化 / 到点触发事件，当前仅占位）
 	_time_reaction(data)
 	print("[SaveManager] 已读档 [%s] %s（重建积木 %d 块）" % [type, name, blocks_res])
@@ -574,6 +615,9 @@ func _collect_blocks() -> Array:
 			continue
 		if BlockTags.AUTO_GENERATED in b.tags:
 			continue
+		# ★ 排除挂在关卡/家园面板下的积木（它们各自有独立持久化，不进桌面 save.json，避免串味）。
+		if b._scene_of() != null:
+			continue
 		var prop := BlockProperty.from_block(b)
 		out.append(_to_json_compatible({
 			"id": int(b.id),
@@ -632,6 +676,9 @@ func _remove_existing_user_blocks() -> void:
 			continue
 		if BlockTags.AUTO_GENERATED in b.tags:
 			continue
+		# ★ 排除关卡/家园面板下的积木：读档只重建桌面积木，页面积木由各自系统还原，不能在此 free。
+		if b._scene_of() != null:
+			continue
 		BlockManager.unregister(b)
 		b.queue_free()
 
@@ -688,6 +735,12 @@ func save_app_settings(patch: Dictionary) -> void:
 		_auto_load_save = bool(patch["auto_load_save"])
 	if patch.has("calendar_week_starts_monday"):
 		_calendar_week_starts_monday = bool(patch["calendar_week_starts_monday"])
+	if patch.has("page_dark_bg"):
+		var new_val: bool = bool(patch["page_dark_bg"])
+		if new_val != _page_dark_bg:
+			_page_dark_bg = new_val
+			if has_signal("page_dark_bg_changed"):
+				page_dark_bg_changed.emit(_page_dark_bg)
 	_write_json(_settings_path, _app_settings)
 
 
@@ -726,6 +779,24 @@ func get_quit_auto_save() -> bool:
 	return _quit_auto_save
 
 
+## 「反转滚轮」（设置页·世界页）：滚轮缩放上下方向对调。落盘 settings.json，默认关。
+func get_world_invert_wheel() -> bool:
+	return bool(_app_settings.get("world_invert_wheel", false))
+
+
+func set_world_invert_wheel(on: bool) -> void:
+	save_app_settings({ "world_invert_wheel": on })
+
+
+## 「反转鼠标」：世界 3D 舞台里拖动（卫星视角绕转 / 自由平移）的鼠标方向对调。
+func get_world_invert_mouse() -> bool:
+	return bool(_app_settings.get("world_invert_mouse", false))
+
+
+func set_world_invert_mouse(on: bool) -> void:
+	save_app_settings({ "world_invert_mouse": on })
+
+
 ## 自动载入存档开关：开启时游戏启动即自动载入最新存档（按 created_at 倒序的第一条）。
 ## 落盘 settings.json，重启保留（与具体存档无关，所有存档通用）。
 func set_auto_load_save(on: bool) -> void:
@@ -741,10 +812,24 @@ func get_auto_load_save() -> bool:
 func set_calendar_week_starts_monday(on: bool) -> void:
 	_calendar_week_starts_monday = on
 	save_app_settings({ "calendar_week_starts_monday": _calendar_week_starts_monday })
+	# ★ 同步驱动两页：日历与课程表都连了本信号，谁改谁都让两页同时刷新。
+	if has_signal("calendar_week_start_changed"):
+		calendar_week_start_changed.emit(_calendar_week_starts_monday)
 
 
 func get_calendar_week_starts_monday() -> bool:
 	return _calendar_week_starts_monday
+
+
+## 「页面透明效果」开关：开=各浮动主面板改用课程表同款深色背景；默认关=玻璃透出。
+## 落盘 settings.json，重启保留。
+func get_page_dark_bg() -> bool:
+	return _page_dark_bg
+
+
+## 设置开关（持久化 + 广播，驱动已开面板实时换肤）。与设置页 apply 走同一落盘路径。
+func set_page_dark_bg(on: bool) -> void:
+	save_app_settings({ "page_dark_bg": on })
 
 
 # ============ UI 缩放（⚠️实验性内容） ============
@@ -933,6 +1018,8 @@ func _load_app_settings() -> void:
 		_auto_load_save = bool(_app_settings["auto_load_save"])
 	if _app_settings.has("calendar_week_starts_monday"):
 		_calendar_week_starts_monday = bool(_app_settings["calendar_week_starts_monday"])
+	if _app_settings.has("page_dark_bg"):
+		_page_dark_bg = bool(_app_settings["page_dark_bg"])
 	# UI 缩放：非法/越界值夹回合法区间（面板/各 CanvasLayer 在各自 _ready 时读取本值）
 	if _app_settings.has("ui_scale"):
 		_ui_scale = clampf(float(_app_settings["ui_scale"]), UI_SCALE_MIN, UI_SCALE_MAX)
@@ -1051,6 +1138,7 @@ func ensure_temp_files() -> Dictionary:
 		["player_profile.json", PlayerProfile],
 		["nyxel_daily_state.json", NyxelDailyState],
 		["calendar_notes.json", CalendarNotes],
+		["course_schedule.json", CourseSchedule],
 		["devices.json", Devices],
 		["inventory.json", Inventory],
 	]

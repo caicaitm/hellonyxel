@@ -64,12 +64,16 @@ func read_from_disk() -> Dictionary:
 		out["memo"] = d["memo"]
 	if d.has("diary") and (d["diary"] is Dictionary):
 		out["diary"] = d["diary"]
+	if d.has("period") and (d["period"] is Dictionary):
+		out["period"] = d["period"]
 	out["version"] = VERSION
-	# 合法性兜底：memo 必须 dict，diary 必须 dict of Array
+	# 合法性兜底：memo 必须 dict，diary 必须 dict of Array，period 必须 dict
 	if not (out["memo"] is Dictionary):
 		out["memo"] = {}
 	if not (out["diary"] is Dictionary):
 		out["diary"] = {}
+	if not (out["period"] is Dictionary):
+		out["period"] = {}
 	for k in out["diary"].keys():
 		if not (out["diary"][k] is Array):
 			out["diary"][k] = []
@@ -204,6 +208,192 @@ func remove_diary_entry(date: String, id: String) -> bool:
 	return removed
 
 
+# ============ 生理期（period）============
+# 玩家在日历里**逐天标记**某天是否处于生理期（period: { "yyyy-MM-dd": true }）。
+# 系统把「连续标记段的首日」视为一次周期开始，再按历史相邻 starts 的间隔
+# （中位数 / 均值）预测下一次开始日与经期长度——玩家无需手填任何参数。
+#
+# ★ 数据模型：
+#   period: { "2026-10-07": true, ... }   —— 键为日期，值为 true 表示当天处于生理期。
+#   值为 false / 键不存在 → 当天非生理期（unmark 时直接 erase 键）。
+
+## 某天是否标记为生理期
+func is_period_day(date: String) -> bool:
+	var d := normalize_date(date)
+	var p: Variant = load_notes().get("period", {})
+	if p is Dictionary and (p as Dictionary).has(d):
+		return bool((p as Dictionary)[d])
+	return false
+
+
+## 所有被标记生理期的日期（升序 Array[String]）
+func get_period_days() -> Array:
+	var p: Variant = load_notes().get("period", {})
+	var out: Array = []
+	if p is Dictionary:
+		for k in (p as Dictionary).keys():
+			if bool((p as Dictionary)[k]):
+				out.append(str(k))
+	out.sort()
+	return out
+
+
+## 标记某天为生理期
+func mark_period(date: String) -> void:
+	var d := normalize_date(date)
+	var n := load_notes()
+	var p: Dictionary = n.get("period", {})
+	if not (p is Dictionary):
+		p = {}
+	p[d] = true
+	n["period"] = p
+	n["updated_at"] = Time.get_datetime_string_from_system(false, true)
+	_notes = n
+	_loaded = true
+	persist()
+	changed.emit(_notes)
+
+
+## 取消某天生理期标记
+func unmark_period(date: String) -> void:
+	var d := normalize_date(date)
+	var n := load_notes()
+	var p: Dictionary = n.get("period", {})
+	if not (p is Dictionary):
+		p = {}
+	p.erase(d)
+	n["period"] = p
+	n["updated_at"] = Time.get_datetime_string_from_system(false, true)
+	_notes = n
+	_loaded = true
+	persist()
+	changed.emit(_notes)
+
+
+## 切换某天生理期标记，返回切换后是否「已标记」
+func toggle_period(date: String) -> bool:
+	if is_period_day(date):
+		unmark_period(date)
+		return false
+	mark_period(date)
+	return true
+
+
+## 连续标记段的首日序列（= 每次周期开始日），升序 Array[String]。
+## 相邻两天都标记视为连续；间隔 >1 天视为新一次周期。
+func period_starts() -> Array:
+	var days: Array = get_period_days()
+	var starts: Array = []
+	var prev_unix := -1
+	for dt in days:
+		var u := _date_to_unix(dt)
+		if starts.is_empty() or (u - prev_unix) > 86400:
+			starts.append(dt)
+		prev_unix = u
+	return starts
+
+
+## 每次周期的经期长度（连续标记天数）列表，按开始顺序
+func period_run_lengths() -> Array:
+	var days: Array = get_period_days()
+	var lens: Array = []
+	var prev_unix := -1
+	var cur := 0
+	for dt in days:
+		var u := _date_to_unix(dt)
+		if prev_unix < 0 or (u - prev_unix) > 86400:
+			if cur > 0:
+				lens.append(cur)
+			cur = 1
+		else:
+			cur += 1
+		prev_unix = u
+	if cur > 0:
+		lens.append(cur)
+	return lens
+
+
+## 预测下一次生理期。
+## 返回 Dictionary：
+##   has_prediction: bool
+##   next_start: String（yyyy-MM-dd；不足两次周期则空）
+##   next_end:   String（经期结束日，= next_start + 经期长度 - 1；为空则无）
+##   cycle_days: int（预测周期长度，即相邻开始日间隔中位数）
+##   period_days: int（预测经期长度，即各段长度均值）
+##   cycles_used: int（参与预测的周期数）
+func forecast_period() -> Dictionary:
+	var result := {
+		"has_prediction": false,
+		"next_start": "",
+		"next_end": "",
+		"cycle_days": 0,
+		"period_days": 0,
+		"cycles_used": 0,
+	}
+	var starts: Array = period_starts()
+	if starts.is_empty():
+		return result
+	# 经期长度：各连续段长度的均值
+	var lens: Array = period_run_lengths()
+	var period_days := 0
+	if lens.size() > 0:
+		var s := 0
+		for x in lens:
+			s += int(x)
+		period_days = int(round(float(s) / lens.size()))
+	result["period_days"] = period_days
+	if starts.size() < 2:
+		# 只有一次记录：无法预测周期，仅给出经期长度
+		return result
+	# 相邻开始日间隔（天）
+	var intervals: Array = []
+	for i in range(1, starts.size()):
+		var a := _date_to_unix(starts[i - 1])
+		var b := _date_to_unix(starts[i])
+		intervals.append(int((b - a) / 86400))
+	var cycle := _median(intervals)
+	result["cycle_days"] = cycle
+	result["cycles_used"] = intervals.size()
+	var last_unix := _date_to_unix(starts[starts.size() - 1])
+	var next_unix := last_unix + cycle * 86400
+	result["next_start"] = _unix_to_date(next_unix)
+	if period_days > 0:
+		result["next_end"] = _unix_to_date(next_unix + (period_days - 1) * 86400)
+	result["has_prediction"] = true
+	return result
+
+
+# ---- 日期 <-> 午时 unix 秒（hour=12 避开夏令时切换，保证相邻天差恒为 86400）----
+static func _date_to_unix(date: String) -> int:
+	var parts := date.split("-")
+	if parts.size() < 3:
+		return 0
+	var dict := {
+		"year": int(parts[0]),
+		"month": int(parts[1]),
+		"day": int(parts[2]),
+		"hour": 12, "minute": 0, "second": 0,
+	}
+	return int(Time.get_unix_time_from_datetime_dict(dict))
+
+
+static func _unix_to_date(sec: int) -> String:
+	var d := Time.get_datetime_dict_from_unix_time(sec)
+	return "%04d-%02d-%02d" % [int(d.get("year", 2000)), int(d.get("month", 1)), int(d.get("day", 1))]
+
+
+# 整数中位数（奇数取中值，偶数取两中值平均四舍五入）
+static func _median(arr: Array) -> int:
+	if arr.is_empty():
+		return 0
+	var s := arr.duplicate()
+	s.sort()
+	var n := s.size()
+	if n % 2 == 1:
+		return int(s[n / 2])
+	return int(round(float(int(s[n / 2 - 1]) + int(s[n / 2])) / 2.0))
+
+
 # ============ 持久化 ============
 
 func persist() -> Error:
@@ -275,6 +465,7 @@ func empty_notes() -> Dictionary:
 		"version": VERSION,
 		"memo": {},
 		"diary": {},
+		"period": {},
 		"updated_at": "",
 	}
 

@@ -89,7 +89,10 @@ func evaluate(seg_content: String, variable_resolver: Callable) -> String:
 ## 定义串 → { "bbcode":String, "text":String }
 ## text = 去掉一切修饰/结构符后的纯文本（供「是否有可见文本」判定）。
 ## 积木文本框 / 弹窗事件正文都走这里，保证「修饰」只有一份实现。
-func to_bbcode(def: String, resolver: Callable = Callable()) -> Dictionary:
+## translator：可选的「段文本 → 段文本」翻译回调（Callable(String)->String）。
+##   在「变量已求值」之后、生成 BBCode 之前逐段调用 —— 只翻纯文本，不动任何修饰符。
+##   默认空 Callable（无操作）→ 弹窗 / 对话面板等既有调用方行为完全不变。
+func to_bbcode(def: String, resolver: Callable = Callable(), translator: Callable = Callable()) -> Dictionary:
 	if def.strip_edges().is_empty():
 		return { "bbcode": "", "text": "" }
 	var bb := ""
@@ -101,6 +104,11 @@ func to_bbcode(def: String, resolver: Callable = Callable()) -> Dictionary:
 		var text: String = evaluate(seg.content, resolver)
 		if text.is_empty():
 			continue
+		# 可选内容翻译：查不到就原样返回（由回调自行保证），故可安全叠加在既有文本上。
+		if translator.is_valid():
+			text = str(translator.call(text))
+			if text.is_empty():
+				continue
 		plain += text
 		bb += _bbcode_body(seg, text)
 	return { "bbcode": bb, "text": plain }

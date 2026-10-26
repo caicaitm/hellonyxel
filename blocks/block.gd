@@ -42,6 +42,10 @@
 class_name Block
 extends Node2D
 
+# YSM（是，史蒂夫）未加密模型包烘焙器：用 preload 显式依赖，
+# 避免依赖全局 class_name 注册（headless 校验环境全局类缓存可能滞后）。
+const YSMProjector = preload("res://blocks/ysm_projector.gd")
+
 # 按钮信号：积木带「button_XXX」标签（BlockTags.BUTTON_PREFIX）且被**双击**（两次点击的
 # 间隔与距离均 ≤ 阈值）→ 发出本信号。后续行动 / 事件链脚本可连接做响应，例如：
 #   block.button_activated.connect(func(name: String): print("被按下，信号=", name))
@@ -91,6 +95,25 @@ var _attack_boxes: Array[AttackBox] = []
 @export var width: float = 120.0
 @export var height: float = 120.0
 
+# ============ 形状（矩形 / 球 / 椭圆 / 三角形）============
+# 形状只改变「碰撞多边形」与「绘制轮廓」，尺寸仍由 width/height 给出：
+#   · RECT：四角矩形（历史行为，零回归）
+#   · CIRCLE：圆，半径 = min(width,height)/2（内切，保证是真圆）
+#   · ELLIPSE：椭圆，半轴 = (width/2, height/2)
+#   · TRI_*：三角形，外接于 width×height 包围盒；shape_dir 控制朝向
+# 碰撞统一走 SAT（见 _obb_corners → _shape_polygon），圆/椭圆用 24 边形近似（凸多边形可直接 SAT）。
+enum Shape {
+	RECT = 0,
+	CIRCLE = 1,
+	ELLIPSE = 2,
+	TRI_ISOSCELES = 3,
+	TRI_EQUILATERAL = 4,
+	TRI_RIGHT = 5,
+}
+@export var shape: int = Shape.RECT
+# 三角形朝向：0=上 1=右 2=下 3=左（仅三角形有意义；其它形状忽略）
+@export var shape_dir: int = 0
+
 # ============ 位置坐标 ============
 # 直接使用 Node2D.position（积木中心的世界/场景坐标）。
 # 相对父级偏移同理用 position；无需额外字段以免与引擎冲突。
@@ -125,6 +148,18 @@ var _local_vars: Array[LocalVar] = []
 		queue_redraw()   # 标签变化影响绘制（fill / border / cutout 透明等），立即重绘本积木
 		_sync_cutout_items()   # cutout 标签增删 → 建/删「打洞」子画布
 
+# ============ 行为（积木自主行动；按列表顺序优先级递减）============
+# 每个元素是「行为规格」字符串（见 blocks/block_behaviors.gd 的解析）：
+#   · 预设：random_patrol[:组] / ordered_patrol[:组] / area_patrol[:组] / hold_position
+#   · 挂载脚本：script:<脚本名>（res://behaviors/<脚本名>.json 里的 behaviors 列表）
+# 由 autoload BlockBehaviorRunner 每 tick 解释执行；写在前面的优先级更高。
+var _behaviors: PackedStringArray = PackedStringArray()
+@export var behaviors: PackedStringArray = PackedStringArray():
+	get:
+		return _behaviors
+	set(value):
+		_behaviors = value
+
 # ============ 显示图层（渲染层级，决定绘制先后）============
 # 用 backing 变量 + setter 同步 z_index，确保「初始值」与「运行时修改（属性面板 apply）」
 # 都立即反映到渲染层级。否则仅 _ready 里设过一次 z_index，运行时改 display_layer 不会重排，
@@ -150,6 +185,22 @@ var _local_vars: Array[LocalVar] = []
 #   否则走纯色填充。两者不会同时绘制。
 @export var fill_color: Color = Color(0.25, 0.55, 0.95, 1.0)
 @export var fill: BlockFill = null
+
+# ★ 骨骼动画填充：每块用一个 SubViewport 离屏渲染 .tscn 场景，再按填充模式贴进积木矩形。
+#   纯色 / 静态图完全不创建这些节点，只有 SKELETON 才付出离屏渲染开销。
+const SKELETON_SS: float = 2.0        # 离屏画布相对积木尺寸的超采样倍数（缩放后更清晰）
+const SKELETON_VP_MAX: int = 2048    # 离屏画布单边像素上限，防止超大积木吃满显存
+var _skel_viewport: SubViewport = null
+var _skel_wrapper: Node2D = null
+var _skel_scene: Node = null
+var _skel_anim: AnimationPlayer = null
+var _skel_anim_name: String = ""
+var _skel_tex: ViewportTexture = null
+var _skel_bounds: Rect2 = Rect2()
+var _skel_vp_size: Vector2i = Vector2i.ZERO
+var _skel_ok: bool = false
+var _skel_failed: bool = false
+var _skel_rebuild_queued: bool = false
 
 # ============ 文本框（独立子组件，见 text_box.gd / text_box_view.gd）============
 # backing + setter：任何赋值（代码 / 属性面板 apply / 场景文件）都会立即重建子节点视图，
@@ -215,6 +266,10 @@ func _ensure_selectable() -> void:
 	tags = t2
 
 func _ready() -> void:
+	# 旧积木只有 gravity / rollable 标签，没有运动面板字段 → 入树时迁移一次。
+	# 显式写入过新字段的积木（属性面板 / 类型 JSON）不受标签影响。
+	if not _motion_toggles_explicit:
+		_init_legacy_motion_flags()
 	_ensure_selectable()
 	z_index = int(round(display_layer))
 	add_to_group("block")
@@ -230,6 +285,57 @@ func _ready() -> void:
 	queue_redraw()
 	# 镂空遮罩入树：按初始标签建好「打洞」子画布
 	_sync_cutout_items()
+	# 骨骼填充：入树后按当前 fill 建离屏场景；隐藏/镂空时暂停离屏刷新
+	if not visibility_changed.is_connected(_sync_skeleton_activity):
+		visibility_changed.connect(_sync_skeleton_activity)
+	refresh_fill_visual()
+
+# ============ 重力 / 滚动开关（「积木运动」面板）============
+# ★★ 这两个开关**已从标签系统移除**：物理只读下面的字段，标签不再有任何作用。
+#   旧存档里残留的 gravity / rollable 在入树时读取一次（迁移），随后**剥离** ——
+#   留着它们，标签选择页就会显示一个「看着能控制、其实什么都不控制」的假开关。
+func _init_legacy_motion_flags() -> void:
+	gravity_enabled = BlockTags.GRAVITY in _tags
+	roll_enabled = BlockTags.ROLLABLE in _tags
+	_strip_legacy_motion_tags()
+
+
+## 由属性面板 / 类型 JSON 显式写入。
+func set_motion_toggles(gravity_on: bool, roll_on: bool) -> void:
+	gravity_enabled = gravity_on
+	roll_enabled = roll_on
+	_motion_toggles_explicit = true
+	_strip_legacy_motion_tags()
+
+
+# 剥离旧的重力 / 可滚动标签（改由「积木运动」面板的字段控制后，标签只剩迁移读取的价值）。
+func _strip_legacy_motion_tags() -> void:
+	if BlockTags.GRAVITY not in _tags and BlockTags.ROLLABLE not in _tags:
+		return
+	var t: PackedStringArray = PackedStringArray(_tags)
+	t.erase(BlockTags.GRAVITY)
+	t.erase(BlockTags.ROLLABLE)
+	tags = t
+
+
+## 旋转轴 / 质心（世界坐标）：几何中心 + 局部偏移（随 rotation 旋转）。
+func get_rotation_axis_position() -> Vector2:
+	return global_position + roll_axis_offset.rotated(rotation)
+
+
+func _com_world() -> Vector2:
+	return get_rotation_axis_position()
+
+
+## 绕配置的旋转轴旋转：轴点保持不动，几何中心随之平移。
+## 用于空中自转 / 自由旋转；贴地翻滚仍以真实接触点为支点。
+func _rotate_about_com(dtheta: float) -> void:
+	if absf(dtheta) < 0.000001:
+		return
+	var axis: Vector2 = get_rotation_axis_position()
+	rotation += dtheta
+	global_position = axis - roll_axis_offset.rotated(rotation)
+
 
 # 离开场景树：解开双向绑定，避免留下悬空引用。
 # 「绑定」是 ID 关系而不是节点父子关系（场景树保持扁平），
@@ -287,12 +393,24 @@ func _draw_impl() -> void:
 	#     若还强制要求 fill，用户会「填了路径却什么都不显示」。
 	if not (BlockTags.CUTOUT in tags):
 		if BlockTags.FILL_IMAGE in tags and fill != null and fill.is_valid():
-			_draw_image_fill(rect, fill)
+			if shape == Shape.RECT:
+				if int(fill.anim_type) == int(BlockFill.AnimType.SKELETON):
+					_draw_skeleton_fill(rect)
+				else:
+					_draw_image_fill(rect, fill)
+			else:
+				_draw_shaped_image_fill(fill)
 		elif BlockTags.FILL in tags:
-			draw_rect(rect, fill_color)
+			if shape == Shape.RECT:
+				draw_rect(rect, fill_color)
+			else:
+				_draw_shape_solid(fill_color)
 	# 边框（cutout 的边框改由 _border_item 子画布在洞之后绘制，避免被自己的洞抠掉）
 	if BlockTags.BORDER in tags and not (BlockTags.CUTOUT in tags):
-		draw_rect(rect, border_color, false, border_width)
+		if shape == Shape.RECT:
+			draw_rect(rect, border_color, false, border_width)
+		else:
+			_draw_shape_border(border_color, border_width)
 	if flipped:
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)   # 复位，避免影响后续绘制
 	# 文本框：不再在 _draw 里手绘，改为子节点 TextBoxView 自行渲染（见 rebuild_text_boxes）
@@ -316,19 +434,25 @@ var _border_item: Node2D = null   # 遮罩边框画布（洞之后绘制，不�
 # 打洞画布：往父积木矩形内写 (0,0,0,0)（MUL → 洞内一切已画内容归零）
 class _CutoutHoleItem extends Node2D:
 	var block: Block = null
-	var _last_size := Vector2.INF
+	var _last_sig := ""
 	func _draw() -> void:
 		if block == null or not is_instance_valid(block):
 			return
-		draw_rect(Rect2(-block.width / 2.0, -block.height / 2.0, block.width, block.height),
-			Color(0, 0, 0, 0))
+		# 打洞区域 = 积木形状（矩形走 draw_rect；圆/椭圆/三角形走多边形）。
+		if int(block.shape) == 0:
+			draw_rect(Rect2(-block.width / 2.0, -block.height / 2.0, block.width, block.height),
+				Color(0, 0, 0, 0))
+		else:
+			var pts := block._shape_local_polygon()
+			if pts.size() >= 3:
+				draw_colored_polygon(pts, Color(0, 0, 0, 0))
 	func _process(_delta: float) -> void:
-		# 尺寸变化随动；位置由父节点带动（子画布随父移动），无需处理
+		# 尺寸 / 形状变化随动；位置由父节点带动（子画布随父移动），无需处理
 		if block == null or not is_instance_valid(block):
 			return
-		var s := Vector2(block.width, block.height)
-		if s != _last_size:
-			_last_size = s
+		var sig := "%s_%s_%s_%s" % [str(block.width), str(block.height), str(block.shape), str(block.shape_dir)]
+		if sig != _last_sig:
+			_last_sig = sig
 			queue_redraw()
 
 # 遮罩边框画布：普通混合，绘制顺序在洞之后 → 轮廓仍可见。
@@ -341,14 +465,22 @@ class _CutoutBorderItem extends Node2D:
 			return
 		if not (BlockTags.BORDER in block.tags):
 			return
-		draw_rect(Rect2(-block.width / 2.0, -block.height / 2.0, block.width, block.height),
-			block.border_color, false, block.border_width)
+		if int(block.shape) == 0:
+			draw_rect(Rect2(-block.width / 2.0, -block.height / 2.0, block.width, block.height),
+				block.border_color, false, block.border_width)
+		else:
+			var pts := block._shape_local_polygon()
+			if pts.size() >= 2:
+				var line := PackedVector2Array(pts)
+				line.append(pts[0])
+				draw_polyline(line, block.border_color, block.border_width)
 	func _process(_delta: float) -> void:
 		if block == null or not is_instance_valid(block):
 			return
-		var sig := "%s|%s|%s|%s|%s" % [str(block.width), str(block.height),
+		var sig := "%s|%s|%s|%s|%s|%s|%s" % [str(block.width), str(block.height),
 			str(block.border_color), str(block.border_width),
-			"1" if (BlockTags.BORDER in block.tags) else "0"]
+			"1" if (BlockTags.BORDER in block.tags) else "0",
+			str(block.shape), str(block.shape_dir)]
 		if sig != _sig:
 			_sig = sig
 			queue_redraw()
@@ -384,6 +516,7 @@ func _sync_cutout_items() -> void:
 			_border_item.queue_free()
 		_hole_item = null
 		_border_item = null
+	_sync_skeleton_activity()
 
 ## ★★ 输入侧与绘制侧同源的闸门：**该全局坐标点是否被更高的镂空遮罩盖住**。
 ##
@@ -424,7 +557,7 @@ func is_point_covered(p: Vector2) -> bool:
 			continue
 		if ob.display_layer <= my_layer:
 			continue
-		if ob._aabb_at(ob.global_position).has_point(p):
+		if ob._obb_contains_point(ob.global_position, p):
 			return true
 	return false
 
@@ -495,6 +628,9 @@ func get_text_box_var(tb_name: String, prop: String) -> Variant:
 			return tb.hide_when_empty
 		"text_def":
 			return tb.text_def
+		"text_defs":
+			# 返回副本：避免调用方就地改字典而绕过 changed 通知（视图不刷新）。
+			return tb.text_defs.duplicate(true)
 		"fill_image_path":
 			return tb.fill_image_path
 		_:
@@ -645,6 +781,14 @@ func _set_text_box_prop(tb: TextBox, prop: String, value: Variant) -> bool:
 		"text_def":
 			tb.text_def = str(value)
 			refresh_text_boxes()
+		"text_defs":
+			# 整份替换多语言文本（属性页「应用」走这里）。非字典 → 视为清空。
+			# ★ 直接给字段赋值不会 emit_changed（只有 hide_when_empty 的 setter 会）→ 必须显式刷新视图。
+			if value is Dictionary:
+				tb.text_defs = (value as Dictionary).duplicate(true)
+			else:
+				tb.text_defs = {}
+			refresh_text_boxes()
 		"fill_image_path":
 			tb.fill_image_path = str(value)
 			refresh_text_boxes()
@@ -653,22 +797,36 @@ func _set_text_box_prop(tb: TextBox, prop: String, value: Variant) -> bool:
 			return false
 	return true
 
-# 图片填充绘制：按 src.path 取贴图，依 src.fill_mode 决定铺法。
+# 统一解析「填充来源贴图」：YSM 包走 YSMProjector 烘焙，其余走 TextureCache。
+# 返回 null = 无有效贴图（调用方应退回纯色兜底）。
+func _resolve_fill_texture(src: BlockFill) -> Texture2D:
+	if src == null:
+		return null
+	if int(src.anim_type) == int(BlockFill.AnimType.YSM):
+		return YSMProjector.get_texture(src.path)
+	return TextureCache.fetch(src.path)
+
+
+# 静态图填充绘制：按 src.path 取贴图，依 src.fill_mode 决定铺法。
 #   KEEP_MAX_RATIO 等比缩放完整显示并居中（默认） / FILL 拉伸铺满（可能变形） /
 #   CENTER 居中原尺寸 / TILE 平铺重复 / ORIGINAL 左上角原尺寸。
-# ★ 仅实现**静态图**：anim_type = ANIMATED(动图) / SKELETON(骨骼) 仍按静态图绘制首帧，
-#   播放逻辑待资源系统接入（TODO）。贴图加载失败 → 纯色兜底，不让坏路径报错刷屏。
+# ★ 只有静态图走这里；骨骼动画由下方 _draw_skeleton_fill 处理，动图仍按首帧静态绘制。
+#   贴图加载失败 → 纯色兜底，不让坏路径报错刷屏。
 func _draw_image_fill(rect: Rect2, src: BlockFill) -> void:
 	if src == null:
 		draw_rect(rect, fill_color)
 		return
-	var tex := TextureCache.fetch(src.path)
+	var tex := _resolve_fill_texture(src)
 	if tex == null:
 		draw_rect(rect, fill_color)
 		return
 	var tsize: Vector2 = tex.get_size()
 	if tsize.x <= 0.0 or tsize.y <= 0.0:
 		draw_rect(rect, fill_color)
+		return
+	# 瓦片（九宫格/网格）绘制：切分 ≥ 2×2 时走专用绘制，否则退回普通填充模式
+	if src.is_tiled():
+		_draw_tiled(rect, tex, src, tsize)
 		return
 	match int(src.fill_mode):
 		BlockFill.Mode.FILL:
@@ -688,6 +846,482 @@ func _draw_image_fill(rect: Rect2, src: BlockFill) -> void:
 			var s := minf(rect.size.x / tsize.x, rect.size.y / tsize.y)
 			var d := tsize * s
 			draw_texture_rect(tex, Rect2(rect.position + (rect.size - d) * 0.5, d), false)
+
+
+# ============ 非矩形形状的填充 / 边框 / 贴图 ============
+
+# 纯色填充：按形状多边形填充。
+func _draw_shape_solid(color: Color) -> void:
+	var pts := _shape_local_polygon()
+	if pts.size() >= 3:
+		draw_colored_polygon(pts, color)
+
+
+# 边框：沿形状多边形描一圈（闭合）。
+func _draw_shape_border(color: Color, w: float) -> void:
+	var pts := _shape_local_polygon()
+	if pts.size() < 2:
+		return
+	var line := PackedVector2Array(pts)
+	line.append(pts[0])
+	draw_polyline(line, color, w)
+
+
+# 图片填充（非矩形）：把贴图按「包围盒 UV」映射到形状多边形 = 按形状裁剪。
+# 骨骼动画 / 瓦片在非矩形上极少见 → 退回矩形绘制（不裁形），保证功能不缺失。
+func _draw_shaped_image_fill(src: BlockFill) -> void:
+	if src != null and int(src.anim_type) == int(BlockFill.AnimType.SKELETON):
+		_draw_skeleton_fill(Rect2(-width / 2.0, -height / 2.0, width, height))
+		return
+	var tex: Texture2D = _resolve_fill_texture(src)
+	if tex == null:
+		_draw_shape_solid(fill_color)
+		return
+	var tsize: Vector2 = tex.get_size()
+	if tsize.x <= 0.0 or tsize.y <= 0.0:
+		_draw_shape_solid(fill_color)
+		return
+	var pts := _shape_local_polygon()
+	if pts.size() < 3:
+		return
+	var uvs := PackedVector2Array()
+	var cols := PackedColorArray()
+	var w: float = maxf(1.0, width)
+	var h: float = maxf(1.0, height)
+	for lp in pts:
+		var u: float = (lp.x + width * 0.5) / w
+		var v: float = (lp.y + height * 0.5) / h
+		uvs.append(Vector2(u * tsize.x, v * tsize.y))
+		cols.append(Color.WHITE)
+	draw_polygon(pts, cols, uvs, tex)
+
+
+# ============ 骨骼动画填充 ============
+# 数据：fill.path = .tscn 场景，fill.anim_type = SKELETON（由「积木属性 → 填充类型」选择）。
+# 做法：每块积木挂一个 SubViewport，把场景实例放进去交给 AnimationPlayer 播放；
+#   先在动画多个时间点采样 Sprite2D 包围盒，按 fill_mode 把整棵骨架缩放/平移进一块
+#   与积木同宽高比的离屏画布（画布边缘自然裁掉超出的部分），最后把整张画布贴进积木矩形。
+#   这样朝向镜像、边框、文本框覆盖、镂空、显示层全部沿用原有绘制顺序，不需要另开渲染路径。
+#
+# 性能：只有 SKELETON 填充创建 SubViewport，纯色/静态图零额外开销；
+#   积木不可见（无 show / cutout / visible=false）时切到 UPDATE_DISABLED，暂停离屏刷新。
+
+## 填充来源被修改后调用（属性面板 apply、存档恢复、类型模板创建）。重建骨骼离屏场景。
+## 静态图 / 纯色只需重绘（旧骨骼节点一并释放）。
+func refresh_fill_visual() -> void:
+	_teardown_skeleton()
+	queue_redraw()
+	if _wants_skeleton():
+		_queue_skeleton_rebuild()
+
+
+func _wants_skeleton() -> bool:
+	return fill != null and fill.is_valid() and int(fill.anim_type) == int(BlockFill.AnimType.SKELETON)
+
+
+func _queue_skeleton_rebuild() -> void:
+	if _skel_rebuild_queued:
+		return
+	_skel_rebuild_queued = true
+	call_deferred("_rebuild_skeleton_deferred")
+
+
+func _rebuild_skeleton_deferred() -> void:
+	_skel_rebuild_queued = false
+	_teardown_skeleton()
+	_build_skeleton()
+
+
+func _build_skeleton() -> void:
+	if not is_inside_tree() or not _wants_skeleton() or _skel_viewport != null:
+		return
+	var path := str(fill.path).strip_edges()
+	if not ResourceLoader.exists(path):
+		_skel_failed = true
+		queue_redraw()
+		return
+	var res: Resource = load(path)
+	if not (res is PackedScene):
+		_skel_failed = true
+		queue_redraw()
+		return
+	var packed: PackedScene = res as PackedScene
+	var inst: Node = packed.instantiate()
+	if inst == null:
+		_skel_failed = true
+		queue_redraw()
+		return
+	var vp := SubViewport.new()
+	vp.name = "SkeletonViewport"
+	vp.transparent_bg = true
+	vp.world_2d = World2D.new()   # 独立 2D 世界：骨骼场景不参与桌面/关卡的物理与相机
+	vp.disable_3d = true
+	vp.gui_disable_input = true
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	vp.size = _desired_skeleton_vp_size()
+	add_child(vp)
+	var wrap := Node2D.new()
+	wrap.name = "Fit"
+	vp.add_child(wrap)
+	wrap.add_child(inst)
+	_skel_viewport = vp
+	_skel_wrapper = wrap
+	_skel_scene = inst
+	_skel_tex = vp.get_texture()
+	_skel_vp_size = vp.size
+	_skel_anim = _find_animation_player(inst)
+	_skel_anim_name = _pick_skeleton_anim(_skel_anim)
+	_skel_bounds = _sample_skeleton_bounds(_skel_anim, _skel_anim_name)
+	_skel_ok = _skel_bounds.size.x > 0.5 and _skel_bounds.size.y > 0.5
+	_skel_failed = not _skel_ok
+	if _skel_ok:
+		_apply_skeleton_fit()
+	else:
+		push_warning("[Block] 骨骼场景里没有可测量尺寸的 Sprite2D：%s" % path)
+	_sync_skeleton_activity()
+	queue_redraw()
+
+
+func _teardown_skeleton() -> void:
+	if _skel_viewport != null and is_instance_valid(_skel_viewport):
+		_skel_viewport.queue_free()
+	_skel_viewport = null
+	_skel_wrapper = null
+	_skel_scene = null
+	_skel_anim = null
+	_skel_anim_name = ""
+	_skel_tex = null
+	_skel_bounds = Rect2()
+	_skel_vp_size = Vector2i.ZERO
+	_skel_ok = false
+	_skel_failed = false
+
+
+func _sync_skeleton_activity() -> void:
+	if _skel_viewport == null or not is_instance_valid(_skel_viewport):
+		return
+	var active := is_inside_tree() and visible and (BlockTags.SHOW in _tags) and not (BlockTags.CUTOUT in _tags)
+	_skel_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS if active else SubViewport.UPDATE_DISABLED
+
+
+# 离屏画布尺寸：与积木同宽高比，乘以超采样倍数；超大积木自动降低倍数并夹到上限。
+func _desired_skeleton_vp_size() -> Vector2i:
+	var w := maxf(1.0, width)
+	var h := maxf(1.0, height)
+	var ss := SKELETON_SS
+	var longest := maxf(w, h)
+	if longest * ss > float(SKELETON_VP_MAX):
+		ss = float(SKELETON_VP_MAX) / longest
+	var px := maxi(1, int(round(w * ss)))
+	var py := maxi(1, int(round(h * ss)))
+	return Vector2i(mini(px, SKELETON_VP_MAX), mini(py, SKELETON_VP_MAX))
+
+
+func _find_animation_player(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node as AnimationPlayer
+	for child in node.get_children():
+		var ap := _find_animation_player(child)
+		if ap != null:
+			return ap
+	return null
+
+
+# 优先 autoplay；没有就播第一个非 RESET 动画。返回 "" = 场景无动画（只显示绑定姿势）。
+func _pick_skeleton_anim(ap: AnimationPlayer) -> String:
+	if ap == null:
+		return ""
+	var auto_anim := str(ap.autoplay)
+	if not auto_anim.is_empty() and ap.has_animation(auto_anim):
+		return auto_anim
+	for anim_name in ap.get_animation_list():
+		if str(anim_name) != "RESET":
+			return str(anim_name)
+	return ""
+
+
+# 在动画时长内均匀采样，取 Sprite2D 包围盒的并集 —— 走路时手脚会伸出绑定姿势，
+# 只按第 0 帧适配会导致动画中途被裁掉。
+func _sample_skeleton_bounds(ap: AnimationPlayer, anim_name: String) -> Rect2:
+	var has_anim := ap != null and not anim_name.is_empty() and ap.has_animation(anim_name)
+	var anim_len := 0.0
+	if has_anim:
+		ap.play(anim_name)
+		var anim := ap.get_animation(anim_name)
+		if anim != null:
+			anim_len = anim.length
+	var acc := Rect2()
+	var found := false
+	var samples: int = 1 if (not has_anim or anim_len <= 0.0) else 13
+	for i in samples:
+		if has_anim:
+			ap.seek(anim_len * float(i) / float(maxi(1, samples - 1)), true)
+		var r := _current_sprite_bounds()
+		if r.size.x > 0.0 and r.size.y > 0.0:
+			acc = r if not found else acc.merge(r)
+			found = true
+	if has_anim:
+		ap.seek(0.0, true)
+		ap.play(anim_name)
+	return acc
+
+
+# 当前姿势下所有 Sprite2D 在「wrapper 坐标系」里的并集（采样时 wrapper 是单位变换）。
+func _current_sprite_bounds() -> Rect2:
+	var acc := Rect2()
+	var found := false
+	if _skel_scene == null or not is_instance_valid(_skel_scene):
+		return acc
+	var sprites: Array[Sprite2D] = []
+	_collect_sprites(_skel_scene, sprites)
+	for spr in sprites:
+		if spr.texture == null or not spr.visible:
+			continue
+		var r := spr.get_rect()
+		if r.size.x <= 0.0 or r.size.y <= 0.0:
+			continue
+		var xf := spr.get_global_transform()
+		var p0 := xf * r.position
+		var p1 := xf * Vector2(r.position.x + r.size.x, r.position.y)
+		var p2 := xf * (r.position + r.size)
+		var p3 := xf * Vector2(r.position.x, r.position.y + r.size.y)
+		var box := Rect2(p0, Vector2.ZERO).expand(p1).expand(p2).expand(p3)
+		acc = box if not found else acc.merge(box)
+		found = true
+	return acc
+
+
+func _collect_sprites(node: Node, out: Array[Sprite2D]) -> void:
+	if node is Sprite2D:
+		out.append(node as Sprite2D)
+	for child in node.get_children():
+		_collect_sprites(child, out)
+
+
+# 把包围盒映射进离屏画布，语义与静态图填充模式一致。
+# CENTER / ORIGINAL 的「原尺寸」= 场景像素尺寸（画布是积木的 SS 倍，所以乘 SS 还原）。
+func _apply_skeleton_fit() -> void:
+	if _skel_wrapper == null or not is_instance_valid(_skel_wrapper) or _skel_viewport == null:
+		return
+	var b := _skel_bounds
+	if b.size.x <= 0.0 or b.size.y <= 0.0:
+		_skel_wrapper.transform = Transform2D.IDENTITY
+		return
+	var vp_size := Vector2(_skel_viewport.size)
+	var mode := int(BlockFill.Mode.KEEP_MAX_RATIO)
+	if fill != null:
+		mode = int(fill.fill_mode)
+	var fit_scale := Vector2.ONE
+	var fit_origin := Vector2.ZERO
+	if mode == int(BlockFill.Mode.FILL):
+		fit_scale = Vector2(vp_size.x / b.size.x, vp_size.y / b.size.y)
+		fit_origin = -b.position * fit_scale
+	elif mode == int(BlockFill.Mode.CENTER):
+		fit_scale = Vector2(SKELETON_SS, SKELETON_SS)
+		fit_origin = (vp_size - b.size * SKELETON_SS) * 0.5 - b.position * SKELETON_SS
+	elif mode == int(BlockFill.Mode.ORIGINAL):
+		fit_scale = Vector2(SKELETON_SS, SKELETON_SS)
+		fit_origin = -b.position * SKELETON_SS
+	else:
+		# KEEP_MAX_RATIO（默认）；TILE 对骨骼没有意义，也按最大原比例处理
+		var fit := minf(vp_size.x / b.size.x, vp_size.y / b.size.y)
+		fit_scale = Vector2(fit, fit)
+		fit_origin = (vp_size - b.size * fit) * 0.5 - b.position * fit
+	_skel_wrapper.transform = Transform2D(0.0, fit_scale, 0.0, fit_origin)
+
+
+# 把离屏画布整张贴进积木矩形（内容已按 fill_mode 排好并被画布裁切）。
+func _draw_skeleton_fill(rect: Rect2) -> void:
+	if _skel_ok and _skel_tex != null and _skel_viewport != null and is_instance_valid(_skel_viewport):
+		if _desired_skeleton_vp_size() != _skel_vp_size:
+			_queue_skeleton_rebuild()
+		draw_texture_rect(_skel_tex, rect, false)
+		return
+	if _skel_viewport == null and not _skel_failed:
+		_queue_skeleton_rebuild()   # 尚未建好：本帧先留空，避免闪一块纯色
+		return
+	draw_rect(rect, fill_color)
+
+
+# ============ 瓦片（九宫格 / 网格）贴图绘制 ============
+# 源图切成 N×M 格（N=tile_split.x, M=tile_split.y，≥2），按 tile_size 绘制到积木 rect。
+# 两种布局：
+#   A) 退化网格（N<3 或 M<3，如 2×2 / 2×3 / 3×2）：积木切为 N×M 等分区，每区恰好一张源格
+#      铺满（无重复、无裁切）——对应「2×2 上半部分=上边、下半部分=剩余」「2×3/3×2 类似」。
+#   B) 标准九宫格（N≥3 且 M≥3）：四角格固定满尺寸贴四角（角落维持不变），上/下/左/右边带由
+#      对应边格平铺（末端无法密铺时裁切半张=不完全平铺），中部由内格平铺。顺序/随机取格生效。
+# 瓦片尺寸：ABSOLUTE=像素；MULTIPLE=积木宽高×倍数（仅九宫格布局用，退化网格按等分区铺满）。
+# 绘制入口：计算所有 (dest, src) 绘制规格，再交给 draw_texture_rect_region。
+# 几何计算抽成 _build_tile_specs（纯函数、可在无 GPU 的 headless 下单元测试）。
+func _draw_tiled(rect: Rect2, tex: Texture2D, src: BlockFill, tsize: Vector2) -> void:
+	var N: int = maxi(1, int(src.tile_split.x))
+	var M: int = maxi(1, int(src.tile_split.y))
+	var cell_w: float = tsize.x / float(N)
+	var cell_h: float = tsize.y / float(M)
+	var cw: float
+	var ch: float
+	if src.tile_size_mode == BlockFill.TileSizeMode.MULTIPLE:
+		cw = rect.size.x * maxf(0.0001, src.tile_size.x)
+		ch = rect.size.y * maxf(0.0001, src.tile_size.y)
+	else:
+		cw = maxf(1.0, src.tile_size.x)
+		ch = maxf(1.0, src.tile_size.y)
+	var seed: int = int(get_instance_id()) & 0x7fffffff
+	var order: int = int(src.tile_fill_order)
+	var specs := _build_tile_specs(rect, N, M, cell_w, cell_h, cw, ch, order, seed)
+	for s in specs:
+		draw_texture_rect_region(tex, s.dest, s.src)
+
+
+# 生成全部绘制规格（Array of {dest:Rect2, src:Rect2}）。
+#   A) 退化网格（N<3 或 M<3）：积木切 N×M 等分区，每区一张源格铺满。
+#   B) 九宫格（N≥3 且 M≥3）：四角固定满尺寸贴四角（不裁切），边带平铺（末端裁半张=不完全平铺），中部平铺。
+func _build_tile_specs(rect: Rect2, N: int, M: int, cell_w: float, cell_h: float,
+		cw: float, ch: float, order: int, seed: int) -> Array:
+	var specs: Array = []
+	if N < 3 or M < 3:
+		_append_grid(specs, rect, N, M, cell_w, cell_h)
+	else:
+		_append_nine(specs, rect, N, M, cell_w, cell_h, cw, ch, order, seed)
+	return specs
+
+
+# A) 退化网格：等分区，每区一张源格。
+func _append_grid(specs: Array, rect: Rect2, N: int, M: int, cell_w: float, cell_h: float) -> void:
+	var zw: float = rect.size.x / float(N)
+	var zh: float = rect.size.y / float(M)
+	for j in M:
+		for i in N:
+			specs.append({
+				"dest": Rect2(rect.position.x + float(i) * zw, rect.position.y + float(j) * zh, zw, zh),
+				"src": Rect2(float(i) * cell_w, float(j) * cell_h, cell_w, cell_h),
+			})
+
+
+# B) 九宫格。
+func _append_nine(specs: Array, rect: Rect2, N: int, M: int, cell_w: float, cell_h: float,
+		cw: float, ch: float, order: int, seed: int) -> void:
+	var left: float = rect.position.x
+	var top: float = rect.position.y
+	var right: float = rect.position.x + rect.size.x
+	var bottom: float = rect.position.y + rect.size.y
+	var mid_x0: float = left + cw
+	var mid_x1: float = right - cw
+	var mid_y0: float = top + ch
+	var mid_y1: float = bottom - ch
+	var mid_w: float = mid_x1 - mid_x0
+	var mid_h: float = mid_y1 - mid_y0
+	if mid_w < 0.0 or mid_h < 0.0:
+		# 积木比 2 张瓦片还小：仅画四角（满尺寸，可能重叠），边/中无空间
+		_append_corner(specs, Rect2(left, top, cw, ch), 0, 0, cell_w, cell_h)
+		_append_corner(specs, Rect2(right - cw, top, cw, ch), N - 1, 0, cell_w, cell_h)
+		_append_corner(specs, Rect2(left, bottom - ch, cw, ch), 0, M - 1, cell_w, cell_h)
+		_append_corner(specs, Rect2(right - cw, bottom - ch, cw, ch), N - 1, M - 1, cell_w, cell_h)
+		return
+	# 四角（固定满尺寸，不裁切）
+	_append_corner(specs, Rect2(left, top, cw, ch), 0, 0, cell_w, cell_h)
+	_append_corner(specs, Rect2(right - cw, top, cw, ch), N - 1, 0, cell_w, cell_h)
+	_append_corner(specs, Rect2(left, bottom - ch, cw, ch), 0, M - 1, cell_w, cell_h)
+	_append_corner(specs, Rect2(right - cw, bottom - ch, cw, ch), N - 1, M - 1, cell_w, cell_h)
+	# 上边（row0, col 1..N-2 平铺）/ 下边（row M-1）
+	_append_edge_h(specs, Rect2(mid_x0, top, mid_w, ch), 0, 1, N - 2, cell_w, cell_h, cw, ch, order, seed, 0)
+	_append_edge_h(specs, Rect2(mid_x0, bottom - ch, mid_w, ch), M - 1, 1, N - 2, cell_w, cell_h, cw, ch, order, seed, 1)
+	# 左边（col0, row 1..M-2 平铺）/ 右边（col N-1）
+	_append_edge_v(specs, Rect2(left, mid_y0, cw, mid_h), 0, 1, M - 2, cell_w, cell_h, cw, ch, order, seed, 2)
+	_append_edge_v(specs, Rect2(right - cw, mid_y0, cw, mid_h), N - 1, 1, M - 2, cell_w, cell_h, cw, ch, order, seed, 3)
+	# 中部（内格 rows 1..M-2 × cols 1..N-2 平铺）
+	_center_cols = maxi(1, N - 2)
+	_center_rows = maxi(1, M - 2)
+	_append_center(specs, Rect2(mid_x0, mid_y0, mid_w, mid_h), cell_w, cell_h, cw, ch, order, seed)
+
+
+func _append_corner(specs: Array, r: Rect2, ci: int, cj: int, cell_w: float, cell_h: float) -> void:
+	specs.append({"dest": r, "src": Rect2(float(ci) * cell_w, float(cj) * cell_h, cell_w, cell_h)})
+
+
+# 水平边带：从左到右平铺 source 行=row、列从 c0 起共 count 张；末端不足一张时裁切（不完全平铺）。
+func _append_edge_h(specs: Array, r: Rect2, row: int, c0: int, count: int, cell_w: float, cell_h: float,
+		cw: float, ch: float, order: int, seed: int, edge_id: int) -> void:
+	if count <= 0:
+		return
+	var x: float = r.position.x
+	var slot: int = 0
+	while x < r.end.x - 0.001:
+		var rem: float = r.end.x - x
+		var tw: float = minf(cw, rem)
+		var frac: float = tw / cw
+		var pool_idx: int = slot % count if order == BlockFill.TileFillOrder.SEQUENTIAL else (absi(_tile_stable_rand(slot, edge_id, seed)) % count)
+		var src_col: int = c0 + pool_idx
+		specs.append({"dest": Rect2(x, r.position.y, tw, ch), "src": Rect2(float(src_col) * cell_w, float(row) * cell_h, cell_w * frac, cell_h)})
+		x += cw
+		slot += 1
+
+
+# 垂直边带：从上到下平铺 source 列=col、行从 r0 起共 count 张；末端不足一张时裁切。
+func _append_edge_v(specs: Array, r: Rect2, col: int, r0: int, count: int, cell_w: float, cell_h: float,
+		cw: float, ch: float, order: int, seed: int, edge_id: int) -> void:
+	if count <= 0:
+		return
+	var y: float = r.position.y
+	var slot: int = 0
+	while y < r.end.y - 0.001:
+		var rem: float = r.end.y - y
+		var th: float = minf(ch, rem)
+		var frac: float = th / ch
+		var pool_idx: int = slot % count if order == BlockFill.TileFillOrder.SEQUENTIAL else (absi(_tile_stable_rand(slot, edge_id, seed)) % count)
+		var src_row: int = r0 + pool_idx
+		specs.append({"dest": Rect2(r.position.x, y, cw, th), "src": Rect2(float(col) * cell_w, float(src_row) * cell_h, cell_w, cell_h * frac)})
+		y += ch
+		slot += 1
+
+
+# 中部：平铺内格（起始列=1、行=1，周期 _center_cols × _center_rows）；末端裁切（x、y 均可）。
+func _append_center(specs: Array, r: Rect2, cell_w: float, cell_h: float,
+		cw: float, ch: float, order: int, seed: int) -> void:
+	var y: float = r.position.y
+	var tj: int = 0
+	while y < r.end.y - 0.001:
+		var rem_y: float = r.end.y - y
+		var th: float = minf(ch, rem_y)
+		var frac_y: float = th / ch
+		var x: float = r.position.x
+		var ti: int = 0
+		while x < r.end.x - 0.001:
+			var rem_x: float = r.end.x - x
+			var tw: float = minf(cw, rem_x)
+			var frac_x: float = tw / cw
+			var ic: int
+			var ir: int
+			if order == BlockFill.TileFillOrder.SEQUENTIAL:
+				ic = 1 + (ti % maxi(1, _center_cols))
+				ir = 1 + (tj % maxi(1, _center_rows))
+			else:
+				ic = 1 + absi(_tile_stable_rand(ti, 7, seed)) % maxi(1, _center_cols)
+				ir = 1 + absi(_tile_stable_rand(tj, 13, seed)) % maxi(1, _center_rows)
+			specs.append({"dest": Rect2(x, y, tw, th), "src": Rect2(float(ic) * cell_w, float(ir) * cell_h, cell_w * frac_x, cell_h * frac_y)})
+			x += cw
+			ti += 1
+		y += ch
+		tj += 1
+
+
+# 中部平铺周期（内格列数/行数），_append_nine 调用 _append_center 前赋值。
+var _center_cols: int = 1
+var _center_rows: int = 1
+
+
+# 稳定伪随机（同 (a,b,seed) 必同值，范围覆盖 int；调用方取模）。
+func _tile_stable_rand(a: int, b: int, seed: int) -> int:
+	var h: int = (a * 73856093) ^ (b * 19349663) ^ (seed * 83492791)
+	h = h ^ (h >> 13)
+	h = h * 1274126177
+	h = h ^ (h >> 16)
+	return h
+
+
+func absi(v: int) -> int:
+	return v if v >= 0 else -v
+
 
 # ============ 父/子级锚定（ID 绑定 + 位移同步）============
 # 语义（本次约定，参考已废弃版本的父子级系统）：
@@ -898,8 +1532,8 @@ func _shift_child_by(child: Block, delta: Vector2) -> void:
 			return   # 这个方向走不通 → 剩余子步也不再尝试
 
 # ============ 交互与物理（自 abandon 版迁移简化：拖动 / 重力 / 受控移动 / 跳跃）============
-# 迁移自旧版 block.gd + main.gd 的移动逻辑（v0.1.25 定稿行为），简化为 AABB 碰撞：
-#   - 旋转不参与碰撞判定（按未旋转 AABB 近似，待后续需要时再引入 SAT）
+# 迁移自旧版 block.gd + main.gd 的移动逻辑（v0.1.25 定稿行为）；碰撞改为 OBB（随 rotation 旋转，SAT 解算）：
+#   - 碰撞箱四角随本积木 rotation 旋转，物理碰撞/命中测试均与画面一致（批次103 引入 OBB/SAT）
 #   - 碰撞条件：双方都含 "collision" 标签，且 collision_layer 集合有公共元素（至少一个相同才对撞）
 #
 # 常量（与旧版手感一致）
@@ -911,6 +1545,15 @@ const MOVE_COLLISION_EPSILON: float = 0.05 # "恰好贴着"容差：小于此穿
 const FLOOR_VY_EPSILON: float = 0.5         # 竖直速度≈0 判定容差（在地面）
 const MAX_JUMPS: int = 1                   # 跳数上限。改为 2 即启用二段跳（逻辑已预留）
 
+# ---- 可滚动（标签 rollable）----
+# 物理滚动：重心被底部「受支撑区间」托住 → 停滚（并回正姿态）；重心偏出区间 → 绕最近的
+# 支撑缘翻/滚下去（碰撞箱随 rotation 真转）；完全悬空 → 自由下落 + 自转。
+const ROLL_PROBE: float = 4.0             # 向下探测支撑的距离（像素）；> MOVE_COLLISION_EPSILON 才能探穿"恰好贴着"
+const ROLL_ACCEL: float = 600.0           # 滚动水平加速度（像素/秒²）
+const ROLL_MAX_SPEED: float = 360.0       # 滚动水平最大速度（像素/秒）
+const ROLL_SLOPE_EPS: float = 2.0         # 左右支撑深度差超过该值（像素）判定为斜坡 → 朝更低侧真滚；否则视作平地稳定
+const ROLL_SETTLE_SPEED: float = 4.0      # 矩形落地回正到「面朝下」的角速度（弧度/秒），越大回正越快
+
 # ---- 运动参数（「积木运动」面板 / ui/block_motion_panel.gd）----
 # 进一步细化受控移动：把原本写死的 MOVE_SPEED 拆成「每块可配的最大速度 + 加速度」。
 #   can_fly           可飞行：**不受重力**（悬停），且可按住 W/↑ 上升、S/↓ 下降（仍需 controlled 标签）。
@@ -918,12 +1561,66 @@ const MAX_JUMPS: int = 1                   # 跳数上限。改为 2 即启用�
 #   horiz_accel       水平加速度（像素/秒²）。★ <=0 视为「瞬时到位」（保留旧版手感，也是默认值）。
 #   fly_up_max_speed  飞行上升最大速度（像素/秒）；飞行下降复用同一速度值。
 #   fly_up_accel      飞行上升加速度（像素/秒²）。★ <=0 视为「瞬时到位」。
+#   mass              质量（相对值，默认 1.0）。只作用于「可滚动」积木的惯性：
+#                     越重 → 起步更慢、风阻影响更小、动量更足（驱动力与风阻按 1/mass 缩放）。
+#                     ★ 地面摩擦**不**按质量缩放：库仑摩擦的减速度 = μ·g 与质量无关（批次 537）。
+#                     1.0 时缩放系数恒为 1 → 旧手感不变；<=0 视为 1.0（防除零）。
 # ★ 全部有默认值 → 存量积木 / 未带这些键的类型 JSON 行为完全不变。
 @export var can_fly: bool = false
 @export var horiz_max_speed: float = MOVE_SPEED
 @export var horiz_accel: float = 0.0
 @export var fly_up_max_speed: float = MOVE_SPEED
 @export var fly_up_accel: float = 0.0
+@export var mass: float = 1.0
+# ---- 重力 / 滚动（「积木运动」面板；2026-10-23 起取代 gravity / rollable 标签）----
+# gravity_enabled  是否受重力。未显式配置时按旧标签迁移（见 _init_legacy_motion_flags）。
+# roll_enabled     是否可滚动。同上。
+# free_roll        完全自由的滚动姿态：取消「翻到面朝下」的吸附与自纠正，
+#                  允许任意角度静止；仍受重力与接触自然翻倒。
+# roll_axis_offset 旋转轴 / 质心相对几何中心的局部偏移（像素，随 rotation 旋转）。
+#                  ★ 它参与力矩（τ = m·g·r，r = 质心−支点）与自由自转中心，
+#                  所以改变它会让积木的翻滚快慢、稳定姿态都不同。
+@export var gravity_enabled: bool = false
+@export var roll_enabled: bool = false
+@export var free_roll: bool = false
+@export var roll_axis_offset: Vector2 = Vector2.ZERO
+# ---- 摩擦 / 风阻 / 弹性（「积木运动」面板；2026-10-23 批次 537）----
+# ★ 思路来自 Flash 物理小游戏（Box2D 一路）：观感好坏取决于**能量有没有去处**。
+# friction_coef  摩擦系数 μ。库仑摩擦 F = μ·N ⇒ 滑动减速度 = μ·g，
+#                ★与质量无关（同材质轻重不同的箱子滑停距离一样，现实如此）。
+#                μ=0 ≈ 冰面：只滑不翻、也停不下来；μ 大 ≈ 橡胶：一绊就翻。
+#                μ 还吃得住坡度 → 浅坡上放着不动（静摩擦），坡够陡才开始下滑。
+# air_drag       风阻（1/秒）：速度每帧 ×1/(1+drag·dt)，按 1/mass 放大（轻的更受影响）。
+# restitution    弹性（恢复系数 0~0.9）：撞击法向速度按比例反弹；低于阈值不弹，
+#                否则小角度来回弹 = 永远停不下来的抖动。
+#                ★只对「可滚动」积木生效 —— 桌面图标不该弹。
+# squash_amount   落地挤压幅度（0 = 关闭）：撞击把积木沿接触法线压扁到这个比例，
+#                 再由弹簧回弹（并轻微过冲成拉伸）—— Flash 小游戏「Q 弹」的观感来源。
+#                 ★纯视觉（只动 scale/offset），碰撞体、力矩、质心一律不受影响。
+# squash_stiffness 回弹刚度（rad/s）：越大回得越快越"硬"，越小越"软糖"。
+@export var friction_coef: float = 0.45
+@export var air_drag: float = 0.15
+@export var restitution: float = 0.2
+@export var squash_amount: float = 0.25
+@export var squash_stiffness: float = 22.0
+# ---- 转动惯量（「积木运动」面板；2026-10-24 批次 541）----
+# ★★ 538 及以前的转动方程把整块积木当成**集中在质心的一个质点**绕支点转
+#   （α = g·r.x/|r|²、起翻 ω = v/|r|×1.35 的手调增益）→ 尺寸与质量都不进方程
+#   → 大石块和小纸片翻起来一个样，这就是「生硬」的物理内核。
+# inertia_enabled  计入转动惯量：α 的分母换成真回转半径²（薄板绕质心 + 平行轴到支点），
+#                  起翻 ω 改成**对支点的角动量守恒**（ω = v·摩擦力臂/k²），
+#                  圆件的滑移耦合 β 也按形状算（盘 0.5、环 1.0、椭圆随转角变）。
+#                  ★ 关掉时逐位退回 538 的老手感（存量积木零影响）。
+#                  开与关的观感差异是真实的：矮胖子被推只会滑、高瘦件一推就翻，
+#                  大件起步明显更懒、翻一面耗时更长。
+# inertia_value    手动转动惯量 I（单位：质量·像素²，绕自转轴）；0 = 按形状与尺寸自动算。
+#                  ★ 填大 → 更难被拧起来（翻滚懒、打滑久）；填小 → 像纸片一碰就转。
+@export var inertia_enabled: bool = false
+@export var inertia_value: float = 0.0
+
+# 显式配置标记：属性面板/类型 JSON 写入过新字段 → 不再从旧标签推导。
+# 旧积木（只有 gravity / rollable 标签）在 _ready 时推导一次，保证存量行为不丢。
+var _motion_toggles_explicit: bool = false
 
 # ---- 命令移动（标签 commandable，「移到此处」）----
 # 只做直线：每帧朝目标点取一小步，不做绕行 / 寻路（需求：现在做直线就行）。
@@ -944,6 +1641,28 @@ const COMMAND_MAX_JUMPS: int = 6
 # ---- 状态 ----
 var _gravity_velocity: Vector2 = Vector2.ZERO  # 重力累积速度（vy<0 = 上升中）
 var _move_velocity: Vector2 = Vector2.ZERO     # 受控移动速度（匀速/线性衰减）
+var _roll_dir: float = 0.0                     # 可滚动：当前翻滚方向（+1 右 / -1 左 / 0 停稳）；跨帧保持，避免卡在边缘薄刃
+var _spin: float = 0.0                       # 可滚动：角速度（弧度/秒）—— 倾倒/翻滚的角动量；空中保留（角动量守恒）
+var _rb_mode: int = 0                        # 可滚动：刚体状态（RB_AIR 悬空 / RB_FLAT 边着地 / RB_TOPPLE 倾倒）
+var _rb_slide: float = 0.0                   # 可滚动（矩形/三角）：沿支撑面切向的滑动速度（跨帧保持）
+var _rb_pivot_i: int = -1                    # 可滚动（矩形/三角）：当前倾倒支点的顶点索引（跨帧保持，防支点跳变）
+var _rb_target_rot: float = 0.0              # 可滚动（矩形/三角）：倾倒的目标姿态角（对齐到支撑面）
+var _rb_target_valid: bool = false           # 目标姿态是否已计算
+var _rb_target_pivot_i: int = -1             # 目标姿态对应的支点（支点变了要重算）
+var _rb_grounded: bool = false               # 可滚动：本帧是否有支撑（悬空时禁止「滚动自转」）
+var _rb_tumble: bool = false                 # 可滚动（矩形/三角）：受推力驱动的「平地主动翻滚」进行中
+var _rb_tumble_speed: float = 0.0            # 主动翻滚结束时要保留的水平速度（像素/秒）
+var _rb_orbit_pivot: Vector2 = Vector2.ZERO  # 上一帧绕着公转的支点（世界）——支点换了就要重新换算角动量，见批次 542
+# ---- 批次 538：法向冲量 + 挤压回弹 ----
+# _contact_impulse：本帧接触**吸收了多大的法向速度**（像素/秒）。
+# ★★ 库仑摩擦的上限是 F ≤ μ·N，N 是法向**冲量**而不只是重力：
+#   旧写法只给 μ·m·g·dt → 高速落地的球要花 14~35 帧才把 ω 拉起来（实测 0.23~0.58s 打滑），
+#   就是用户说的「先落到底、顿一下才滚动」。把撞击那一份算进预算，落地那一帧就咬地起滚。
+var _contact_impulse: float = 0.0
+var _impulse_bank: float = 0.0                # 上一帧撞击冲量的「存款」（本帧仍悬空 → 摩擦没处花，留着）
+var _squash: float = 0.0                     # 挤压弹簧的当前形变（+=压扁 / −=拉伸，无量纲）
+var _squash_vel: float = 0.0                 # 形变速度（决定回弹快慢与过冲）
+var _squash_normal: Vector2 = Vector2.UP     # 挤压方向（世界）= 最后一次接触的法线
 var _is_dragging: bool = false                 # 正被鼠标拖动
 var _drag_offset: Vector2 = Vector2.ZERO       # 按下时 鼠标→积木中心 的偏移
 var _drag_layer_saved: bool = false            # 是否已备份「拖动前的碰撞图层」
@@ -1041,41 +1760,231 @@ func _collision_layers_intersect(a, b) -> bool:
 			return true
 	return false
 
-# 以 pos 为中心的 AABB（忽略旋转的近似）
+# 以 pos 为中心的 AABB（忽略旋转的近似）。
+# ★ 仅用于「检测区」(detect) 这类**不要求**碰撞体旋转的语义；物理碰撞/命中测试已改用 OBB（见下）。
 func _aabb_at(pos: Vector2) -> Rect2:
 	return Rect2(pos.x - width / 2.0, pos.y - height / 2.0, width, height)
 
-# 以 pos 为中心的 AABB 与 other 的 AABB 的重叠深度（0 = 未重叠）。
-# 本项目碰撞不做旋转（按未旋转 AABB 近似），故深度 = 两轴重叠量的较小值。
-func _penetration_at(pos: Vector2, other: Block) -> float:
-	var a := _aabb_at(pos)
-	var b := other._aabb_at(other.global_position)
-	var ox: float = minf(a.end.x, b.end.x) - maxf(a.position.x, b.position.x)
-	var oy: float = minf(a.end.y, b.end.y) - maxf(a.position.y, b.position.y)
-	if ox <= 0.0 or oy <= 0.0:
-		return 0.0
-	return minf(ox, oy)
+# ============ 朝向矩形（OBB）碰撞：碰撞箱随 rotation 旋转 ============
+# 本积木此前（批次≤101）碰撞用「未旋转 AABB 近似」，旋转只改渲染、碰撞箱不跟着转。
+# 现改为 OBB（分离轴定理 SAT）：碰撞箱四角随本积木 rotation 旋转，
+# 物理碰撞/命中测试/可滚动支撑判定全部基于 OBB，旋转后碰撞箱与画面一致。
 
-# 判断能否移动到 target（绝对判据：对任一积木穿透 > 容差即阻挡）
-# 例外：**自己携带的子树**（自己的子级及其后代）不算障碍物 ——
-#   父级不该被自己带的东西卡住，否则"子级压在父级侧面/上方"时父级会被自己锁死。
-func _can_move_to(target: Vector2) -> bool:
+# 形状的横向 / 纵向「半轴」（用于滚动与支撑探测；圆/椭圆按各自半径）。
+func _shape_radius_x() -> float:
+	var hw: float = maxf(0.0, width / 2.0)
+	match shape:
+		Shape.CIRCLE:
+			return minf(hw, maxf(0.0, height / 2.0))
+		_:
+			return hw
+
+
+func _shape_radius_y() -> float:
+	var hh: float = maxf(0.0, height / 2.0)
+	match shape:
+		Shape.CIRCLE:
+			return minf(maxf(0.0, width / 2.0), hh)
+		_:
+			return hh
+
+
+# 本地空间（中心原点、未旋转）形状多边形；shrink 把各半径内缩。
+# 圆 / 椭圆用 24 边形近似（凸多边形 → SAT 与点包含直接可用）。
+func _shape_local_polygon(shrink: float = 0.0) -> PackedVector2Array:
+	var hw: float = maxf(0.0, width / 2.0 - shrink)
+	var hh: float = maxf(0.0, height / 2.0 - shrink)
+	var pts := PackedVector2Array()
+	match shape:
+		Shape.CIRCLE:
+			var r: float = minf(hw, hh)
+			if r <= 0.0:
+				pts.append(Vector2.ZERO)
+				return pts
+			var n: int = 24
+			for i in range(n):
+				var a: float = TAU * float(i) / float(n)
+				pts.append(Vector2(cos(a) * r, sin(a) * r))
+		Shape.ELLIPSE:
+			if hw <= 0.0 or hh <= 0.0:
+				pts.append(Vector2.ZERO)
+				return pts
+			var n2: int = 24
+			for i in range(n2):
+				var a2: float = TAU * float(i) / float(n2)
+				pts.append(Vector2(cos(a2) * hw, sin(a2) * hh))
+		Shape.TRI_ISOSCELES, Shape.TRI_EQUILATERAL, Shape.TRI_RIGHT:
+			pts = _tri_local_pts(hw, hh)
+		_:
+			pts.append(Vector2(hw, hh))
+			pts.append(Vector2(-hw, hh))
+			pts.append(Vector2(-hw, -hh))
+			pts.append(Vector2(hw, -hh))
+	return pts
+
+
+# 三角形本地顶点（先按「顶点朝上」构造），再按 shape_dir 旋转 90° 的整数倍。
+func _tri_local_pts(hw: float, hh: float) -> PackedVector2Array:
+	var base := PackedVector2Array()
+	if shape == Shape.TRI_RIGHT:
+		# 直角在左下：左上、左下、右下
+		base.append(Vector2(-hw, -hh))
+		base.append(Vector2(-hw, hh))
+		base.append(Vector2(hw, hh))
+	else:
+		var apex_y: float = -hh
+		var base_y: float = hh
+		if shape == Shape.TRI_EQUILATERAL:
+			# 以宽为边长 → 高 = sqrt(3) * hw；竖直居中放进包围盒
+			var h_eq: float = sqrt(3.0) * hw
+			apex_y = -h_eq * 0.5
+			base_y = h_eq * 0.5
+		# 等腰 / 等边：顶点朝上、底边朝下
+		base.append(Vector2(0.0, apex_y))
+		base.append(Vector2(hw, base_y))
+		base.append(Vector2(-hw, base_y))
+	var dir: int = int(shape_dir) % 4
+	if dir != 0:
+		var ang: float = TAU * float(dir) / 4.0
+		var c: float = cos(ang)
+		var s: float = sin(ang)
+		for i in range(base.size()):
+			var v: Vector2 = base[i]
+			base[i] = Vector2(v.x * c - v.y * s, v.x * s + v.y * c)
+	return base
+
+
+# 世界空间形状多边形：本地形状 → 绕中心旋转 rotation → 平移到 pos。
+# shrink>0 时内缩每侧（用于「恰好贴着」容差）。
+func _shape_polygon(pos: Vector2, shrink: float = 0.0) -> PackedVector2Array:
+	var local := _shape_local_polygon(shrink)
+	var c: float = cos(rotation)
+	var s: float = sin(rotation)
+	var out := PackedVector2Array()
+	for l in local:
+		out.append(pos + Vector2(l.x * c - l.y * s, l.x * s + l.y * c))
+	return out
+
+
+# 中心 pos 处的碰撞多边形（世界坐标）——SAT / 命中 / 支撑全部经此。
+# ★ 名称沿用 _obb_corners（历史上仅矩形四角），现按 shape 返回 N 个顶点；
+#   所有调用方都只把它喂给 _sat_overlap / _penetration_at，不假设恰好 4 个点。
+func _obb_corners(pos: Vector2, shrink: float = 0.0) -> PackedVector2Array:
+	return _shape_polygon(pos, shrink)
+
+
+# 点 p 是否落入中心 pos 处的形状内（随 rotation 旋转；形状感知）。
+func _obb_contains_point(pos: Vector2, p: Vector2) -> bool:
+	var d := p - pos
+	var c: float = cos(-rotation)
+	var s: float = sin(-rotation)
+	var lx := d.x * c - d.y * s
+	var ly := d.x * s + d.y * c
+	match shape:
+		Shape.CIRCLE:
+			var r: float = minf(width / 2.0, height / 2.0)
+			return (lx * lx + ly * ly) <= r * r
+		Shape.ELLIPSE:
+			var rx: float = maxf(0.0001, width / 2.0)
+			var ry: float = maxf(0.0001, height / 2.0)
+			return (lx * lx) / (rx * rx) + (ly * ly) / (ry * ry) <= 1.0
+		Shape.TRI_ISOSCELES, Shape.TRI_EQUILATERAL, Shape.TRI_RIGHT:
+			return _point_in_polygon(Vector2(lx, ly), _shape_local_polygon())
+		_:
+			return absf(lx) <= width / 2.0 and absf(ly) <= height / 2.0
+
+
+# 射线法点在多边形内（凸/凹通用）。
+func _point_in_polygon(p: Vector2, poly: PackedVector2Array) -> bool:
+	var n: int = poly.size()
+	if n < 3:
+		return false
+	var inside := false
+	var j: int = n - 1
+	for i in range(n):
+		var a: Vector2 = poly[i]
+		var b: Vector2 = poly[j]
+		if ((a.y > p.y) != (b.y > p.y)) and (p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x):
+			inside = not inside
+		j = i
+	return inside
+
+# 多边形在轴上的投影区间 [min, max]（Vector2.x=min, .y=max）
+func _project_range(poly: PackedVector2Array, axis: Vector2) -> Vector2:
+	var mn := INF
+	var mx := -INF
+	for v in poly:
+		var p := v.x * axis.x + v.y * axis.y
+		mn = minf(mn, p)
+		mx = maxf(mx, p)
+	return Vector2(mn, mx)
+
+func _poly_center(poly: PackedVector2Array) -> Vector2:
+	var sum := Vector2.ZERO
+	for v in poly:
+		sum += v
+	return sum / float(poly.size())
+
+# SAT 重叠检测（两个 OBB，各 4 角点）。返回 Dictionary：
+#   { "overlap": bool, "axis": Vector2, "depth": float }
+# axis 从 a 指向 b（把 a 沿 axis 推出即可分离）；depth = 最小穿透深度（0 = 刚好接触/不重叠）。
+func _sat_overlap(a: PackedVector2Array, b: PackedVector2Array) -> Dictionary:
+	var best_depth := INF
+	var best_axis := Vector2.ZERO
+	var axes := PackedVector2Array()
+	# 两个矩形的边法线（各 4 条，平行边重复无妨）；显式 Vector2 类型避免弱类型推断报错
+	for i in range(a.size()):
+		var p1: Vector2 = a[i]
+		var p2: Vector2 = a[(i + 1) % a.size()]
+		var edge := p2 - p1
+		var ln := edge.length()
+		if ln < 0.0001:
+			continue
+		axes.append(Vector2(-edge.y, edge.x) / ln)
+	for i in range(b.size()):
+		var p1: Vector2 = b[i]
+		var p2: Vector2 = b[(i + 1) % b.size()]
+		var edge := p2 - p1
+		var ln := edge.length()
+		if ln < 0.0001:
+			continue
+		axes.append(Vector2(-edge.y, edge.x) / ln)
+	for axis in axes:
+		var ra := _project_range(a, axis)
+		var rb := _project_range(b, axis)
+		var o := minf(ra.y, rb.y) - maxf(ra.x, rb.x)
+		if o <= 0.0:
+			return { "overlap": false, "axis": Vector2.ZERO, "depth": 0.0 }
+		if o < best_depth:
+			best_depth = o
+			var ca := _poly_center(a)
+			var cb := _poly_center(b)
+			var dd := cb - ca
+			best_axis = axis if dd.dot(axis) >= 0.0 else -axis
+	return { "overlap": true, "axis": best_axis, "depth": best_depth }
+
+# 以 pos 为中心的 OBB 与 other 的 OBB 的重叠深度（0 = 未重叠），基于 SAT。
+func _penetration_at(pos: Vector2, other: Block) -> float:
+	var r := _sat_overlap(_obb_corners(pos), other._obb_corners(other.global_position))
+	return float(r["depth"]) if bool(r["overlap"]) else 0.0
+
+# 判断能否移动到 target（绝对判据：对任一积木 OBB 重叠即阻挡）。
+# 碰撞箱随 rotation 旋转（OBB/SAT）；my 盒缩边 MOVE_COLLISION_EPSILON 实现"恰好贴着可滑动"。
+# 例外：**自己携带的子树**不算障碍物（同旧逻辑）。
+func _can_move_to(target: Vector2, shrink: float = MOVE_COLLISION_EPSILON) -> bool:
 	if not _has_collision():
 		return true
 	var tree := get_tree()
 	if tree == null:
 		return true
-	var my_rect := _aabb_at(target).grow(-MOVE_COLLISION_EPSILON)
+	var my := _obb_corners(target, shrink)
 	var my_scene: Node = _scene_of()
 	for other in tree.get_nodes_in_group("block"):
-		# ★ 先 is_instance_valid 再 `is Block`（同 portal_manager）：组里可能残留已释放节点，
-		#   对已释放实例执行 `is` 会抛「previously freed instance」硬脚本错误。
+		# ★ 先 is_instance_valid 再 `is Block`：组里可能残留已释放节点。
 		if not is_instance_valid(other) or other == self or not (other is Block):
 			continue
 		var ob: Block = other
 		# ★★ 同场景闸门：只有同一归属的积木才互相碰撞阻挡。
-		#   组是**全局快照**、AABB 是**全局坐标** —— 关卡积木被页面平移/搬运时全局坐标会扫过
-		#   另一场景的静止积木，缺此闸门就会被"隔场景"挡住（同 portal_manager / _detect_scan）。
 		if ob._scene_of() != my_scene:
 			continue
 		if ob._is_in_subtree_of(self):
@@ -1084,8 +1993,8 @@ func _can_move_to(target: Vector2) -> bool:
 			continue
 		if not _collision_layers_intersect(collision_layer, ob.collision_layer):
 			continue
-		# 缩边后相交测试："恰好贴着"（穿透 ≤ 容差）不算重叠 → 可沿接触面滑动
-		if my_rect.intersects(ob._aabb_at(ob.global_position), true):
+		# 缩边后 OBB 相交测试 → 阻挡
+		if bool(_sat_overlap(my, ob._obb_corners(ob.global_position))["overlap"]):
 			return false
 	return true
 
@@ -1165,6 +2074,23 @@ func is_command_moving() -> bool:
 ## 当前命令目标点（未在下令中时返回本积木当前位置）
 func get_command_target() -> Vector2:
 	return _command_target if _command_active else global_position
+
+# ============ 行为系统移动 API（绕过 commandable 标签闸门）============
+## 行为系统驱动移动：机制与 command_move_to 完全相同（复用 _command_step 直线趋近 + 碰撞校验），
+## 但不要求本积木带 commandable 标签 —— 让「行为 / 巡逻」能驱动任意积木自主移动。
+## 重复调用 = 直接覆盖旧目标（不做排队）。
+func behavior_move_to(target: Vector2) -> void:
+	_command_target = target
+	_command_active = true
+	_command_stuck = 0
+	_command_vel = Vector2.ZERO
+	_command_jump_cd = 0
+	_command_jumps = 0
+	_command_vert_done = false
+
+## 行为系统是否正在驱动移动（与 is_command_moving 共用同一标志位 _command_active）
+func is_behavior_moving() -> bool:
+	return _command_active
 
 # 尝试按 offset 位移移动（4 子步 + 单轴滑动），返回各轴移动/阻挡结果
 # 返回 Dictionary：{ "moved_x": bool, "moved_y": bool, "blocked_y": bool }
@@ -1308,7 +2234,7 @@ func _command_step(delta: float) -> void:
 	#   → 每帧都 stuck+1 → 10 帧后命令被误判为"走不通"而提前结束。
 	#   实测症状：起跳后只升 ~100px（= 10 帧 × 9px/帧）就停在半空，永远到不了 150px 的目标。
 	#   把重力位移并进命令帧内，stuck 判据看的才是"本帧所有位移落定后"的距离。
-	if not can_fly and BlockTags.GRAVITY in tags:
+	if not can_fly and gravity_enabled:
 		var g: float = ProjectSettings.get_setting("physics/2d/default_gravity", 980.0)
 		_gravity_velocity.y += g * delta
 		# ★★ 必须**先留档 vy** 再调 _try_move：_try_move 内部在竖直被挡时会
@@ -1369,6 +2295,16 @@ func _physics_process(delta: float) -> void:
 
 
 func _physics_step(delta: float) -> void:
+	# 视觉弹簧先走一步（任何分支都要跑，否则拖动/命令期间会停在半扁状态）
+	_squash_step(delta)
+	# ★ 取「上一帧接触吸收掉的法向速度」作为本帧摩擦预算的一部分（见 _fric_impulse_budget）。
+	#   ★ 加上 _impulse_bank：撞击那一帧常常还在「SAT 已停住、支撑面还没贴实」的空档里
+	#     （538 逐帧实测：落地帧 blocked_y 收了 784px/s，下一帧 _rb_grounded 仍为 false）
+	#     → 唯一一笔大额预算当场作废，之后只能按 μ·g·dt 一帧帧磨 = 「顿一下才滚」。
+	#     悬空时把它存起来（逐帧衰减），接触一恢复立刻继续领取。
+	var impact: float = maxf(_contact_impulse, _impulse_bank)
+	_contact_impulse = 0.0
+	_impulse_bank = 0.0
 	# ---- 待判定拖动：按下后位移未达阈值 ---- 
 	if _pending_drag:
 		if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
@@ -1461,11 +2397,16 @@ func _physics_step(delta: float) -> void:
 	#     松手仍按 MOVE_DECAY_RATE 线性衰减滑停。
 	#   · 飞行（can_fly）：两轴各自独立 —— 水平用 horiz_max_speed / horiz_accel，
 	#     竖直（W/↑ 上升、S/↓ 下降）用 fly_up_max_speed / fly_up_accel。
+	# ★★ 可滚动积木的水平速度**只能有一处主人**：`_roll_step`（平地摩擦 / 斜坡加速 / 空中动量）。
+	#   若这里再套一层 MOVE_DECAY_RATE(1200)，它会比 ROLL_ACCEL(600) 还大 →
+	#   斜坡上每帧「加 10、减 20」，速度被死死压在个位数，表现为「斜坡上几乎滚不动」（批 533 实测）。
+	#   竖直方向不受影响，照常衰减。
+	var rollable: bool = roll_enabled
 	if can_fly:
 		if motion.x != 0.0:
 			var tvx: float = motion.x * horiz_max_speed
 			_move_velocity.x = move_toward(_move_velocity.x, tvx, horiz_accel * delta) if horiz_accel > 0.0 else tvx
-		else:
+		elif not rollable:
 			_move_velocity.x = move_toward(_move_velocity.x, 0.0, MOVE_DECAY_RATE * delta)
 		if motion.y != 0.0:
 			var tvy: float = motion.y * fly_up_max_speed
@@ -1479,15 +2420,35 @@ func _physics_step(delta: float) -> void:
 				_move_velocity = _move_velocity.move_toward(target, horiz_accel * delta)
 			else:
 				_move_velocity = target
+		elif rollable:
+			_move_velocity.y = move_toward(_move_velocity.y, 0.0, MOVE_DECAY_RATE * delta)
 		else:
 			_move_velocity = _move_velocity.move_toward(Vector2.ZERO, MOVE_DECAY_RATE * delta)
 
-	# 重力累积（无 gravity 标签 或 可飞行 → 不下落）
-	if BlockTags.GRAVITY in tags and not can_fly:
+	# 重力累积（未开启「受重力」或 可飞行 → 不下落）
+	if gravity_enabled and not can_fly:
 		var g: float = ProjectSettings.get_setting("physics/2d/default_gravity", 980.0)
 		_gravity_velocity.y += g * delta
 	else:
 		_gravity_velocity = Vector2.ZERO
+
+	# 可滚动：重心未受支撑时滚动（水平位移+旋转），被支撑则停稳
+	# ★ 传入受控水平方向：平地上玩家正按方向键时不能被滚动摩擦吃掉速度
+	_roll_step(delta, motion.x, impact)
+	# ★★ 撞击冲量「这一帧没处花」就存起来：摩擦只在**接触帧**存在，而落地帧常常是
+	#   blocked_y 先把下落停住、`_rb_grounded` 要到下一帧贴实才为真（538 逐帧实测：
+	#   入射 784px/s 记在 blocked_y 那一帧，之后 4 帧圆形件的接触判据仍为假）。
+	#   判据用 `_rb_grounded` 而不是 `_on_floor`：后者表示「本帧竖直没动」，
+	#   在这段空档期还挂着 true → 唯一一笔大额预算当场作废，之后只能按 μ·g·dt 一帧帧磨
+	#   = 「先落到底、顿一下才滚动」。存住的这份在接触恢复的那一帧继续供摩擦。
+	if impact > 0.0 and not _rb_grounded:
+		_impulse_bank = impact * IMPULSE_BANK_KEEP
+
+	# 刚体倾倒中（矩形 / 三角绕支点公转）：位置与角度已由物理给出，
+	# 不能再叠加「速度位移」——否则质心会被平移与公转各推一次（双重运动、抖动）。
+	if _rb_mode == RB_TOPPLE:
+		_on_floor = true      # 支点着地 → 视为落地（可跳跃）
+		return
 
 	# 合成位移并移动
 	var total := _move_velocity + _gravity_velocity
@@ -1503,11 +2464,45 @@ func _physics_step(delta: float) -> void:
 	#     整条分配路径都不再被走到。
 	if total.length() < 0.001:
 		return
+	var _roll_prev_x: float = global_position.x
+	# ★ _try_move 在竖直被挡时会把 _gravity_velocity.y 清零 → 撞击速度必须先取下来，
+	#   否则弹性反弹拿不到入射速度。
+	var vy_before: float = _gravity_velocity.y
 	var r := _try_move(total * delta)
+	# 可滚动（圆 / 椭圆）：角度已由 _roll_step_round 里的 ω 积分给出，这里只做**撞墙校验**：
+	# 实际水平位移明显小于预期 → 是被实体挡住（墙/桌沿），平移归零、自转减半吸收撞击。
+	# ★ 旧版这里是「rotation = 实际位移 / 半径」（强制无滑移）→ 打滑在数学上永远不可能出现。
+	# ★ 阈值必须是「位移掉了大半」而不是「差 0.01px」：正常滚动的浮点误差就会越过 0.01，
+	#   旧写法把每一帧都判成撞停，并把 ω 强行改回 v/r → 刚建立的滑移动力学当场被抹平
+	#   （批次 537 探针 T8：椭圆第 4 帧 ω 从 1.3 跳到 3.7 后冻死）。
+	if roll_enabled and (shape == Shape.CIRCLE or shape == Shape.ELLIPSE) and _rb_grounded:
+		var dx_act: float = global_position.x - _roll_prev_x
+		var dx_int: float = total.x * delta
+		if absf(dx_act) < absf(dx_int) * 0.4:
+			_move_velocity.x = 0.0
+			_gravity_velocity.x = 0.0
+			_spin *= 0.5
 
 	# 落地状态机：下落被挡 → 落地；竖直方向成功移动 → 离地
 	if bool(r["blocked_y"]) and total.y > 0.0:
 		_on_floor = true
+		# ★ 弹性（批次 537）：入射法向速度按恢复系数反弹 —— 「落地那一下」的观感来源。
+		#   只给「可滚动」积木（桌面图标不该跳）；低于 LAND_MIN_SPEED 完全不弹，
+		#   否则每次弹得更小却永远停不下来（高频抖动）。
+		var rebound: float = 0.0
+		if roll_enabled and restitution > 0.0 and vy_before * restitution > LAND_MIN_SPEED:
+			rebound = vy_before * restitution
+			_gravity_velocity.y = -rebound
+		else:
+			_gravity_velocity.y = 0.0
+		# ★★ 撞击被接触**吸收掉的法向速度** = 入射 + 回弹（完全非弹性时就是入射）。
+		#   ① 下一帧的摩擦预算加上这一份 → 落地当帧就能咬地起滚（修「顿一下才滚动」）；
+		#   ② 同时驱动挤压回弹的形变量（砸得越狠扁得越多）。
+		#   ★ 只在真撞击时记：贴着地面静止的那帧 g·dt≈16 不该算撞击，
+		#     否则静止积木会带着一层恒定薄扁（那一份本来就在 μ·g·dt 里）。
+		var absorbed: float = vy_before + rebound
+		if absorbed > LAND_MIN_SPEED:
+			_note_contact_impulse(absorbed, Vector2.UP)
 	elif bool(r["moved_y"]):
 		_on_floor = false
 
@@ -1529,7 +2524,7 @@ func _physics_step(delta: float) -> void:
 #   因为 _on_floor 为真时会先把 _jumps_used 清零，所以每一次落地都能重新起跳，
 #   而空中（_on_floor 为假、跳数用尽）的调用会被直接拒绝，不产生额外开销。
 func _try_jump() -> bool:
-	if not (BlockTags.GRAVITY in tags):
+	if not gravity_enabled:
 		return false
 	if _on_floor:
 		_jumps_used = 0   # 落地重置跳数（二段跳预留）
@@ -1549,6 +2544,1562 @@ func _try_jump() -> bool:
 	_on_floor = false
 	return true
 
+# ============ 可滚动（「积木运动」面板 roll_enabled）============
+# ★★ 批次 534：把「位移驱动自转 + 纯平移」的伪刚体，换成**刚体支点公转**模型。
+# 旧模型的三个物理错误：
+#   ① 悬空时照样自转（还会在空中横向加速）→ 看着像「积木在空中滚」；
+#   ② 矩形以角着地时不会翻倒，而是一角撑着疯转 → 永远落不成「边着地」；
+#   ③ 着地姿态靠 _flat_settle 强行回正（瞬移感），且与自转互相拉扯。
+# 新模型按形状分两路：
+#   · 圆 / 椭圆（旋转对称）= 真滚动：仍按「实际水平位移 / 半径」自转，但**仅在有支撑时**；
+#     悬空时水平动量原样保留（不加速、不衰减）、不自转（角动量只保留 _spin）。
+#   · 矩形 / 三角（有棱有角）= 真刚体：
+#       - 找「触地」的顶点当支点 → 质心绕支点**公转**（走圆弧），角速度由「重力对支点的力矩」积分；
+#       - 单角着地 = 倾倒中 → 靠力矩自然翻到「边着地」（角落地问题就此解决）；
+#       - 两个同属一条底边的顶点同高着地 = 边着地（稳定，可被推动而滑动，不自转）。
+# ★ 须带 collision 标签才有支撑可托（否则无支撑、持续下落，与无碰撞积木一致）。
+const RB_GROUND_EPS: float = 2.5    # 旧：顶点下方多少像素内有支撑算「触地」（保留常量名以免外部引用断裂）
+const RB_CONTACT_EPS: float = 0.4   # 顶点到支撑面的**法向**距离 ≤ 此值算「接触」（矩形/三角路径用；与坡度无关）
+const RB_ROUND_GAP: float = 1.0      # 圆/椭圆：中心到支撑面的法向距离 − 支撑半径 ≤ 此值算「着地」
+const RB_ROUND_SEAT: float = 10.0    # 圆/椭圆：允许的嵌入容差，并在贴地时沿法线补正（椭圆滚转时支撑半径会变）
+const RB_ROUND_SEAT_MAX: float = 4.0 # 每帧最多沿法线补正多少像素（防瞬移）
+const RB_FLAT_NORMAL: float = 0.99     # 同一支撑面的法线平行判据（|cos|）
+const RB_FACE_UP: float = 0.35      # 支撑面外法线的 y 分量须 ≤ -0.35（面足够「朝上」才作支撑，排除侧壁）
+const RB_APPROACH_MAX: float = 90.0 # 「还在快速落向支撑面」的速度阈值（px/s）：超过则不算接触（防空中误判着地）
+const RB_FLAT_PARALLEL: float = 0.999  # 两面平行判据（|cos| 阈值，≈2.6°）
+const RB_GAP_MATCH: float = 1.2     # 底边两端「到支撑面法向距离」的最大差（超过 → 不是边着地）
+const RB_SEAT_MAX: float = 0.35     # 每帧最多把积木「按到支撑面上」多少像素（消除悬空缝隙）
+const RB_SLOPE_ANG_EPS: float = 0.03  # 坡面倾角小于此值视作平地（弧度）
+const RB_SLOPE_FULL: float = 0.30   # 坡面「满速」倾角（sin 值，≈17°）：越陡滑得越快
+const RB_SPIN_DAMP: float = 0.6    # 倾倒角速度阻尼（每秒比例，模拟能量损耗）
+const RB_SPIN_MAX: float = 2.5     # 自转角速度上限的**下限**（rad/s）——大件沿用此值；小件按尺寸抬高，见 _roll_spin_cap
+const RB_MAX_DTHETA: float = 0.08  # 单帧最大转角（防一步转太多穿进地面）
+const RB_ORBIT_PIVOT_EPS: float = 0.75  # 支点跨帧位移小于此值视作**同一个支点**（继续公转，不重新换算角动量）
+const RB_TOPPLE_SLOP: float = 2.0  # 绕棱角公转时允许的额外嵌入容差（px）——见 _rb_topple 的说明
+const RB_TOPPLE_SNAP: float = 0.05  # 距目标姿态小于此值直接吸附（避免卡在「差一点平」的角上）
+const RB_CORNER_EPS: float = 1.0   # 积木顶点 ↔ 支撑体「角」的距离阈值（角接触）
+const RB_FACE_EPS: float = 0.8      # 面级接触的高度容差（我的边与支撑面的法向距离）
+const RB_PAR_EPS: float = 0.05     # 边与支撑面「平行」的判据（|sin|）
+const RB_BAL_MARGIN: float = 0.5   # 重心投影落在接触区间内的余量（静力平衡判据）
+const RB_EDGE_EPS: float = 1.5     # 积木边 ↔ 支撑体「角」的距离阈值（积木的边压在支撑角上）
+const RB_EQ_EPS: float = 1.0       # 重心投影落在接触区段内的容差（静力平衡判定）
+const RB_AIR: int = 0              # 刚体状态：悬空
+const RB_FLAT: int = 1             # 刚体状态：边着地（稳定）
+const RB_TOPPLE: int = 2           # 刚体状态：倾倒（绕支点公转）
+# ---- 平地主动翻滚（可滚动矩形/三角被推动时，像现实一样越过前缘翻过去）----
+const RB_TUMBLE_MIN_SPEED: float = 30.0  # 低于此水平速度只滑动、不翻滚
+const RB_TUMBLE_MIN_SPIN: float = 1.2    # 主动翻滚的起步角速度下限（rad/s）
+const RB_TUMBLE_SPIN_MAX: float = 4.0    # 主动翻滚时的角速度上限（rad/s）
+const RB_TUMBLE_SPIN_GAIN: float = 1.35  # 起步角速度相对 v/r 的增益（推在手推高度的力矩，v/r 之外的一部分）
+const RB_TUMBLE_SPIN_MARGIN: float = 1.6 # 翻滚角速度上限 = 越过支点所需最小值 × 此余量（见 _rb_flip_min_spin）
+const RB_TUMBLE_DRIVE: float = 3.0       # 玩家持续推动时额外角加速度（rad/s²），保证翻得过去
+const RB_TUMBLE_DRIVE_REF_K2: float = 2000.0  # 上式的归一化基准 k²（538 时代 80×40 方块）—— 见 _rb_step 的推动力矩
+const RB_SPIN_DAMP_TUMBLE: float = 0.2   # 主动翻滚的角速度阻尼（比自由翻落的 0.6 小，避免半途停下）
+const RB_TUMBLE_PEAK_SPIN: float = 0.6   # 重力矩≈0 且角速度低于此值 = 悬在「翻不过去」的峰顶（批次 542）
+# ---- 摩擦 / 风阻 / 弹性（批次 537：库仑摩擦 + 滑移耦合）----
+const LAND_MIN_SPEED: float = 70.0      # 撞击法向速度低于此值**不反弹**（否则小角度来回弹 = 抖动）
+const SETTLE_SPEED: float = 18.0        # 滑动速度低于此值 → 静摩擦直接咬死（停得干脆，不磨）
+const ROLL_RESIST_SCALE: float = 0.05   # 滚动阻力 = μ·该比例·g（圆形件负责「慢慢收住」）
+const SLIP_BETA: float = 0.5            # 转动惯量 I = m·β·r²（实心圆盘 0.5、圆环 1.0）
+# ---- 挤压回弹 / 撞击摩擦预算（批次 538）----
+const SQUASH_FULL_SPEED: float = 620.0  # 撞击法向速度到这个值 → 形变打满 1.0（再快也不更扁）
+const SQUASH_ZETA: float = 0.38         # 弹簧阻尼比：<1 才会回弹过冲成「拉伸」，就是 Q 弹那一下
+const SQUASH_MAX: float = 0.5           # 视觉形变上限（scale 最低 0.5 倍，绝不为负）
+const ROLL_SPIN_CAP: float = 14.0       # 圆形件角速度硬上限（rad/s）—— 见 _roll_spin_cap
+const IMPULSE_BANK_KEEP: float = 0.9    # 撞击冲量「这一帧没花掉」时的存留比例（见 _impulse_bank）
+func _roll_step(delta: float, ctrl_x: float = 0.0, impulse: float = 0.0) -> void:
+	if not roll_enabled:
+		return
+	# 质量惯性缩放：a = F/m 的简化 —— **驱动力**按 1/mass 走（越重起步越慢）。
+	# ★ 摩擦不再乘 mi：库仑摩擦的减速度 = μ·g，与质量无关（批次 537）；
+	#   批次 538 起摩擦上限改成 μ×法向冲量（见 _fric_impulse_budget），故此处不再预取 μ·g。
+	var mi: float = _mass_inertia()
+	var acc: float = ROLL_ACCEL * mi
+	# 圆 / 椭圆 = 连续滚动（无棱角，不会「翻面」）；矩形/三角 = 支点刚体模型。
+	if shape == Shape.CIRCLE or shape == Shape.ELLIPSE:
+		_roll_step_round(delta, ctrl_x, acc, impulse)
+	else:
+		_rb_step(delta, ctrl_x, acc, impulse)
+
+
+# ---- 圆 / 椭圆：真滚动 ----
+# ★ 触地判定改成「**中心到支撑面的法向距离 − 支撑半径**」：
+#   旧版用「最低点下方 2.5px 内有支撑」→ 悬空 2px 也算着地 → 空中照样滚（用户报的现象之一）。
+#   新判据与坡度无关、且要求真正贴面（gap ≈ 0），空中绝不会被误判成着地。
+func _roll_step_round(delta: float, ctrl_x: float, acc: float, impulse: float = 0.0) -> void:
+	var c: Dictionary = _rb_round_contact()
+	_rb_grounded = not c.is_empty()
+	var r_eff: float = _roll_eff_radius()
+	# ★ 滑移→自转的耦合系数：538 写死实心盘 0.5，541 起按形状/手填惯量实算（见 _inertia_slip_beta）
+	var beta: float = _inertia_slip_beta(r_eff)
+	if not _rb_grounded:
+		# 悬空：线动量与角动量**都保留**（不加速、不硬清零），只受风阻。
+		# ★ 旧版规定「空中一律不自转」→ 滚动的球滚下悬崖会突然停转（角动量凭空消失）。
+		#   现在守恒：`_spin` 只可能由**地面接触**（打滑/翻倒）产生，
+		#   被鼠标拖放的积木 `_spin` 恒为 0 → 不会出现「空中凭空转起来」。
+		_rb_mode = RB_AIR
+		_roll_dir = 0.0
+		_rb_slide = 0.0
+		# ★ 重力统一由 _physics_step 的 gravity_enabled 分支累积；
+		#   这里旧版有一段「没有 gravity 标签才加重力」的反向判断，已删除（会造成双份/缺失）。
+		var dm_air: float = _drag_mul(delta)
+		_move_velocity *= dm_air
+		_gravity_velocity *= dm_air
+		_spin = clampf(_spin * dm_air, -_roll_spin_cap(r_eff), _roll_spin_cap(r_eff))
+		if absf(_spin) > 0.0001:
+			# ★ 单帧转角与 ω 上限同源（见 _rb_round_integrate 的同一条注释）：
+			#   写死 RB_MAX_DTHETA 会让高速滚出的球在空中「转得比 ω 慢」= 看着像被冻住。
+			_rotate_about_com(clampf(_spin * delta, -maxf(RB_MAX_DTHETA, _roll_spin_cap(r_eff) * delta),
+				maxf(RB_MAX_DTHETA, _roll_spin_cap(r_eff) * delta)))
+		return
+	_rb_mode = RB_FLAT
+	# ★ 圆/椭圆贴地补正：椭圆转过一个角度后「朝下方向的支撑半径」会变
+	#   （圆恒定），若只按水平位移补旋转而不补高度，中心会逐帧陷进支撑面 → 接触丢失、停转。
+	#   这里沿支撑面法线把中心拉回「刚好相切」，每帧限速 RB_ROUND_SEAT_MAX 防瞬移。
+	#   ★ 正在回弹（向上）时不补 —— 否则每帧 0.35px 的拉力会把撞击弹跳磨平。
+	var cgap: float = float(c["gap"])
+	if absf(cgap) > 0.01 and _gravity_velocity.y >= 0.0:
+		var cnrm: Vector2 = Vector2(c["normal"])
+		var seated_round: Vector2 = global_position - cnrm * clampf(cgap, -RB_ROUND_SEAT_MAX, RB_ROUND_SEAT_MAX)
+		if _can_move_to(seated_round):
+			global_position = seated_round
+	# 斜坡判定与滑动方向：**用支撑面的切向**（不是世界 x 轴）。
+	#   ★ 旧版把速度硬塞给 _move_velocity.x（世界水平），在斜坡上等于往坡里钻。
+	#   现在速度严格沿支撑面切向 → 圆是「贴着坡面滚下去」而不是「横着插进坡里」。
+	var tang: Vector2 = c["tangent"]
+	if tang.y < 0.0:
+		tang = -tang
+	if absf(tang.y) > RB_SLOPE_ANG_EPS:
+		# —— 斜坡：滚动加速度 = g·sinθ / (1+β) ——
+		#   ★ 分母是「摩擦把滑动变成滚动」的代价：同一份摩擦力既要推质心、又要提供力矩
+		#     → 球沿坡滚得比方块**滑**得慢（实心球 β=0.5 → 只有纯滑动加速度的 2/3）。
+		#   滚动阻力吃得住坡度 → 静止（浅坡上放着不动，坡够陡才开始滚）。
+		_roll_dir = 1.0 if tang.y > 0.0 else -1.0
+		var a_roll: float = _gravity_px() * absf(tang.y) / (1.0 + beta)
+		var a_res: float = _roll_resist_decel()
+		if ctrl_x != 0.0:
+			_rb_slide = move_toward(_rb_slide, ctrl_x * horiz_max_speed * (1.0 if tang.x >= 0.0 else -1.0), acc * delta)
+		elif absf(_rb_slide) < SETTLE_SPEED and a_roll <= a_res:
+			_rb_slide = 0.0
+		else:
+			_rb_slide = clampf(_rb_slide + (a_roll - signf(_rb_slide) * a_res) * delta,
+				-ROLL_MAX_SPEED, ROLL_MAX_SPEED)
+		_rb_slide *= _drag_mul(delta)
+		_move_velocity = tang * _rb_slide
+		if _gravity_velocity.y > LAND_MIN_SPEED:
+			_land_absorb(_gravity_velocity.y, Vector2(c["normal"]))
+		if _gravity_velocity.y >= 0.0:
+			_gravity_velocity = Vector2.ZERO
+		_spin = _move_velocity.x / r_eff     # 坡上按无滑移约束滚动
+		_rb_round_integrate(delta, c)
+		return
+	# —— 平地：摩擦作用在**接触点滑移速度**上（v_slip = v − ω·r），不是质心速度 ——
+	# ★★ 这是 Flash 物理小游戏观感的核心，旧模型完全没有：
+	#   · 球被砸出去（v 大、ω 小）→ 接触点向前打滑 → 摩擦**同时**减 v、加 ω
+	#     → 先滑一小段、再咬地起滚（而不是一碰地就完美滚动）；
+	#   · 倒旋（ω 与 v 反号）会被摩擦「抓住」突然向前窜出去 —— 台球效应；
+	#   · 静摩擦冲量够用（μ·g·dt ≥ 滑移）→ 一帧掐掉，直接纯滚动。
+	# ★ 受控输入优先：玩家正按方向键时水平速度归「受控移动」管，不做停滚清零
+	#   （否则可滚动积木按 D 走不动：每帧被摩擦减完）。
+	_rb_slide = 0.0
+	# ★ 向上（y<0）的速度是撞击回弹，必须放行 —— 与 _rb_step 稳定分支同一条纪律：
+	#   旧版在这里无条件清零 → 「落地弹性」对圆/椭圆永远不可能出现（探针 T5 实测升起 0px）。
+	# ★★ 清零之前先记下「被接触吸收掉的法向速度」= 本帧的撞击冲量（批次 538），
+	#   并按恢复系数把它的一部分转回**向上**的速度。
+	#   ★★ 为什么回弹不能只写在 `_physics_step` 的 blocked_y 里：圆形件落下来那一步
+	#   刚好「贴到表面」（不穿透）→ SAT 不算挡 → blocked_y 恒假 → 弹性永远不触发
+	#   （538 探针 T5 实测升起 0px）；而且竖直速度在这里就被接触吃掉了。
+	if _gravity_velocity.y > LAND_MIN_SPEED:
+		_land_absorb(_gravity_velocity.y, Vector2(c["normal"]))
+	if _gravity_velocity.y >= 0.0:
+		_gravity_velocity = Vector2.ZERO
+	_roll_dir = 0.0
+	var slip: float = _move_velocity.x - _spin * r_eff
+	if absf(slip) > 0.5:
+		# 摩擦冲量上限 = μ ×（重力 + 本帧撞击吸收的法向冲量）—— 落地那一帧预算极大，
+		# 于是滑移被一帧掐掉、立刻起滚（旧写法只有 μ·g·dt，高速落地要滑 0.2~0.6s = 「顿一下」）
+		var j: float = minf(absf(slip) / (1.0 + 1.0 / beta), _fric_impulse_budget(delta, impulse))
+		var s: float = signf(slip)
+		_move_velocity.x -= j * s
+		_spin += j * s / (beta * r_eff)
+	elif ctrl_x == 0.0:
+		# 已纯滚动：只剩滚动阻力 + 风阻；低于静摩擦阈值**直接咬死**（停得干脆、不磨）
+		var res: float = _roll_resist_decel() * delta
+		if absf(_move_velocity.x) <= maxf(res, SETTLE_SPEED):
+			_move_velocity.x = 0.0
+			_spin = 0.0
+		else:
+			_move_velocity.x -= signf(_move_velocity.x) * res
+			_spin = _move_velocity.x / r_eff
+	var dm: float = _drag_mul(delta)
+	_move_velocity.x *= dm
+	_spin = clampf(_spin * dm, -_roll_spin_cap(r_eff), _roll_spin_cap(r_eff))
+	# ★ 角度由 ω 积分 —— 旧版在 _physics_step 里按「实际水平位移 / 半径」反推，
+	#   等于强制无滑移 → 「打滑」在数学上永远不可能出现（观感假的根源）。
+	_rb_round_integrate(delta, c)
+
+
+# 圆形件本帧的「转角积分 + 贴地复算」。
+# ★ 二次贴地不能省：贴地补正发生在旋转**之前**，而椭圆的支撑半径随角度变
+#   （转到 90° 是 50、躺着是 30）→ 旋转后的那一帧会略微陷进支撑体，
+#   水平位移被 SAT 拒绝 → 通用校验把它当成「撞墙」，滚动当场冻住（批次 537 探针 T8 实测）。
+#   这里按解析支撑差直接沿法线抬回，无需再扫一遍场景。
+func _rb_round_integrate(delta: float, c: Dictionary) -> void:
+	var nrm: Vector2 = Vector2(c["normal"])
+	var ext_before: float = _rb_support_dist(nrm)
+	# ★ 转角上限跟着 ω 上限走，而不是写死 RB_MAX_DTHETA：0.08 rad/帧只等于 4.8rad/s，
+	#   高速纯滚的球（ω 可到 12）会被它掐住 → 「跑得比转得快」= 看上去还在打滑。
+	#   圆/椭圆的支撑半径重新算一遍就能贴回，放大这一步不会破坏接触。
+	var dth_cap: float = maxf(RB_MAX_DTHETA, ROLL_SPIN_CAP * delta)
+	var dth: float = clampf(_spin * delta, -dth_cap, dth_cap)
+	if absf(dth) > 0.0001:
+		_rotate_about_com(dth)
+	var lift: float = _rb_support_dist(nrm) - ext_before
+	if absf(lift) > 0.005:
+		var seated: Vector2 = global_position + nrm * lift
+		if _can_move_to(seated):
+			global_position = seated
+
+
+# ============ 矩形 / 三角：真刚体（支撑面 + 对齐目标）============
+# ★★ 批次 534 v2 的模型（由隔离探针的逐帧几何反推得出 —— 斜坡单一场景实测）：
+#   旧模型（v1）=「固定支点公转 + 点采样贴地判据」，在三处硬伤上连环失效：
+#   ① 贴地判据用「沿面法线探 0.8/2.0px 有支撑」→ 真实缝隙 1~2px 就判失败 → 误入倾倒；
+#      倾倒支点又按「谁的 y 大」选 → 选到**下坡角** → 力矩反向（spin 变负）→
+#      积木越转越插进坡体（实测 pen=1.71）→ can_move_to 恒假 → **永久卡死**。
+#   ② 倾倒**没有转角上限**：转过「边与支撑面平行」的姿态还继续转 → 远端顶点压进坡体。
+#   ③ 坡面下滑速度写在 _move_velocity 上，却被通用 MOVE_DECAY_RATE 衰减 y 分量
+#      → 坡面向下（y 增大）的分量被碾到 ~0（实测 vel=(154, 2.0)）→ 积木横着插进坡里。
+#   v2 的做法：
+#   · 接触用「顶点 → 支撑体**朝上面**的**法向**有向距离 gap」求（>0 悬空 / <0 已嵌入），
+#     与坡度无关；并排除「还在快速落向支撑面」的情况（否则空中会误判着地 → 空中滚动）；
+#   · 底边两端都接触同一支撑面、且底边与该面平行 → RB_FLAT（躺着，可沿面滑动）；
+#   · 只一角接触 → RB_TOPPLE：绕该角公转，**转到「边与支撑面平行」为止**（对齐上限）；
+#   · 已经嵌入支撑体 → 按 SAT 最小平移量顶出来（否则 can_move_to 恒假 → 卡死）；
+#   · 悬空（无接触）→ 不自转、不横向加速（空中滚动问题就此根治）。
+#
+# ============ 支撑分析（批次 535 v3：面级接触 + 静力平衡）============
+# ★★ 批次 534 的 v2 模型只做**逐顶点**采样（顶点 → 支撑面法向距离），漏掉了
+#   两种最常见的真实支撑形态：
+#     ① **我的底边与支撑面共线**（矩形躺着，只有底边中间一小段搭在窄台上）；
+#     ② **支撑体的棱角压在我的底边中间**（斜着搭在台角上）。
+#   这两种情况下**我的两个底角都在支撑体之外** → 顶点采样一个都碰不到 →
+#   判定成「悬空」→ 刚体层完全不工作，而通用 SAT 碰撞又把我按在原地 →
+#   表现为「维持角度、不会像现实那样倒下来」（批次 535 的根因）。
+#   v3 改为**面级接触**：对支撑体的每个朝上面求出「接触区间」，
+#   再用**静力平衡判据**（重心投影是否落在接触区间内）决定
+#   「躺平（可沿面滑动）」还是「绕区间外端翻倒」。
+#
+# 返回「支撑候选」数组，每项描述「某个支撑体的某个朝上面」与我的接触关系：
+#   { "kind":int, "block":Block, "origin":Vector2, "dir":Vector2, "len":float,
+#     "nrm":Vector2, "s_lo":float, "s_hi":float, "gap":float,
+#     "pivot":Vector2, "pivot_i":int }
+#   kind: 0 = 面接触（我的边与支撑面共线，接触是**一段**）
+#         1 = 点接触（我的顶点压在支撑面上）
+#         2 = 棱角接触（支撑体的角压在我的边/顶点上）
+func _rb_analyze(poly: PackedVector2Array) -> Array:
+	var res: Array = []
+	var tree := get_tree()
+	if tree == null:
+		return res
+	var my_scene: Node = _scene_of()
+	var n: int = poly.size()
+	if n < 3:
+		return res
+	# 当前总速度：用来判断「还在快速落向支撑面」→ 那种情况不算接触（否则空中会误判着地）
+	var vel: Vector2 = _move_velocity + _gravity_velocity
+	var my_reach: float = _rb_reach()
+	# 顶点「嵌进支撑体多深仍算接触」（px，负方向的搜索窗口）——见下面 ② 的说明
+	var pen_look: float = maxf(2.0, my_reach * 0.5)
+	for other in tree.get_nodes_in_group("block"):
+		if not is_instance_valid(other) or other == self or not (other is Block):
+			continue
+		var ob: Block = other
+		if ob._scene_of() != my_scene:
+			continue
+		if ob._is_in_subtree_of(self):
+			continue
+		if not ob._has_collision():
+			continue
+		if not _collision_layers_intersect(collision_layer, ob.collision_layer):
+			continue
+		# 粗筛：中心距太远直接跳过（避免对全场积木都算多边形）
+		var dd: Vector2 = ob.global_position - global_position
+		var lim: float = my_reach + ob._rb_reach() + 2.0
+		if dd.length_squared() > lim * lim:
+			continue
+		var opoly: PackedVector2Array = ob._obb_corners(ob.global_position)
+		var m: int = opoly.size()
+		if m < 3:
+			continue
+		var ocent: Vector2 = _poly_center(opoly)
+		for k in range(m):
+			var a: Vector2 = opoly[k]
+			var b: Vector2 = opoly[(k + 1) % m]
+			var e: Vector2 = b - a
+			var el: float = e.length()
+			if el < 0.0001:
+				continue
+			var dir: Vector2 = e / el
+			# 支撑面外法线：背离支撑体质心
+			var nrm: Vector2 = Vector2(-dir.y, dir.x)
+			if nrm.dot((a + b) * 0.5 - ocent) < 0.0:
+				nrm = -nrm
+			# 只认「足够朝上」的面（侧壁不算支撑面）
+			if nrm.y > -RB_FACE_UP:
+				continue
+			# ---------- ① 面接触：我的某条边与本面共线 ----------
+			var bi_lo: float = INF
+			var bi_hi: float = -INF
+			var bi_gap: float = 0.0
+			for i in range(n):
+				var j: int = (i + 1) % n
+				var v1: Vector2 = poly[i]
+				var v2: Vector2 = poly[j]
+				var h1: float = (v1 - a).dot(nrm)
+				var h2: float = (v2 - a).dot(nrm)
+				if absf(h1) > RB_FACE_EPS or absf(h2) > RB_FACE_EPS:
+					continue
+				var ed: Vector2 = v2 - v1
+				var edl: float = ed.length()
+				if edl < 0.0001:
+					continue
+				# 边必须与支撑面平行（|sin| 判据）
+				if absf(dir.x * (ed.y / edl) - dir.y * (ed.x / edl)) > RB_PAR_EPS:
+					continue
+				var s1: float = (v1 - a).dot(dir)
+				var s2: float = (v2 - a).dot(dir)
+				var lo: float = maxf(0.0, minf(s1, s2))
+				var hi: float = minf(el, maxf(s1, s2))
+				if hi - lo <= 0.0:
+					continue
+				var gap: float = (h1 + h2) * 0.5
+				# 还在快速落向支撑面 → 尚未接触（避免空中误判着地 → 空中滚动）
+				if gap > 0.05 and -vel.dot(nrm) > RB_APPROACH_MAX:
+					continue
+				if lo < bi_lo or hi > bi_hi:
+					bi_lo = minf(bi_lo, lo)
+					bi_hi = maxf(bi_hi, hi)
+					bi_gap = gap
+			if bi_hi > bi_lo:
+				res.append({
+					"kind": 0, "block": ob, "origin": a, "dir": dir, "len": el,
+					"nrm": nrm, "s_lo": bi_lo, "s_hi": bi_hi, "gap": bi_gap,
+					"pivot": Vector2.ZERO, "pivot_i": -1,
+				})
+			# ---------- ② 点接触：我的顶点落在本面上 ----------
+			# ★★ 负向窗口必须放开到「至少半个自身尺寸」（批次 542）：
+			#   h < 0 表示顶点**已经在支撑体里面**——那是毫无疑问的接触，绝不能因为
+			#   「嵌得太深、不像接触」而看不见它。旧窗口只到 −1px，而高速自转的方块
+			#   每帧转角把棱尖往下甩 3~4px（ω=5.6、r=42 → 4px/帧），于是：
+			#   嵌深 → 分析说「无支撑」→ 唯一能脱嵌的 _rb_unstick() 根本不会被调用
+			#   → 通用 SAT 又拒绝一切位移 → 角在土里原地打转、位置纹丝不动（542 DIAG f1~f11）。
+			#   ★ 正向（悬空）一侧不动：h>0 仍是薄窗口 + 「正在快速接近就不算接触」，
+			#   否则空中会被误判着地（537 的老教训）。
+			for i in range(n):
+				var v: Vector2 = poly[i]
+				var h: float = (v - a).dot(nrm)
+				if h > RB_CONTACT_EPS or h < -pen_look:
+					continue
+				var s: float = (v - a).dot(dir)
+				if s < -RB_CORNER_EPS or s > el + RB_CORNER_EPS:
+					continue
+				if h > 0.05 and -vel.dot(nrm) > RB_APPROACH_MAX:
+					continue
+				if s >= 0.0 and s <= el:
+					res.append({
+						"kind": 1, "block": ob, "origin": a, "dir": dir, "len": el,
+						"nrm": nrm, "s_lo": s, "s_hi": s, "gap": h,
+						"pivot": v, "pivot_i": i,
+					})
+				else:
+					# 顶点落在面的**外侧** → 实际是靠支撑体的**棱角**顶着
+					var cp: Vector2 = a if s < 0.0 else b
+					res.append({
+						"kind": 2, "block": ob, "origin": a, "dir": dir, "len": el,
+						"nrm": nrm, "s_lo": 0.0, "s_hi": 0.0, "gap": h,
+						"pivot": cp, "pivot_i": -1,
+					})
+			# ---------- ③ 棱角接触：支撑体本面的端点压在我的边/顶点上 ----------
+			for cpv in [a, b]:
+				var cpoint: Vector2 = cpv
+				# 棱角必须在我重心之下 → 才是「从下往上顶」
+				if cpoint.y < _com_world().y - RB_CORNER_EPS:
+					continue
+				for i in range(n):
+					var j: int = (i + 1) % n
+					var dist: float = _rb_point_seg_dist(cpoint, poly[i], poly[j])
+					if dist > RB_CORNER_EPS:
+						continue
+					res.append({
+						"kind": 2, "block": ob, "origin": a, "dir": dir, "len": el,
+						"nrm": nrm, "s_lo": 0.0, "s_hi": 0.0, "gap": dist,
+						"pivot": cpoint, "pivot_i": -1,
+					})
+	return res
+
+
+# 从候选里挑出「最该用」的支撑：
+#   优先级：面接触（区间最长）> 点接触（间隙最小 = 嵌得最深）> 棱角接触（间隙最小）
+#   点接触额外遵守「跨帧保持支点」（_rb_pivot_i），避免支点跳变导致抖动。
+func _rb_pick(cands: Array) -> Dictionary:
+	var face: Dictionary = {}
+	var point: Dictionary = {}
+	var point_sticky: Dictionary = {}
+	var corner: Dictionary = {}
+	for c in cands:
+		var cd: Dictionary = c
+		var k: int = int(cd["kind"])
+		if k == 0:
+			if face.is_empty() or _rb_span(cd) > _rb_span(face):
+				face = cd
+		elif k == 1:
+			if _rb_pivot_i >= 0 and int(cd["pivot_i"]) == _rb_pivot_i:
+				point_sticky = cd
+			elif point.is_empty() or float(cd["gap"]) < float(point["gap"]):
+				point = cd
+		else:
+			if corner.is_empty() or float(cd["gap"]) < float(corner["gap"]):
+				corner = cd
+	if not face.is_empty():
+		return face
+	if not point_sticky.is_empty():
+		return point_sticky
+	if not point.is_empty():
+		return point
+	return corner
+
+
+# 候选的「接触区间长度」
+func _rb_span(c: Dictionary) -> float:
+	return float(c["s_hi"]) - float(c["s_lo"])
+
+
+# 点 p 到线段 ab 的最短距离（用于「支撑体棱角压在我的边上」判定）
+func _rb_point_seg_dist(p: Vector2, a: Vector2, b: Vector2) -> float:
+	var ab: Vector2 = b - a
+	var l2: float = ab.length_squared()
+	if l2 < 0.0001:
+		return p.distance_to(a)
+	var t: float = clampf((p - a).dot(ab) / l2, 0.0, 1.0)
+	return p.distance_to(a + ab * t)
+
+
+
+# 圆 / 椭圆：找与支撑面的接触（用中心 + 支撑半径，判定与坡度无关）
+# 返回 { "gap": float, "tangent": Vector2, "normal": Vector2, "block": Block } 或空字典
+func _rb_round_contact() -> Dictionary:
+	var tree := get_tree()
+	if tree == null:
+		return {}
+	var my_scene: Node = _scene_of()
+	var my_reach: float = _rb_reach()
+	var best_gap: float = INF
+	var best_tang: Vector2 = Vector2.RIGHT
+	var best_nrm: Vector2 = Vector2.UP
+	var best_block: Block = null
+	for other in tree.get_nodes_in_group("block"):
+		if not is_instance_valid(other) or other == self or not (other is Block):
+			continue
+		var ob: Block = other
+		if ob._scene_of() != my_scene:
+			continue
+		if ob._is_in_subtree_of(self):
+			continue
+		if not ob._has_collision():
+			continue
+		if not _collision_layers_intersect(collision_layer, ob.collision_layer):
+			continue
+		var dd: Vector2 = ob.global_position - global_position
+		var lim: float = my_reach + ob._rb_reach() + 2.0
+		if dd.length_squared() > lim * lim:
+			continue
+		var opoly: PackedVector2Array = ob._obb_corners(ob.global_position)
+		var m: int = opoly.size()
+		if m < 3:
+			continue
+		var ocent: Vector2 = _poly_center(opoly)
+		for k in range(m):
+			var a: Vector2 = opoly[k]
+			var b: Vector2 = opoly[(k + 1) % m]
+			var e: Vector2 = b - a
+			var el: float = e.length()
+			if el < 0.0001:
+				continue
+			var dir: Vector2 = e / el
+			var nrm: Vector2 = Vector2(-dir.y, dir.x)
+			if nrm.dot((a + b) * 0.5 - ocent) < 0.0:
+				nrm = -nrm
+			if nrm.y > -RB_FACE_UP:
+				continue
+			# 中心在面上的投影必须落在这条面的覆盖范围内
+			var s: float = (global_position - a).dot(dir)
+			if s < -2.0 or s > el + 2.0:
+				continue
+			var gap: float = (global_position - a).dot(nrm) - _rb_support_dist(nrm)
+			# 允许最多 RB_ROUND_SEAT 的嵌入（椭圆滚转时支撑半径按姿态变化，不补正会越陷越深）
+			if gap > RB_ROUND_GAP or gap < -RB_ROUND_SEAT:
+				continue
+			if gap < best_gap:
+				best_gap = gap
+				best_tang = dir
+				best_nrm = nrm
+				best_block = ob
+	if best_block == null:
+		return {}
+	return {"gap": best_gap, "tangent": best_tang, "normal": best_nrm, "block": best_block}
+
+
+# 本积木在方向 n 上的「支撑半径」（圆 = 半径；椭圆 = 支撑函数；其余 = 0，即当作一个点）
+func _rb_support_dist(n: Vector2) -> float:
+	match shape:
+		Shape.CIRCLE:
+			return minf(width, height) * 0.5
+		Shape.ELLIPSE:
+			var n2: Vector2 = n.rotated(-rotation)   # 世界法线 → 本地（椭圆随 rotation 转）
+			var a2: float = width * 0.5
+			var b2: float = height * 0.5
+			return sqrt(a2 * a2 * n2.x * n2.x + b2 * b2 * n2.y * n2.y)
+		_:
+			return 0.0
+
+
+# 本积木的外接半径（粗筛用）
+func _rb_reach() -> float:
+	# ★★ 本积木的「影响半径」= **半对角线**（不是最长边的一半）。
+	#   多边形的最远顶点距离中心是半对角线 sqrt(w²+h²)/2；
+	#   用「最长边一半」会**低估**影响范围 → 粗筛把「斜着搭在窄台/窄边上」的支撑体
+	#   误判成「太远」而跳过 → 接触漏判 → 积木被判成悬空、被通用碰撞卡住、维持角度
+	#   （批次 535 的第二个根因：100×100 方块 vs 40 宽窄台，中心距 72px > 误算的 72 边界）。
+	#   与批次 533「矩形翻滚支点是角 → 半径取半对角线」是同一条几何纪律。
+	return 0.5 * sqrt(width * width + height * height)
+
+
+# 把已经嵌入支撑体的积木顶出来（SAT 最小平移量）。
+# ★ 必须有：一旦嵌入，_can_move_to 永远为假 → 刚体再也动不了（v1 实测永久卡死）。
+func _rb_unstick() -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	var my_scene: Node = _scene_of()
+	var my_reach: float = _rb_reach()
+	for other in tree.get_nodes_in_group("block"):
+		if not is_instance_valid(other) or other == self or not (other is Block):
+			continue
+		var ob: Block = other
+		if ob._scene_of() != my_scene:
+			continue
+		if ob._is_in_subtree_of(self):
+			continue
+		if not ob._has_collision():
+			continue
+		if not _collision_layers_intersect(collision_layer, ob.collision_layer):
+			continue
+		var dd: Vector2 = ob.global_position - global_position
+		var lim: float = my_reach + ob._rb_reach() + 2.0
+		if dd.length_squared() > lim * lim:
+			continue
+		var r: Dictionary = _sat_overlap(_obb_corners(global_position), ob._obb_corners(ob.global_position))
+		if not bool(r["overlap"]):
+			continue
+		var depth: float = float(r["depth"])
+		if depth <= 0.2:
+			continue
+		var axis: Vector2 = r["axis"]
+		if axis.length_squared() < 0.0001:
+			continue
+		# axis 指向「我 → 对方」，分离要沿 -axis 走
+		global_position -= axis * (depth + 0.05)
+
+
+# 刚体三态：RB_AIR 悬空 / RB_FLAT 边着地 / RB_TOPPLE 倾倒
+# ★ 判据全部基于「与支撑面的真实接触关系」，与坡度无关：
+#   ① 无任何接触 → 悬空（不滚、不自转）；
+#   ② 底边与支撑面共线（接触是一**段**），且**重心投影落在接触区间内**
+#      → 边着地（可沿支撑面滑动）；
+#   ③ 重心投影落在接触区间**之外** → 绕区间外端（支撑体的棱）翻倒；
+#   ④ 只顶点接触 → 绕该顶点倾倒，转到与支撑面平行为止。
+# ★★ ②③ 的分界就是**静力平衡判据** —— 现实中「只有一点点接触面」的物体会倒，
+#    v2 没有这个判据 → 维持角度不倒（批次 535 的核心修复）。
+func _rb_step(delta: float, ctrl_x: float, acc: float, impulse: float = 0.0) -> void:
+	var was_topple: bool = (_rb_mode == RB_TOPPLE)
+	var poly := _obb_corners(global_position)
+	var n: int = poly.size()
+	if n < 3:
+		return
+	# ---- 主动翻滚进行中：继续绕支点公转 ----
+	# 不能走下面的静力平衡判定：翻滚到一半时接触只剩支点一个顶点，
+	# 重算会把它判成「角撑着」或换支点 → 翻滚立刻中断。
+	# 支点仍在支撑上 → 沿冻结的目标姿态继续转；支点脱离（翻过棱 / 悬空）→ 交回常规分析。
+	if _rb_tumble and _rb_mode == RB_TOPPLE:
+		var pi: int = _rb_pivot_i
+		if pi >= 0 and pi < n and _rb_point_supported(poly[pi] + Vector2(0.0, 1.5)):
+			var tp: Vector2 = poly[pi]
+			var tr: Vector2 = _com_world() - tp
+			var trr: float = maxf(1.0, tr.length())
+			var tg2: float = ProjectSettings.get_setting("physics/2d/default_gravity", 980.0)
+			var t_alpha: float = tg2 * tr.x / _inertia_k2(trr)
+			# ★★ 峰顶放手（批次 542 用户报的第二条：「停在不应该平衡下来的角度」）：
+			#   翻面翻到「质心正好在支点正上方」而角速度也耗尽时，重力矩≈0，
+			#   而这一分支里**没有**下面倾倒分支那条极小自纠正力矩 →
+			#   积木会永远悬在这一面**根本站不住**的角度上（探针 R1 f60~f69：
+			#   rot 卡死在 1.403rad、离躺平只差 9.6°，ω 与 vx 一起归零）。
+			#   正确做法是**交回常规支撑分析**：那里按当前支点重算对齐目标，
+			#   取转角最小的稳定姿态 → 倒回它来的那一面，自然落定。
+			#   ★ 只在「真的没力气了」时放手：还有角速度说明这一面正要被甩过去，
+			#     中途改判会把 538 校好的接力翻面打断。自由翻滚不做吸附，也不放手。
+			if absf(t_alpha) < 0.5 and absf(_spin) < RB_TUMBLE_PEAK_SPIN and not free_roll:
+				_rb_tumble = false
+				_rb_tumble_speed = 0.0
+				_rb_target_valid = false
+			else:
+				# 玩家持续推动 → 额外驱动（推力的力矩），保证越过重心最高点；
+				# 松手后只有角动量与重力矩，翻不过去就自然回落。
+				if ctrl_x != 0.0:
+					# ★ 推力的力矩同样要过惯量这关：开惯量后 α_drive = (τ/m)/k²
+					#   → 大件、手填大 I 的件「推得动但拧不动」，不会再一推就利落翻面。
+					#   基准 k² 取 538 时代 80×40 方块的 |质心−支点|²≈2000，
+					#   使默认件在开与关之间观感连续；关闭时直接用定值（逐位不变）。
+					var drive: float = RB_TUMBLE_DRIVE
+					if inertia_enabled:
+						drive = RB_TUMBLE_DRIVE * RB_TUMBLE_DRIVE_REF_K2 / _inertia_k2(trr)
+					t_alpha += signf(wrapf(_rb_target_rot - rotation, -PI, PI)) * drive
+				_rb_topple(delta, tp, _rb_target_rot, t_alpha, true)
+				return
+		_rb_tumble = false
+		_rb_tumble_speed = 0.0
+	var cands: Array = _rb_analyze(poly)
+	var best: Dictionary = _rb_pick(cands)
+	if best.is_empty():
+		# 悬空：不施加自转（角动量只保留 _spin）→ 不再出现「空中滚动」
+		_rb_release_to_air(delta)
+		return
+	# 已经嵌进支撑体（老模型留下的坏状态）→ 先顶出来，否则一切移动都会被 can_move_to 拒绝
+	if float(best["gap"]) < -0.2:
+		_rb_unstick()
+		cands = _rb_analyze(_obb_corners(global_position))
+		best = _rb_pick(cands)
+		if best.is_empty():
+			_rb_mode = RB_AIR
+			_rb_grounded = false
+			_rb_pivot_i = -1
+			_rb_target_valid = false
+			_rb_slide = 0.0
+			_rb_tumble = false
+			_rb_tumble_speed = 0.0
+			return
+	var kind: int = int(best["kind"])
+	var dir: Vector2 = Vector2(best["dir"])
+	var nrm: Vector2 = Vector2(best["nrm"])
+	var origin: Vector2 = Vector2(best["origin"])
+	# 记下当前支撑面法线：撞击帧的挤压形变沿它压扁（公转途中没有新的 best，沿用这一份）
+	_squash_normal = nrm
+	# 重心（= 配置的旋转轴）在支撑面切向上的投影（静力平衡判据的输入）
+	# ★ 用 _com_world() 而不是 global_position：轴偏移会改变重心位置 → 改变稳定姿态与倾倒力矩。
+	var com_s: float = (_com_world() - origin).dot(dir)
+	var s_lo: float = float(best["s_lo"])
+	var s_hi: float = float(best["s_hi"])
+	# ---- 静力平衡：重心投影落在接触区间内 → 躺平；否则 → 翻倒 ----
+	var stable: bool = false
+	if kind == 0:
+		stable = com_s >= s_lo - RB_BAL_MARGIN and com_s <= s_hi + RB_BAL_MARGIN
+	if stable:
+		_rb_mode = RB_FLAT
+		_rb_grounded = true
+		_rb_pivot_i = -1
+		_rb_target_valid = false
+		_rb_tumble = false
+		_rb_tumble_speed = 0.0
+		_spin = 0.0
+		# 支撑面切向：取 y 增大的一侧 = 下坡方向
+		var tang: Vector2 = dir
+		if tang.y < 0.0:
+			tang = -tang
+		# 「按到支撑面上」：消除悬空缝隙（每帧最多 RB_SEAT_MAX 像素）
+		#   ★ 正在向上回弹时不补 —— 否则每帧 0.35px 的拉力会把撞击弹跳磨平。
+		var gap: float = float(best["gap"])
+		if gap > 0.0 and _gravity_velocity.y >= 0.0:
+			var seated: Vector2 = global_position - nrm * minf(gap, RB_SEAT_MAX)
+			if _can_move_to(seated):
+				global_position = seated
+		# 法向重力交给接触承担（否则会逐帧往支撑面里硬顶）。
+		# ★ 例外：**向上**的速度（y<0）是撞击回弹，必须放行 —— 它先把积木抬离支撑面
+		#   （接触断开 → 转入 RB_AIR），重力再把它拉回来重砸一次。
+		#   这就是 Flash 游戏里「翻面砸地 → 弹一下 → 再砸实」的来源；
+		#   旧版在这里一律清零 → 弹性参数永远不可能起作用。
+		# ★★ 「按到支撑面上」清零竖直速度 == 接触吸收了法向动量 == 一次撞击：先记下再清零
+		#   （与 _roll_step_round 的同一条纪律；blocked_y 对刚体件基本不触发）。
+		if _gravity_velocity.y > LAND_MIN_SPEED:
+			_land_absorb(_gravity_velocity.y, nrm)
+		if _gravity_velocity.y >= 0.0:
+			_gravity_velocity = Vector2.ZERO
+		if absf(tang.y) > RB_SLOPE_ANG_EPS:
+			# —— 坡面：库仑滑动 a = g·(sinθ − μ·cosθ) ——
+			#   ★ μ·cosθ 吃得住 g·sinθ → **静摩擦**：浅坡上放着不动、坡够陡才开始下滑。
+			#     旧模型只看坡度不看摩擦 → 任何微小倾斜都滑到满速，观感像冰面。
+			#   ★ y 分量绝不能被通用 MOVE_DECAY_RATE 衰减掉，否则会横着插进坡里（实测 vel=(154,2.0)）。
+			if _rb_slide == 0.0:
+				_rb_slide = _move_velocity.dot(tang)   # 继承进入坡面时的水平动量
+			var sin_t: float = absf(tang.y)
+			var cos_t: float = sqrt(maxf(0.0, 1.0 - sin_t * sin_t))
+			var a_grav: float = _gravity_px() * sin_t
+			var a_fric: float = clampf(friction_coef, 0.0, 2.0) * _gravity_px() * cos_t
+			if ctrl_x != 0.0:
+				# 玩家推动：把水平意图投影到坡面切向（acc 已含质量惯性缩放）
+				_rb_slide = move_toward(_rb_slide, ctrl_x * horiz_max_speed * tang.x, acc * delta)
+			elif absf(_rb_slide) < SETTLE_SPEED and a_grav <= a_fric:
+				_rb_slide = 0.0     # 静摩擦咬住
+			else:
+				var prev_slide: float = _rb_slide
+				_rb_slide = clampf(prev_slide + (a_grav - signf(prev_slide) * a_fric) * delta,
+					-ROLL_MAX_SPEED, ROLL_MAX_SPEED)
+				# 摩擦吃得住坡度时不许「反向滑上坡」：穿过零点就咬死
+				if prev_slide > 0.0 and _rb_slide < 0.0 and a_grav <= a_fric:
+					_rb_slide = 0.0
+			_rb_slide *= _drag_mul(delta)
+			_move_velocity = tang * _rb_slide
+			return
+		# —— 平地：库仑摩擦 μ·g 匀减速 + 静摩擦阈值 ——
+		_rb_slide = 0.0
+		if not can_fly:
+			_move_velocity.y = 0.0
+		# ★★ 撞击那一帧**先**判翻滚（批次 538）：此刻水平速度还完整、且摩擦预算被法向冲量抬高，
+		#   「砸下来还往前滑」应当直接接力翻下一面。
+		#   顺序反了（先减摩擦再判）→ 撞击帧的大预算一口吃掉水平速度 → 起翻速度被掐死
+		#   = 方块版的「落到底、顿一下才滚」。
+		if impulse > 0.0 and _rb_try_tumble(delta, poly, dir, nrm, origin, ctrl_x, impulse):
+			return
+		if ctrl_x == 0.0:
+			# ★ 摩擦上限是 μ×**法向冲量**（重力 g·dt + 本帧被接触吸收的撞击速度），不是恒定 μ·g·dt。
+			_move_velocity.x = move_toward(_move_velocity.x, 0.0, _fric_impulse_budget(delta, impulse))
+			# ★ 低于阈值直接咬死：旧版只剩线性缓动 → 末尾几十像素磨磨蹭蹭（「停得太肉」）。
+			if absf(_move_velocity.x) < SETTLE_SPEED:
+				_move_velocity.x = 0.0
+		_move_velocity.x *= _drag_mul(delta)
+		# 推得够快 → 绕「运行方向前下方」的棱翻过去（现实里推盒子就是这样翻滚的），
+		# 而不是像旧模型那样贴着地面平移。
+		if _rb_try_tumble(delta, poly, dir, nrm, origin, ctrl_x, impulse):
+			return
+		return
+	# ================= 翻倒 =================
+	var pivot: Vector2 = Vector2.ZERO
+	var align: bool = false
+	var pivot_i: int = -1
+	if kind == 0:
+		# 重心在接触区间之外 → 绕区间外端（支撑体的棱）翻倒
+		var s_p: float = s_hi
+		if com_s < s_lo:
+			s_p = s_lo
+		pivot = origin + dir * s_p
+	elif kind == 1:
+		# 我的顶点压在支撑面上 → 绕它倾倒，转到「边与支撑面平行」为止
+		# ★ 自由翻滚（free_roll）：不做对齐吸附 —— 让它按重力自然转，
+		#   允许以任意角度搭在棱角上（用户要的「完全自由的滚动姿态」）。
+		pivot = Vector2(best["pivot"])
+		pivot_i = int(best["pivot_i"])
+		align = not free_roll
+	else:
+		# 支撑体的棱角顶着我 → 绕该棱翻落
+		pivot = Vector2(best["pivot"])
+	_rb_mode = RB_TOPPLE
+	_rb_grounded = true
+	var comw: Vector2 = _com_world()
+	var r: Vector2 = comw - pivot
+	var rr: float = maxf(1.0, r.length())
+	var g2: float = ProjectSettings.get_setting("physics/2d/default_gravity", 980.0)
+	# 力矩：重力对支点的力矩 τ = m·g·r.x（r = 质心 − 支点）；角加速度 α = τ/I = g·r.x/k²。
+	# ★ k² 由 `_inertia_k2(rr)` 给：关闭时 = |r|²（质点近似，与 538 逐位一致）；开启时 =
+	#   形状绕质心的回转半径² + 平行轴 → 同包围盒下 α 变小（真实薄板是 4/3 倍），
+	#   大件与手填大 I 的件明显更「懒」。
+	# ★ **自动惯量仍与质量无关**（τ ∝ m、I ∝ m 抵消，现实如此）；
+	#   只有手填 I（单位含质量）才让质量真正进转动方程 —— 想要「同尺寸但更沉更不易翻」就填它。
+	#   v1 误乘 1/mass → 重块 8 倍慢 → 永远翻不过来（探针 T6b 实测用时 -1 帧）。
+	var alpha: float = g2 * r.x / _inertia_k2(rr)
+	var fall: float = signf(r.x)
+	if absf(r.x) < 1.0:
+		fall = 0.0
+	var target_rot: float = rotation
+	if align:
+		# 目标姿态 = 「含支点的边转到与支撑面平行」（进入倾倒时冻结，避免逐帧跳变；支点变了才重算）
+		if not was_topple or not _rb_target_valid or _rb_target_pivot_i != pivot_i:
+			_rb_target_rot = rotation + _rb_align_d(poly, pivot_i, dir, nrm, fall)
+			_rb_target_valid = true
+			_rb_target_pivot_i = pivot_i
+		target_rot = _rb_target_rot
+		# 近乎平衡（质心正好在支点正上方）→ 给一个极小的自纠正力矩，
+		#   否则积木会永远「角撑着」站在尖上（正是用户报的现象）。
+		#   ★ 必须在**每条路径**上都生效（不能写成 elif）——否则正好平衡的角撑完全不动。
+		#   ★ 自由翻滚时不加这个人工纠正 —— 允许「角撑着」的自然姿态。
+		if absf(alpha) < 0.5 and not free_roll:
+			# ★ 近乎平衡 + 几乎不动 = 真的悬在角上（批次 542）：此刻冻结的目标可能是
+			#   **上一段**倾倒留下的、指向「绕远的那一面」，照它爬会停在中途的假平衡角。
+			#   这一刻最可信的判据是「哪一面最近」→ fall=0 重算目标
+			#   （`_rb_align_d` 在 fall=0 时退化成只取转角最小者，与本函数注释的意图一致）。
+			if absf(_spin) < RB_TUMBLE_PEAK_SPIN:
+				_rb_target_rot = rotation + _rb_align_d(poly, pivot_i, dir, nrm, 0.0)
+				_rb_target_valid = true
+				_rb_target_pivot_i = pivot_i
+				target_rot = _rb_target_rot
+			alpha = signf(target_rot - rotation) * 0.5
+	elif absf(alpha) < 0.5 and not free_roll:
+		# 近乎平衡 → 极小自纠正力矩（朝重心偏移的方向）
+		var side: float = signf(com_s - (pivot - origin).dot(dir))
+		if side == 0.0:
+			side = 1.0
+		alpha = side * 0.5
+	# ★★ 「重心低于支点就放手自由落体」是**错的**：重心低于支点只说明方块已经转到
+	#   支点下方，但**支点仍在承重**（接触依然存在）——此时放手会让方块穿模、
+	#   或者被通用 SAT 挡住 → 表现为「维持角度、既不倒也不落」（批次 535 用户报的现象）。
+	# ================= 棱角支点：先解这一帧的接触冲量，再决定「咬住公转」还是「继续滑」 =================
+	# ★★ 公转的前提是接触点被**钉死**（接触点线速度一帧归零）。棱角能给的冲量分两种：
+	#   法向（顶住）永远给得起；切向最多只有 μ×法向那一份（库仑）。
+	#   旧写法把棱角当理想铰链：`_rb_topple` 末尾用 _move_velocity = ω×r 覆盖真实速度 →
+	#   滑到台角那一帧 291px/s 的水平动量凭空蒸发（542 探针 f7→f8「水平位移掉了 100%」），
+	#   之后只剩重力矩一点一点爬 = 用户说的「像和那块静止的积木之间有粘性」，
+	#   并且会停在「根本平衡不住的角度」上不倒也不落。
+	#   现在分层解：① 法向吸收「挖进支撑面」那一份（=撞击，顺带顶住本帧重力）；
+	#   ② 切向按 μ 上限吸收滑移（与圆形件 _roll_step_round 的滑移摩擦同一条纪律）；
+	#   ③ 只有滑移被吃光（接触真的咬住）且单向接触留得住，才转成绕支点公转；
+	#   否则继续滑——支持力对质心的力矩会把积木**逐渐**拧起来：探出越多、力臂越大、
+	#   拧得越快，脱离台角时带着自然的自转飞出去（这就是「接着滚下去」的那一下）。
+	var rc: Vector2 = pivot - comw
+	var tang: Vector2 = dir
+	if tang.y < 0.0:
+		tang = -tang
+	var k2c: float = maxf(1.0, _inertia_k2_axis())
+	var arm_n: float = rc.x * nrm.y - rc.y * nrm.x
+	var arm_t: float = rc.x * tang.y - rc.y * tang.x
+	var den_n: float = 1.0 + arm_n * arm_n / k2c
+	var den_t: float = 1.0 + arm_t * arm_t / k2c
+	var v_com: Vector2 = _move_velocity + _gravity_velocity
+	# 接触点这一帧的速度 = 质心速度 + 自转带动的那一份
+	var u: Vector2 = v_com + _spin * Vector2(-rc.y, rc.x)
+	var u_n: float = -u.dot(nrm)
+	var u_t: float = u.dot(tang)
+	# ① 法向冲量：把「压进支撑面」顶出来（e 决定回弹），并顶住本帧重力
+	#   （等价于旧稳定分支的「竖直速度交给接触承担」，但这里是按力臂分配到自转的真冲量）
+	var jn: float = (maxf(0.0, u_n) * (1.0 + clampf(restitution, 0.0, 0.9)) + g2 * delta) / den_n
+	_apply_contact_impulse(jn, nrm, arm_n, k2c)
+	if u_n > LAND_MIN_SPEED:
+		_note_contact_impulse(u_n, nrm)
+	# ② 切向冲量：|P_t| ≤ μ·P_n —— 撞击那帧预算极大，一帧就能咬地（批次 538 的老纪律）
+	var jt_need: float = -u_t / den_t
+	var jt_cap: float = _fric_impulse_budget(delta, maxf(0.0, u_n))
+	_apply_contact_impulse(clampf(jt_need, -jt_cap, jt_cap), tang, arm_t, k2c)
+	# ③ 咬住 = 这一帧的摩擦足以把接触点的滑移全吃光；再加单向接触顶得住公转
+	var stuck: bool = absf(jt_need) <= jt_cap * 1.1 + 1.0
+	var pin_spin: float = _spin
+	if not (was_topple and pivot.distance_squared_to(_rb_orbit_pivot) \
+			< RB_ORBIT_PIVOT_EPS * RB_ORBIT_PIVOT_EPS):
+		# 新支点接管：铰链假设下角动量守恒 L = k²_质心·ω + r×v → ω = L / k²_支点
+		#   ★ 关闭惯量时 k²_质心项 = 0（质点近似，与 538 逐位同）→ ω = 切向速度/r，天然按尺寸给
+		var k2p: float = _inertia_k2(rr)
+		pin_spin = (_spin * maxf(0.0, k2p - rr * rr) + r.x * v_com.y - r.y * v_com.x) / k2p
+	# ★ 公转要求的向下向心加速度超过重力时，支点必须反过来「往下拉」积木才留得住
+	#   —— 棱角拉不住，这一刻积木其实已经在往外抛出，只能走滑移那条路。
+	var a_orbit: Vector2 = Vector2(-pin_spin * pin_spin * r.x - alpha * r.y,
+		-pin_spin * pin_spin * r.y + alpha * r.x)
+	if stuck and (a_orbit - Vector2(0.0, g2)).dot(nrm) >= 0.0:
+		_spin = pin_spin
+		_rb_orbit_pivot = pivot
+		_rb_pivot_i = pivot_i
+		_rb_topple(delta, pivot, target_rot, alpha, align)
+		return
+	# ---- 滑移接触：接触还在（顶着、有摩擦），但没钉死 → 继续平移，同时被力矩拧 ----
+	_rb_orbit_pivot = pivot
+	_rb_mode = RB_FLAT
+	_rb_grounded = true
+	_rb_pivot_i = -1
+	_rb_target_valid = false
+	_rb_slide = 0.0
+	_rb_tumble = false
+	_rb_tumble_speed = 0.0
+	var slip_cap: float = _roll_spin_cap(maxf(1.0, rr))
+	_spin = clampf(_spin * maxf(0.0, 1.0 - RB_SPIN_DAMP * delta) * _drag_mul(delta),
+		-slip_cap, slip_cap)
+	var slip_dth: float = maxf(RB_MAX_DTHETA, slip_cap * delta)
+	_rotate_about_com(clampf(_spin * delta, -slip_dth, slip_dth))
+
+
+# 单位质量冲量 j（带符号）沿单位方向 drc 作用在接触点上：
+#   质心速度按其分量分摊给 _move_velocity(x) / _gravity_velocity(y)（与全文件的分工一致），
+#   角速度按力矩改：Δω = j·arm / k²_质心（arm = 接触点对质心的力矩臂 = rc×drc）。
+# ★ 与圆形件 _roll_step_round 里那句「j = min(|slip|/(1+1/β), 摩擦预算)」是同一条纪律，
+#   只是刚体件的冲量作用点不一定在质心正下方，力臂必须按真实接触点算，否则
+#   「棱角被顶一下」不会让积木转起来（= 又回到只平移、不翻滚的老观感）。
+func _apply_contact_impulse(j: float, drc: Vector2, arm: float, k2c: float) -> void:
+	var dv: Vector2 = drc * j
+	_move_velocity.x += dv.x
+	_gravity_velocity.y += dv.y
+	_spin += j * arm / k2c
+
+
+
+# 绕支点转到「该边与支撑切向平行」所需的转角（带符号）。
+# ★ 几何要点：支点在支撑面上，把「含支点的边」转到与支撑切向平行时，
+#   远端顶点恰好落在支撑面上（沿切向）—— 这就是「边着地」的唯一稳定姿态。
+#   两个解相差 π（远端落在支点两侧）：取与力矩方向（fall）一致、且转角最小者；
+#   力矩近乎为零（正好平衡在角上）时取转角最小者 + 极小自纠正力矩，
+#   免得积木永远「角撑着」站不起来。
+func _rb_align_d(poly: PackedVector2Array, pivot_i: int, tang: Vector2, nrm: Vector2, fall: float) -> float:
+	var n: int = poly.size()
+	var pivot: Vector2 = poly[pivot_i]
+	var com: Vector2 = _com_world() - pivot
+	var nbs: Array = [(pivot_i + 1) % n, (pivot_i - 1 + n) % n]
+	var best: float = INF
+	var best_d: float = 0.0
+	var backup: float = INF
+	var backup_d: float = 0.0
+	for nbv in nbs:
+		var nb: int = int(nbv)
+		var f: Vector2 = poly[nb] - pivot
+		if f.length() < 0.0001:
+			continue
+		f = f.normalized()
+		# 该邻边在当前力矩方向下是否会下降（只有下降的邻边才可能是「落地面」）：
+		#   旋转 +dθ 时邻点速度 = dθ·(-f.y, f.x) → f.x > 0 下降；反向则相反。
+		if fall > 0.0 and f.x <= 0.0:
+			continue
+		if fall < 0.0 and f.x >= 0.0:
+			continue
+		var raw: float = tang.angle() - f.angle()
+		for m in range(2):
+			var d: float = wrapf(raw - float(m) * PI, -PI, PI)
+			if absf(d) < backup:
+				backup = absf(d)
+				backup_d = d
+			# 旋转方向必须与力矩方向一致
+			if fall > 0.0 and d <= 0.0001:
+				continue
+			if fall < 0.0 and d >= -0.0001:
+				continue
+			# 落地面之后积木本体必须仍在支撑面上方（否则那是「翻过去」的解）
+			if com.rotated(d).dot(nrm) <= 0.0:
+				continue
+			if absf(d) < best:
+				best = absf(d)
+				best_d = d
+	if best == INF:
+		return backup_d
+	return best_d
+
+
+# 把质心「抬到支点正上方」所需要的最小角速度（能量判据）：
+#   ½Iω² = m·g·(d − h_c) → ω = sqrt(2g(d − h_c)/k²_支点)
+#   d = |质心 − 支点|，h_c = 质心在支点**上方**的高度（屏幕 y 向下 → −r.y）。
+# ★ 只用于**角速度上限**（不是力）：上限低于这个值，翻面必然「爬到一半没力气、
+#   倒头滑回来」（538 T3 实测停在 29.7°）。尺寸越小要的 ω 越大，由公式自然给出。
+# ★ h_c 按**当前姿态**实算而不是 height/2：方块立起来（翻过一面之后）只需把质心抬
+#   4.7px，用 height/2 会算出 4.26 的假需求 → 上限虚高、连翻第二面时疯转。
+# ★ k² 取法：开惯量走 `_inertia_k2`（形状 + 平行轴，手填 I 也算进去）；
+#   关闭时用解析薄板 (w²+h²)/3 —— 与 538 校好的那两个上限逐位一致。
+func _rb_flip_min_spin(r: Vector2) -> float:
+	var d: float = maxf(1.0, r.length())
+	var h_c: float = maxf(0.0, -r.y)
+	var k2: float = _inertia_k2(d) if inertia_enabled \
+		else maxf(1.0, (width * width + height * height) / 3.0)
+	return sqrt(maxf(0.0, 2.0 * _gravity_px() * maxf(0.0, d - h_c) / k2))
+
+
+# 接触断开 / 棱角拉住积木 → 交回自由抛落。
+# ★★ 线动量与角动量**都保留**（批次 542）：这正是「从台角甩出去」的那一下，
+#   旧写法在这里把 _spin 钳进 RB_SPIN_MAX=2.5 —— 60×60 的件由动量换算出的真实角速度 ≈9.6，
+#   一帧就被吃掉 → 又变成「慢慢爬下台角」。上限改成按尺寸给（与圆形件同一条纪律，见 _roll_spin_cap）：
+#   它本身就是「接触点线速度 ≤ ROLL_MAX_SPEED」，大件（r ≥ 144px）算出来仍是 2.5，行为逐位不变。
+func _rb_release_to_air(delta: float) -> void:
+	_rb_mode = RB_AIR
+	_rb_grounded = false
+	_rb_pivot_i = -1
+	_rb_target_valid = false
+	_rb_slide = 0.0
+	_rb_tumble = false
+	_rb_tumble_speed = 0.0
+	var cap: float = _roll_spin_cap(_rb_reach())
+	_spin = clampf(_spin * _drag_mul(delta), -cap, cap)
+	if absf(_spin) > 0.0001:
+		# 绕配置的旋转轴（质心）自转 —— 而不是几何中心；单帧转角与上限同源（同 _rb_round_integrate）
+		var dth: float = maxf(RB_MAX_DTHETA, cap * delta)
+		_rotate_about_com(clampf(_spin * delta, -dth, dth))
+
+
+# 绕支点公转（真刚体翻倒），带「对齐上限」：
+#   ★ 转到「边与支撑面平行」就停 —— 这是 v1 缺失的关键一步：
+#     旧模型无上限地继续转 → 远端顶点压进坡体（pen=1.71）→ can_move_to 恒假 → 永久卡死。
+func _rb_topple(delta: float, pivot: Vector2, target_rot: float, alpha: float, has_target: bool = true) -> void:
+	# ★★ 公转每一帧末尾都会把竖直速度交给接触（下面两处 `_gravity_velocity = ZERO`）——
+	#   第一帧那一份就是「棱角砸到地面」吸收掉的法向冲量：先记下来，
+	#   它既驱动挤压形变，也给下一帧（转入 RB_FLAT）的摩擦预算与绊翻判据抬boost。
+	if _gravity_velocity.y > LAND_MIN_SPEED:
+		_note_contact_impulse(_gravity_velocity.y, _squash_normal)
+	var c: Vector2 = global_position
+	var r: Vector2 = c - pivot
+	_spin += alpha * delta
+	# 角速度耗散：接触处的能量损耗（RB_SPIN_DAMP*）+ 风阻（air_drag，按 1/mass 放大）
+	var damp: float = RB_SPIN_DAMP_TUMBLE if _rb_tumble else RB_SPIN_DAMP
+	_spin *= maxf(0.0, 1.0 - damp * delta) * _drag_mul(delta)
+	# 自转上限：自由翻落（绕棱角甩出去）时角速度不能无限涨 ——
+	#   实测无上限时会转 2 圈以上、横向甩出 200+px，手感很差。
+	#   主动翻滚（被推动）允许多一点角速度，否则 90° 翻面会显得拖沓。
+	# ★★ 翻滚（_rb_tumble）的上限必须**按积木自己的尺寸**给：把质心抬过支点所需的
+	#   最小角速度来自能量判据 ½Iω² = m·g·(d − h_c)（I/m = k² = (w²+h²)/3，绕支角）
+	#   → ω_flip = sqrt(2g(d−h_c)/k²)。80×40 的方块算出 4.26rad/s，而旧写法一律钳在
+	#   RB_TUMBLE_SPIN_MAX=4.0 → 撞击接力翻面「转到 30° 就没力气、倒头滑回来」
+	#   （538 探针 T3 逐帧实测）。小件要的 ω 更大（ω∝1/尺寸），大件更小，都由这条公式自然给出。
+	var spin_max: float = _roll_spin_cap(maxf(1.0, r.length()))
+	if _rb_tumble:
+		spin_max = maxf(RB_TUMBLE_SPIN_MAX, _rb_flip_min_spin(r) * RB_TUMBLE_SPIN_MARGIN)
+	_spin = clampf(_spin, -spin_max, spin_max)
+	var dtheta: float = _spin * delta
+	# ★ 单帧转角上限跟着 ω 上限走（否则 ω=6.8 仍被 0.08rad/帧 掐成 4.8，翻面照样拖沓）。
+	#   自由翻落仍是 RB_MAX_DTHETA 原值，观感不变。
+	var dth_cap: float = maxf(RB_MAX_DTHETA, spin_max * delta)
+	if absf(dtheta) > dth_cap:
+		# ★ 只钳制**单帧转角**（防一步转太多穿进支撑体），
+		#   **不覆盖 _spin** —— 覆盖会让角速度被钉死在 RB_MAX_DTHETA/delta
+		#   （实测恒为 4.8 rad/s）→ 空中一直疯转、落地还在转。
+		#   真实角速度继续按上面的 alpha/阻尼演化。
+		dtheta = signf(dtheta) * dth_cap
+	# 与目标姿态的剩余夹角（带符号）
+	#   ★ has_target=false（自由翻落）：没有「对齐目标」，只受「不穿进支撑体」约束 ——
+	#     现实里「只有一点点接触面」的物体会一直翻到脱开支撑为止。
+	if has_target:
+		var remain: float = wrapf(target_rot - rotation, -PI, PI)
+		if absf(remain) < RB_TOPPLE_SNAP:
+			# 已到位 → 贴地（下一帧由接触判据接管，转入 RB_FLAT 沿面滑动）
+			rotation = target_rot
+			global_position = pivot + (c - pivot).rotated(remain)
+			# ★ 撞击速度 = |ω|·|质心−支点|（绕支点公转的线速度）。
+			#   弹性 e 把它的一部分转成**向上**的速度：下一帧 _rb_step 的稳定分支放行
+			#   （见那里的「向上回弹」注释）→ 积木抬离支撑面 → 重力再把它拉回来重砸一次。
+			#   这就是 Flash 小游戏里「翻过去 → 弹一下 → 砸实」的收势；
+			#   旧版这里无条件清零 → 翻到姿态像被踩住一样硬定（用户说的「太生硬」）。
+			var impact: float = absf(_spin) * maxf(1.0, (c - pivot).length())
+			var bounce: float = impact * clampf(restitution, 0.0, 0.9)
+			_spin = 0.0
+			# ★★ 撞击转翻滚（批次 538）：翻到下一面这一帧**既要把水平动量接力下去，
+			#   又要把撞击冲量交给下一帧的摩擦预算与绊翻判据**。
+			#   旧写法固定「主动翻滚保全部 / 自由翻落保一半」，而且不记冲量 →
+			#   落地面 boost=1、判据退回 μ·h>w → 只平移滑停 = 方块版的「顿一下才滚」。
+			#   现在按撞击强弱扣一点点（砸得狠损失多、轻砸几乎全保）→
+			#   硬砸能连着翻两三面再自然收敛；`keep ≤ 1` 保证松手后逐面减速、不会自己越滚越快。
+			var keep: float = 1.0 - clampf(impact / SQUASH_FULL_SPEED, 0.0, 0.5)
+			var relay: float = _rb_tumble_speed if _rb_tumble else _move_velocity.x
+			if _rb_tumble:
+				_rb_tumble = false
+				_rb_tumble_speed = 0.0
+			_move_velocity = Vector2(relay * keep, 0.0)
+			_gravity_velocity = Vector2(0.0, -bounce) if bounce > LAND_MIN_SPEED else Vector2.ZERO
+			_rb_mode = RB_FLAT
+			_rb_grounded = true
+			if impact > LAND_MIN_SPEED:
+				_note_contact_impulse(impact, _squash_normal)
+			return
+		# 不越过目标姿态
+		if signf(dtheta) == signf(remain) and absf(dtheta) > absf(remain):
+			dtheta = remain
+			_spin = dtheta / maxf(delta, 0.0001)
+
+	var new_pos: Vector2 = pivot + (c - pivot).rotated(dtheta)
+	if not _can_move_to(new_pos, 1.0):
+		# 被挡：先把嵌入的部分顶出来，仍不行就放弃这一步
+		_rb_unstick()
+		if not _can_move_to(new_pos, 1.0):
+			# ★★ 绕**棱角**公转时，旋转必然会让方块的一角略微进入支撑体
+			#   （实测垂距 0.0364px —— 肉眼根本看不见，但 SAT 判为重叠）。
+			#   若直接放弃这一步 → 转速被 _spin*=0.3 压到几乎为零 → **永远转不动**
+			#   → 表现为「维持角度、既不倒也不落」（用户报的现象）。
+			#   正确处理：允许**极小的嵌入**（只放宽一点点容差），
+			#   让它能继续转；只有真的撞到别的东西才停。
+			if _can_move_to(new_pos, RB_TOPPLE_SLOP):
+				# 轻微嵌入 → 照转（下一帧 _rb_unstick 会把它顶回去）
+				global_position = new_pos
+				rotation += dtheta
+				_move_velocity = _spin * Vector2(-r.y, r.x)
+				_gravity_velocity = Vector2.ZERO
+				return
+			# ★★ 这一步被实体挡住 = **另一个角真的砸在地面/别的东西上** ——
+			#   这是整段公转里唯一真实的撞击时刻（比「到达目标姿态」更可信）。
+			#   按恢复系数把角速度**反向**弹回：来回摆两下、幅度递减到停 ——
+			#   旧版一律 `_spin *= 0.3`（方向不变）→ 看着像「卡了一下继续转」，没有撞击感。
+			var e_rock: float = clampf(restitution, 0.0, 0.9)
+			var rock_impact: float = absf(_spin) * maxf(1.0, r.length())
+			if rock_impact * e_rock > LAND_MIN_SPEED:
+				_spin = -_spin * e_rock
+			else:
+				_spin = 0.0
+			_rb_tumble = false
+			_rb_tumble_speed = 0.0
+			if rock_impact > LAND_MIN_SPEED:
+				_note_contact_impulse(rock_impact, _squash_normal)
+			return
+	global_position = new_pos
+	rotation += dtheta
+	# 质心速度 = ω × r（脱离支点时接管动量用）
+	_move_velocity = _spin * Vector2(-r.y, r.x)
+	_gravity_velocity = Vector2.ZERO
+
+
+# 平地主动翻滚：水平速度达到阈值时，绕「行进方向前下方」的棱翻向下一条边。
+# ★ 现实里推一个盒子：推力相对前缘产生力矩，越过前缘后整块翻过去再落到下一条边；
+#   旧模型只在「重心投影落到接触区间外」时才翻倒，平地正常推动永远只平移 —— 就是用户说的「不滚动」。
+# ★ 只由**运动方向**决定支点与落地面，与重力矩方向无关（平地上重力矩为 0）。
+# ★ 松手滑行时还要过**绊翻判据**（μ·h > w）：摩擦力不够（冰面）就只是滑停，不会翻。
+func _rb_try_tumble(delta: float, poly: PackedVector2Array, dir: Vector2, nrm: Vector2, origin: Vector2, ctrl_x: float, impulse: float = 0.0) -> bool:
+	var spd: float = _move_velocity.x
+	if absf(spd) < RB_TUMBLE_MIN_SPEED:
+		return false
+	var n: int = poly.size()
+	if n < 3:
+		return false
+	var dsign: float = signf(spd)
+	# 支撑切向按运动方向定向（dir 可能指向上坡/下坡）
+	var axis: Vector2 = dir if dir.x * dsign >= 0.0 else -dir
+	var com: Vector2 = _com_world()
+	var best_i: int = -1
+	var best_s: float = -INF
+	for i in range(n):
+		var v: Vector2 = poly[i]
+		# 支点必须落在支撑面上（贴在别的顶点/空中都不行）
+		if absf((v - origin).dot(nrm)) > RB_FACE_EPS + 0.8:
+			continue
+		# 支点必须在重心下方
+		if (v - com).dot(nrm) >= 0.0:
+			continue
+		var s: float = (v - origin).dot(axis)
+		if s > best_s:
+			best_s = s
+			best_i = i
+	if best_i < 0:
+		return false
+	var d: float = _rb_next_face_d(poly, best_i, axis, dsign)
+	if absf(d) < 0.05:
+		return false
+	var pivot: Vector2 = poly[best_i]
+	var r: Vector2 = com - pivot
+	var rr: float = maxf(1.0, r.length())
+	# ★ 松手后自己滑出去的积木，只有**被摩擦绊停**才可能翻：
+	#   摩擦力 μmg 的力臂是质心高度 h，重力的稳定力臂是支点到质心的水平距离 w
+	#   → 绊翻条件 μ·h > w。矮胖子要 μ>1 才翻、高瘦件 μ>0.4 就翻（现实如此）；
+	#   冰面（μ≈0）永远只是滑出去，不会一推就翻 —— 这就是「摩擦力」在观感上的作用。
+	#   ★ 玩家正在按方向键推（ctrl_x≠0）时由手的推力矩负责，不受这条约束。
+	#   ★ 撞击帧（批次 538）：摩擦上限是 μ×**法向冲量**，砸地那一帧法向冲量是重力的 boost 倍
+	#     → 绊翻判据同比例放宽成 μ·h·boost > w。硬砸下来还带着水平速度的方块因此
+	#     直接接力翻下一面（用户要的「撞击转翻滚」），轻落地 boost≈1、慢滑依旧只是滑停。
+	var boost: float = 1.0 + maxf(0.0, impulse) / maxf(0.0001, _gravity_px() * delta)
+	if ctrl_x == 0.0 and friction_coef * absf(r.y) * boost < absf(r.x):
+		return false
+	var spin: float
+	if inertia_enabled:
+		# ★★ 绊翻的起步角速度 = 对支点的**角动量守恒**（接触瞬间完全非弹性捕获）：
+		#   L/m = v_x·h（h = 质心离地高度 = 摩擦力 μmg 的力臂）→ ω = v_x·h / k²_支点。
+		#   「矮胖子推不动、高瘦件一推就翻、同形状越大越懒」全部由这一条自己长出来，
+		#   不再需要 538 那个 v/|r|×1.35 的手调增益（它就是「生硬」的另一半来源）。
+		#   ★ 竖直（砸下来）那份动量**不计**：它被支撑面的法向冲量就地吸收，
+		#     作用线过支点 → 对支点的矩≈0 —— T4「垂直落地不乱翻」说的就是这件事。
+		spin = absf(spd) * absf(r.y) / _inertia_k2(rr)
+	else:
+		# 关闭：逐位保留 538 的增益式（老手感不变）
+		spin = absf(spd) / rr * RB_TUMBLE_SPIN_GAIN
+	spin = maxf(spin, RB_TUMBLE_MIN_SPIN)
+	_rb_mode = RB_TOPPLE
+	_rb_grounded = true
+	_rb_pivot_i = best_i
+	_rb_target_rot = rotation + d
+	_rb_target_valid = true
+	_rb_target_pivot_i = best_i
+	_spin = dsign * spin
+	_rb_tumble = true
+	_rb_tumble_speed = spd
+	var g2: float = ProjectSettings.get_setting("physics/2d/default_gravity", 980.0)
+	# ★ 重力矩的角加速度同样除以对支点的 k²（关闭时 _inertia_k2(rr)==rr²，逐位等于 538）
+	_rb_topple(delta, pivot, _rb_target_rot, g2 * r.x / _inertia_k2(rr), true)
+	return true
+
+
+# 绕顶点 pivot_i 转到「相邻边与支撑切向平行」所需的带符号转角（与 dsign 同号，取最小者）。
+# ★ 与 _rb_align_d 的区别：不按「哪条邻边在重力矩下下降」过滤 ——
+#   平地主动翻滚时落地的下一条边完全由**运动方向**决定。
+func _rb_next_face_d(poly: PackedVector2Array, pivot_i: int, tang: Vector2, dsign: float) -> float:
+	var n: int = poly.size()
+	var pivot: Vector2 = poly[pivot_i]
+	var nbs: Array = [(pivot_i + 1) % n, (pivot_i - 1 + n) % n]
+	var best: float = INF
+	for nbv in nbs:
+		var nb: int = int(nbv)
+		var f: Vector2 = poly[nb] - pivot
+		if f.length() < 0.0001:
+			continue
+		var fa: float = f.normalized().angle()
+		for m in range(2):
+			# 边可与切向同向或反向平行（相差 π 的两个解都算对齐）
+			var raw: float = tang.angle() + float(m) * PI - fa
+			var d: float = 0.0
+			if dsign > 0.0:
+				d = wrapf(raw, 0.0, TAU)
+				if d < 0.0001 or d >= PI - 0.0001:
+					continue
+			else:
+				d = wrapf(raw, -TAU, 0.0)
+				if d > -0.0001 or d <= -PI + 0.0001:
+					continue
+			if absf(d) < absf(best):
+				best = d
+	return best if best != INF else 0.0
+
+# 世界坐标点 p 是否落在「其它可碰撞积木」的 OBB 内（_support_at 的通用化）。
+func _rb_point_supported(p: Vector2) -> bool:
+	var tree := get_tree()
+	if tree == null:
+		return false
+	var my_scene: Node = _scene_of()
+	for other in tree.get_nodes_in_group("block"):
+		if not is_instance_valid(other) or other == self or not (other is Block):
+			continue
+		var ob: Block = other
+		if ob._scene_of() != my_scene:
+			continue
+		if ob._is_in_subtree_of(self):
+			continue
+		if not ob._has_collision():
+			continue
+		if not _collision_layers_intersect(collision_layer, ob.collision_layer):
+			continue
+		if ob._obb_contains_point(ob.global_position, p):
+			return true
+	return false
+
+
+# 顶点 p 是否「触地」（正下方 RB_GROUND_EPS 内有支撑）
+func _rb_touching(p: Vector2) -> bool:
+	return _rb_point_supported(p + Vector2(0.0, RB_GROUND_EPS))
+
+
+# 形状最低点（世界坐标）
+func _rb_lowest_point() -> Vector2:
+	var poly := _obb_corners(global_position)
+	if poly.is_empty():
+		return global_position
+	var best: Vector2 = poly[0]
+	for p in poly:
+		if p.y > best.y:
+			best = p
+	return best
+
+
+# 多边形顶点 i、j 是否相邻（同一底边）；三角形任意两顶点相邻
+func _rb_adjacent(i: int, j: int, n: int) -> bool:
+	if n <= 3:
+		return true
+	var d: int = absi(i - j)
+	return d == 1 or d == n - 1
+
+
+# 滚动半径（线速度 → 角速度）：圆 = 半径；椭圆取两半轴均值；矩形/三角形 = 半对角线。
+# ★ 矩形/三角形用「半对角线」而非「短边半长」：它们翻滚时的支点是**角/顶点**，中心到支点的
+#   距离就是半对角线。旧写法（短边半长）把半径报小了近一倍 → 角速度虚高、翻滚看起来" frantic "
+#   地疯转；换成几何上正确的支点距离后，滚动视觉速度与平移速度一致，明显更顺。
+func _roll_radius() -> float:
+	match shape:
+		Shape.CIRCLE:
+			return maxf(1.0, minf(width, height) * 0.5)
+		Shape.ELLIPSE:
+			return maxf(1.0, (width + height) * 0.25)
+		_:
+			return maxf(1.0, sqrt(width * width + height * height) * 0.5)
+
+
+# 滚动有效半径（旋转轴 → 接地点）：圆/椭圆取**当前朝下方向**的支撑距离
+# （椭圆转到不同角度时半径本来就会变），再减去质心偏移在该方向上的分量。
+# ★ 轴偏移让「轴到接地点」变短 → 同样线速度下角速度更大（偏心轮的摆动感）。
+func _roll_eff_radius() -> float:
+	var r: float = _roll_radius()
+	if shape == Shape.CIRCLE or shape == Shape.ELLIPSE:
+		r = _rb_support_dist(Vector2(0.0, 1.0))
+	r -= roll_axis_offset.rotated(rotation).y
+	return maxf(1.0, r)
+
+
+# 圆形件的角速度上限：必须按「纯滚动所需 ω = v/r」给，不能是一个写死的数。
+# ★★ 旧写法（537 之前）一律钳到 RB_TUMBLE_SPIN_MAX=4.0 rad/s —— 半径 30 的球最多只能
+#   滚 4×30=120px/s，而 ROLL_MAX_SPEED=360。于是 400px/s 抛出去的球落地后
+#   「永远咬不住地」：摩擦为了满足无滑移约束，只能把水平速度砍到 120 = 一次急刹
+#   = 「先落到底、顿一下才滚」的另一半成因（538 探针逐帧实测）。
+#   下限保留 RB_SPIN_MAX：大半径件（r=100 → 3.6）不该被压得比小球还慢。
+func _roll_spin_cap(r_eff: float) -> float:
+	return minf(ROLL_SPIN_CAP, maxf(RB_SPIN_MAX, ROLL_MAX_SPEED / maxf(1.0, r_eff)))
+
+
+# 质量对「滚动惯性」的缩放系数（1/mass）：越重越小 → 加速度、摩擦衰减同步变小，
+# 于是「起步慢、停得慢、滚得远」。mass=1 → 恒 1.0（旧手感不变）；<=0 收敛为 1.0 防除零。
+func _mass_inertia() -> float:
+	if mass <= 0.0:
+		return 1.0
+	return 1.0 / clampf(mass, 0.1, 100.0)
+
+
+# ---- 转动惯量（批次 541）----
+# ★★ 下面三个 static 是**唯一一份**惯量算法：物理侧（_inertia_k2_axis）、「积木运动」面板的
+#   自动参考值、验收探针都调它，UI 与模拟不会漂移到不同数字上。
+# 形状「绕**自身形心**」的回转半径² k² = I/m（像素²，单位质量）。
+# ★ 全部取薄板（绕垂直于画面的轴）的解析式，不是拟合数：
+#   矩形 (w²+h²)/12；圆盘 r²/2；椭圆 (a²+b²)/4（a=w/2）；
+#   三角形用「任意三角形 I/m = (a²+b²+c²)/36」（a/b/c 为三边），
+#   等边代回 s²/12 与课本一致。未知形状退回矩形（保守 = 转得更慢）。
+static func k2_shape_center(p_shape: int, w: float, h: float) -> float:
+	var ww: float = maxf(1.0, w)
+	var hh: float = maxf(1.0, h)
+	match p_shape:
+		Shape.CIRCLE:
+			return ww * ww / 8.0
+		Shape.ELLIPSE:
+			return (ww * ww + hh * hh) / 16.0
+		Shape.TRI_ISOSCELES:
+			# 三边：底 w、两腰 sqrt((w/2)²+h²) → Σ边² = 1.5w² + 2h²
+			return (1.5 * ww * ww + 2.0 * hh * hh) / 36.0
+		Shape.TRI_RIGHT:
+			# 三边：w、h、sqrt(w²+h²) → Σ边² = 2w² + 2h²
+			return (2.0 * ww * ww + 2.0 * hh * hh) / 36.0
+		Shape.TRI_EQUILATERAL:
+			return 3.0 * ww * ww / 36.0
+		_:
+			return (ww * ww + hh * hh) / 12.0
+
+
+# ★★ 形状本地（相对包围盒中心）的**面积形心**：矩形/圆/椭圆 = 原点；三角形 ≠ 原点
+#   （形心在底边一侧 h/3 处，而包围盒中心在 h/2）。与 roll_axis_offset 同一局部坐标系，
+#   两者直接相减就是「自转轴到形心」的距离（旋转不改变长度）。
+# ★ 三角形取「顶点平均 = 面积形心」的解析式，不建多边形 —— 每帧都会被转动方程调到。
+static func local_centroid(p_shape: int, w: float, h: float, p_dir: int) -> Vector2:
+	var hw: float = maxf(0.0, w / 2.0)
+	var hh: float = maxf(0.0, h / 2.0)
+	var c: Vector2 = Vector2.ZERO
+	match p_shape:
+		# 等腰：顶点朝上 (0,−hh)、(±hw, hh) → 形心 (0, hh/3)
+		Shape.TRI_ISOSCELES:
+			c = Vector2(0.0, hh / 3.0)
+		# 等边：按「宽 = 边长」构造 → 高 = √3·hw，形心 (0, 高/6)
+		Shape.TRI_EQUILATERAL:
+			c = Vector2(0.0, sqrt(3.0) * hw / 6.0)
+		# 直角：(−hw,−hh)、(−hw,hh)、(hw,hh) → 形心 (−hw/3, hh/3)
+		Shape.TRI_RIGHT:
+			c = Vector2(-hw / 3.0, hh / 3.0)
+		_:
+			return Vector2.ZERO
+	var dir: int = p_dir % 4
+	if dir == 0:
+		return c
+	var ang: float = TAU * float(dir) / 4.0
+	var co: float = cos(ang)
+	var si: float = sin(ang)
+	return Vector2(c.x * co - c.y * si, c.x * si + c.y * co)
+
+
+# 绕自转轴的 k² = 形心 k² + 平行轴（自转轴到形心的距离²）。与 _inertia_k2_axis 一致。
+static func k2_axis_auto(p_shape: int, w: float, h: float, p_dir: int, axis: Vector2) -> float:
+	var ww: float = maxf(1.0, w)
+	var hh: float = maxf(1.0, h)
+	var off: Vector2 = axis - local_centroid(p_shape, ww, hh, p_dir)
+	return maxf(1.0, k2_shape_center(p_shape, ww, hh) + off.length_squared())
+
+
+# 绕**自转轴（质心）**的 k²。手填 I 优先（I 含质量 → 换算回单位质量的 k²）。
+# ★ 平行轴是**加**：自转轴偏离形状自身形心 d → I_轴 = I_形心 + m·d²。
+#   偏心件（摆锤）绕自己的轴更难拧起来，一碰就转的是「质量集中在轴上」的件。
+func _inertia_k2_axis() -> float:
+	if inertia_value > 0.0:
+		return inertia_value / maxf(0.1, mass)
+	return k2_axis_auto(int(shape), width, height, int(shape_dir), roll_axis_offset)
+
+
+# ★★ 转动方程真正要的分母：绕**当前支点/接触点**的 k² = I_质心 + |质心−支点|²。
+# ★ 关闭时返回 dist² —— 正是 538 的质点近似，逐位等价（老手感零风险）。
+func _inertia_k2(dist: float) -> float:
+	if not inertia_enabled:
+		return maxf(1.0, dist * dist)
+	return maxf(1.0, _inertia_k2_axis() + dist * dist)
+
+
+# 圆形件「接触点滑移 → 自转」的耦合系数 β = k²_质心/r²（等价于 I = m·β·r²）。
+# ★ 538 把它写死成实心盘的 0.5；开惯量后按形状/手填值实算：
+#   β 大（环、扁椭圆立着时）→ 同样的摩擦冲量更难把它「拧」起来 = 打滑更久、下坡更慢。
+# ★ 关闭时恒等于 SLIP_BETA（逐位等价于 538）。
+func _inertia_slip_beta(r_eff: float) -> float:
+	if not inertia_enabled:
+		return SLIP_BETA
+	return clampf(_inertia_k2_axis() / maxf(1.0, r_eff * r_eff), 0.05, 4.0)
+
+
+# ---- 摩擦 / 风阻 / 弹性（批次 537）----
+# 重力加速度（像素/秒²）：力矩、摩擦、坡面下滑共用同一来源。
+func _gravity_px() -> float:
+	return ProjectSettings.get_setting("physics/2d/default_gravity", 980.0)
+
+
+# 库仑摩擦能给出的最大减速度 = μ·g（像素/秒²）。
+# ★ 不乘质量：滑动摩擦力 F = μ·m·g，除以 m 后减速度与质量无关（现实里同材质滑停距离一样）。
+#   旧模型用写死的 ROLL_FRICTION=900/mass，等于「越重越黏地」—— 与现实相反。
+func _fric_decel() -> float:
+	return clampf(friction_coef, 0.0, 2.0) * _gravity_px()
+
+
+# 滚动阻力（圆形件专用）：远小于滑动摩擦，负责「慢慢收住」而不是急停。
+func _roll_resist_decel() -> float:
+	return _fric_decel() * ROLL_RESIST_SCALE
+
+
+# 风阻的一帧衰减系数：1/(1+drag·dt/mass)（隐式积分，任意 dt 都稳定，不会过冲变负）。
+# ★ 越重受影响越小（a_drag = drag·v·m/mass 的归一化写法）。
+func _drag_mul(delta: float) -> float:
+	if air_drag <= 0.0:
+		return 1.0
+	return 1.0 / (1.0 + air_drag * delta * _mass_inertia())
+
+
+# ★★ 本帧**能用的摩擦冲量上限** = μ × 法向冲量（单位质量，直接是可减掉的切向速度 px/s）。
+# 法向冲量有两块来源：① 重力那一份 = g·dt（稳态贴地滑动，等于旧写法 μ·g·dt）；
+# ② 撞击那一份 = 本帧被接触吸收掉的法向速度 —— 落地、砸到下一面、被支撑顶住都算。
+# ★ 旧模型只有 ①：球以 400px/s 落地时，把 ω 拉到无滑移需要 35 帧（0.58s）的可见打滑，
+#   而水平方向这段时间几乎不掉速 → 观感就是「先落到底、顿一下才滚」（批次 538 实测）。
+#   Box2D/Flash 的摩擦约束本来就是 `|P_t| ≤ μ·|P_n|`，撞击时 P_n 巨大 → 一帧咬地起滚。
+func _fric_impulse_budget(delta: float, impulse: float) -> float:
+	return clampf(friction_coef, 0.0, 2.0) * (_gravity_px() * delta + maxf(0.0, impulse))
+
+
+# ★★ 接触「吃掉法向速度」那一帧的统一收尾：先记冲量，再按恢复系数把其中一部分转回**向上**。
+# 必须在**吸收点**做（圆形件贴地、刚体平地分支），不能只写在 `_physics_step` 的 blocked_y 里：
+# 落下来那一步刚好贴到表面（不穿透）→ SAT 不报挡 → blocked_y 恒假 → 弹性形同虚设。
+# ★ 只改 y：切向速度归 `_move_velocity` / 坡面切向管，竖直分量才代表「离开表面」。
+func _land_absorb(v: float, nrm: Vector2) -> void:
+	_note_contact_impulse(v, nrm)
+	var up: float = maxf(0.0, v) * clampf(restitution, 0.0, 0.9)
+	if up > LAND_MIN_SPEED:
+		_gravity_velocity.y = -up
+
+
+# 记下「本帧接触吸收掉的法向速度」，供下一帧的摩擦预算与挤压形变使用。
+func _note_contact_impulse(v: float, nrm: Vector2) -> void:
+	var a := maxf(0.0, v)
+	if a <= 0.01:
+		return
+	_contact_impulse = maxf(_contact_impulse, a)
+	# 形变按撞击强弱打满（与 squash_amount 相乘后才作用到 scale）
+	var target: float = clampf(a / SQUASH_FULL_SPEED, 0.0, 1.0)
+	if nrm != Vector2.ZERO:
+		_squash_normal = nrm
+	if target > _squash:
+		_squash = target
+		_squash_vel = 0.0
+		# ★ 撞击当帧就把扁做出来（否则要等下一帧的 _squash_step 才 visible，
+		#   接触的那一下正好是最该看见的 16ms）
+		_apply_squash_transform()
+
+
+# ---- 落地挤压回弹（纯视觉：只动 scale，不碰碰撞体、力矩、质心）----
+# 弹簧：受 _squash 的当前值驱动，回拉到 0 时因欠阻尼（ZETA<1）轻微过冲成负值 = 拉伸，
+# 于是「砸扁 → 弹起 → 拉长一点 → 归位」，正是 Flash 小物件那一下。
+func _squash_step(delta: float) -> void:
+	if not _squash_visual_active():
+		# ★ 一旦不再可见就**彻底清零**，不是只清 scale：欠阻尼的尾巴可能在某一帧
+		#   同时满足「形变已小于阈值」而「速度还大于阈值」，那时 `_squash_visual_active()`
+		#   返回 false → 弹簧当场停摆，把 0.0004 这种残留永久冻在状态里
+		#   （下一次撞击的 target 若更小就被 `target > _squash` 挡掉 = 轻砸不形变）。
+		if _squash != 0.0 or _squash_vel != 0.0:
+			_squash = 0.0
+			_squash_vel = 0.0
+		if scale != Vector2.ONE:
+			scale = Vector2.ONE
+		return
+	var k: float = maxf(2.0, squash_stiffness)
+	# 半隐式积分：先更新速度再更新位移，欠阻尼下也不会发散
+	_squash_vel += (-k * k * _squash - 2.0 * SQUASH_ZETA * k * _squash_vel) * delta
+	_squash += _squash_vel * delta
+	# ★ 拉伸相位限幅：欠阻尼的自然过冲约 −0.27，留一点余量；
+	#   再大就会「拉长到 1.5 倍」——看着像橡皮虫，而且绕中心拉长时下缘会插进支撑面里。
+	_squash = clampf(_squash, -0.35, 1.0)
+	if absf(_squash) < 0.002 and absf(_squash_vel) < 0.05:
+		_squash = 0.0
+		_squash_vel = 0.0
+	_apply_squash_transform()
+
+
+func _squash_visual_active() -> bool:
+	if squash_amount <= 0.001:
+		return false
+	if absf(_squash) < 0.0005:
+		return false
+	# 系统积木（屏障 / 图标边界 / 页面边框覆盖 / 桌面图标）不参与形变：桌面必须保持笔直
+	for t in tags:
+		if str(t) in BlockTags.SYSTEM_TAGS or str(t) == BlockTags.DESKTOP_ICON:
+			return false
+	return true
+
+
+# 沿接触法线压扁 s、垂直方向鼓出 0.55s —— 只动 `scale`（Node2D 的变换）。
+# ★ 为什么不去钉住接触点：Godot 4.7 的 Node2D 只有 position/rotation/scale/skew，
+#   旧版的 pivot_offset、offset 都不存在了（实测 get_property_list 里没有）；
+#   而 `position` 是物理的唯一真值（OBB、质心、支撑探测都直接读 global_position），
+#   为了视觉效果去挪它 → 邻居积木本帧会按偏移后的位置做碰撞 → 抖动。
+#   所以这里接受「绕中心压扁」：下缘抬起的量 = s·h/2（默认参数、典型落地≈1~2px，
+#   且此时弹性本来就在把积木往上抬），代价小、也不会污染物理。
+func _apply_squash_transform() -> void:
+	var s: float = clampf(_squash * squash_amount, -SQUASH_MAX, SQUASH_MAX)
+	if absf(s) < 0.0005:
+		scale = Vector2.ONE
+		return
+	# 把世界法线转回本地，挑最接近的那根本地轴做非等比缩放（Node2D.scale 只能沿本地轴）
+	var ln: Vector2 = _squash_normal.rotated(-rotation)
+	var vertical: bool = absf(ln.y) >= absf(ln.x)
+	var shrink: float = 1.0 - s
+	var bulge: float = 1.0 + s * 0.55
+	scale = Vector2(bulge, shrink) if vertical else Vector2(shrink, bulge)
+
+
+# 某「相对中心」的点正下方是否有碰撞支撑（用于可滚动）：
+# 探测点 = 本积木中心 + (local_x, local_y_offset)，落入任一 collidable 积木的 OBB 即算有支撑。
+func _support_at(local_x: float, local_y_offset: float) -> bool:
+	var p := Vector2(global_position.x + local_x, global_position.y + local_y_offset)
+	var tree := get_tree()
+	if tree == null:
+		return false
+	var my_scene: Node = _scene_of()
+	for other in tree.get_nodes_in_group("block"):
+		if not is_instance_valid(other) or other == self or not (other is Block):
+			continue
+		var ob: Block = other
+		if ob._scene_of() != my_scene:
+			continue
+		if ob._is_in_subtree_of(self):
+			continue
+		if not ob._has_collision():
+			continue
+		if not _collision_layers_intersect(collision_layer, ob.collision_layer):
+			continue
+		if ob._obb_contains_point(ob.global_position, p):
+			return true
+	return false
+
+# 本积木中心偏移 local_x 处的「底部向下」支撑深度（从底边 ry 起、首次探到碰撞支撑的向下距离，
+# 单位像素；探不到返回 INF）。用于可滚动的「平地 / 斜坡 / 贴墙平地 / 边缘」区分：
+#   · 重心正下方深度为 INF（悬空）→ 翻滚掉落；左右深度相等（平地 / 贴墙平地）→ 稳定；
+#   · 左右深度不等（斜坡）→ 朝更深（更低）那侧真滚。
+# ★ 用「局部点下探」(_support_at) 而非整块平移探针：整块平移会把半悬积木误判为整条底边都有支撑。
+func _support_depth(local_x: float) -> float:
+	var ry: float = _shape_radius_y()
+	var d: float = ROLL_PROBE
+	var max_d: float = 48.0
+	var step_d: float = 6.0
+	while d <= max_d:
+		if _support_at(local_x, ry + d):
+			return d
+		d += step_d
+	return INF
+
+# ★ 批次 534：原「_needs_flat_settle / _flat_settle」已删除 ——
+#   旧的「强行把 rotation 回正到 k·π/2 + 把中心压到贴地高度」是**瞬移式**的姿态矫正，
+#   会与自转互相拉扯（抖动），也无法解决「角落地」——角着地的积木根本进不了这条分支。
+#   现在改由刚体支点公转（_rb_step / _rb_topple）自然完成：单角着地 → 绕该角公转 → 翻到边着地；
+#   边着地的稳定姿态恰好就是「某一边朝下」（rotation ≈ k·π/2），与旧需求一致且无瞬移。
+
 # ---- 拖动（标签 draggable）----
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -1562,7 +4113,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			var mp := get_global_mouse_position()
 			# ★★ 被更高的镂空遮罩盖住 → 该点上本积木已被视觉抹掉：既不入「待判定拖动」（挡住拖动），
 			#   也不吞事件（留给真正的上层）。于是"看得见的地方才点得动"，不再出现某块区域无法操作。
-			if _aabb_at(global_position).has_point(mp) and not is_point_covered(mp):
+			# 命中测试用 OBB（随 rotation 旋转），与碰撞箱一致。
+			if _obb_contains_point(global_position, mp) and not is_point_covered(mp):
 				_pending_drag = true
 				_drag_press_pos = mp
 				_drag_offset = global_position - _drag_press_pos
@@ -1606,7 +4158,9 @@ func _snap_to_desktop_icon() -> void:
 	var host := _find_snap_host()
 	if host == null:
 		return
-	var target: Vector2 = host.call("snap_to_desktop_icon", global_position)
+	# ★ 批次 121：把自身（self）一并传出，供宿主 desktop 排除"正在移动松手的这块"自身，
+	#   避免它去避让自己当前所在的格位而乱跳。
+	var target: Vector2 = host.call("snap_to_desktop_icon", global_position, self)
 	if target.distance_to(global_position) < 0.5:
 		return          # 本来就在格位上（含"无图标数据 → 原样返回"）→ 不动，也不打日志
 	global_position = target
@@ -1788,7 +4342,8 @@ func _scene_of() -> Node:
 	while n != null:
 		if not is_instance_valid(n):
 			return null
-		if n is LevelPage:
+		# ★ 关卡页与家园页都是「场景归属」：沿祖先链找到最近的任一种即归该场景。
+		if n is LevelPage or n is HomePage:
 			return n
 		n = n.get_parent()
 	return null

@@ -96,6 +96,16 @@ const COMMANDS: Dictionary = {
 		"usage": "/load_level \"测试1\"",
 		"desc": "按关卡名把该关卡投影到关卡面板（关卡用 JSON 存于 levels/，中文名请加引号）。",
 	},
+	"open_home": {
+		"label": "打开家园",
+		"usage": "/open_home",
+		"desc": "打开家园面板（家园积木随存档落盘进 Saves/<存档>/home.json，无需关卡名）。",
+	},
+	"close_home": {
+		"label": "关闭家园",
+		"usage": "/close_home",
+		"desc": "关闭家园面板（不丢数据，下次打开或读档时还原）。",
+	},
 	"perf": {
 		"label": "性能自测量",
 		"usage": "/perf [on|off|snapshot]",
@@ -224,6 +234,12 @@ static func _exec_one(line: String, res: ExecResult) -> void:
 			res.clear_requested = true
 		"load_level":
 			_load_level(tk, res)
+		"gen_level_group":
+			_gen_level_group(tk, res)
+		"open_home":
+			_open_home(tk, res)
+		"close_home":
+			_close_home(tk, res)
 		"perf":
 			_perf(tk, res)
 		"play_event":
@@ -420,6 +436,113 @@ static func _load_level(tk: _Tok, res: ExecResult) -> void:
 		res.out("[Console] ✓ 已投影关卡「%s」到关卡面板（积木=%d）" % [display, count])
 	else:
 		res.err("[Console] /load_level 失败：关卡「%s」投影失败" % display)
+
+
+# ================= /gen_level_group =================
+# 随机生成关卡组并投影到关卡页面：
+#   /gen_level_group <组名> <种子> [trap=N reward=N normal=N challenge=N] [total=N]
+# 组名含中文请加引号（如 /gen_level_group "测试组" 123 trap=2 normal=3）。
+# 入口关卡/出口关卡各固定 1 个，中间关卡按各类型数量（或 total 随机补足）由种子抽取。
+
+static func _gen_level_group(tk: _Tok, res: ExecResult) -> void:
+	if tk.done() or (tk.cur().type != _Tok.T_STR and tk.cur().type != _Tok.T_IDENT):
+		res.err("[Console] /gen_level_group 需要：组名 种子 [trap=N reward=N normal=N challenge=N] [total=N]")
+		return
+	var group_name: String = str(tk.cur().strv)
+	tk.advance()
+	if tk.done():
+		res.err("[Console] /gen_level_group 需要种子（整数）")
+		return
+	var seed_raw: String = str(tk.cur().strv)
+	tk.advance()
+	var seed_value: int = 0
+	if seed_raw.is_valid_int():
+		seed_value = seed_raw.to_int()
+	else:
+		seed_value = seed_raw.hash()
+	var counts := {}
+	var total := -1
+	while not tk.done():
+		var key_tok = tk.cur()
+		if key_tok.type != _Tok.T_IDENT:
+			res.err("[Console] /gen_level_group 参数须为 key=value：%s" % str(key_tok.strv))
+			return
+		var key: String = str(key_tok.strv)
+		tk.advance()
+		if tk.done() or tk.cur().type != _Tok.T_OP or str(tk.cur().strv) != "=":
+			res.err("[Console] /gen_level_group 参数「%s」缺少 =值" % key)
+			return
+		tk.advance()  # 跳过 =
+		if tk.done():
+			res.err("[Console] /gen_level_group 参数「%s」缺少值" % key)
+			return
+		var val: String = str(tk.cur().strv)
+		tk.advance()
+		if key == "total":
+			if not val.is_valid_int():
+				res.err("[Console] /gen_level_group total 须为整数：%s" % val)
+				return
+			total = val.to_int()
+		elif key in ["trap", "reward", "normal", "challenge"]:
+			if not val.is_valid_int():
+				res.err("[Console] /gen_level_group %s 须为整数：%s" % [key, val])
+				return
+			counts[key] = val.to_int()
+		else:
+			res.err("[Console] /gen_level_group 未知参数：%s（可用 trap/reward/normal/challenge/total）" % key)
+			return
+	if LevelGroupGenerator == null:
+		res.err("[Console] /gen_level_group 失败：LevelGroupGenerator 不可用")
+		return
+	var cfg := {"group_name": group_name, "seed": seed_value, "counts": counts, "total": total}
+	var merged := LevelGroupGenerator.generate(cfg)
+	if merged.is_empty():
+		res.err("[Console] /gen_level_group 失败：关卡池不足（需要 entrance_level 入口关卡、exit_level 出口关卡，以及各类型关卡）")
+		return
+	var page = LevelManager.level_page if LevelManager != null else null
+	if page == null or not is_instance_valid(page) or not page.has_method("project_data"):
+		res.err("[Console] /gen_level_group 失败：关卡面板未就绪")
+		return
+	if page.project_data(merged):
+		var seq: Array = merged.get("_sequence_types", [])
+		var n: int = merged.get("blocks", []).size()
+		res.out("[Console] ✓ 已生成关卡组「%s」（种子=%d） 关卡顺序=%s 合并积木=%d" % [group_name, seed_value, str(seq), n])
+	else:
+		res.err("[Console] /gen_level_group 失败：投影失败")
+
+
+# ================= /open_home / /close_home =================
+
+static func _open_home(tk: _Tok, res: ExecResult) -> void:
+	if not tk.done():
+		res.err("[Console] /open_home 不接受参数：%s" % tk.rest_text())
+		return
+	if HomeManager == null:
+		res.err("[Console] /open_home 失败：HomeManager 不可用")
+		return
+	var page = HomeManager.home_page
+	if page == null or not is_instance_valid(page) or not page.has_method("open_home"):
+		res.err("[Console] /open_home 失败：家园面板未就绪")
+		return
+	if page.open_home():
+		res.out("[Console] ✓ 已打开家园面板")
+	else:
+		res.err("[Console] /open_home 失败：家园投影失败")
+
+
+static func _close_home(tk: _Tok, res: ExecResult) -> void:
+	if not tk.done():
+		res.err("[Console] /close_home 不接受参数：%s" % tk.rest_text())
+		return
+	if HomeManager == null:
+		res.err("[Console] /close_home 失败：HomeManager 不可用")
+		return
+	var page = HomeManager.home_page
+	if page == null or not is_instance_valid(page) or not page.has_method("close_home"):
+		res.err("[Console] /close_home 失败：家园面板未就绪")
+		return
+	page.close_home()
+	res.out("[Console] ✓ 已关闭家园面板")
 
 
 # ================= /perf =================

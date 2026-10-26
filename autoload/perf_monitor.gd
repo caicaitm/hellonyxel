@@ -398,8 +398,10 @@ func compute_busy_score(thresholds: Dictionary, weights: Dictionary) -> float:
 # ---------------- 进程辅助检测（供忙闲面板「检测到进程即加分」）----------------
 
 # 进程是否正在运行：大小写不敏感，自动忽略尾随 .exe（如 "chrome" / "CHROME.EXE" 等价）。
-# 未采样成功（_running_processes 为空）时一律返回 false。
+# 优先走 QiumingDLL（QiumingLink，procdetect）；不可用则回退到原有 PowerShell 进程枚举。
 func is_process_running(name: String) -> bool:
+	if QiumingLink.available and QiumingLink.last_ok:
+		return QiumingLink.is_process_running(name)
 	var n := str(name).strip_edges().to_lower()
 	if n.ends_with(".exe"):
 		n = n.substr(0, n.length() - 4)

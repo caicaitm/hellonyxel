@@ -31,17 +31,25 @@ var _submenu_popup: SubMenu = null
 #   用「代际计数器」让旧协程在每个 await 之后自行作废；另加 is_instance_valid 兜底。
 var _open_gen: int = 0
 
+# ★★ 自初始化：open() 可能在 _ready() 之前被调用（调用方多为 fire-and-forget，
+#   add_child 后下一帧才跑 _ready，而 _build_items() 立刻要用 _items_container）。
+#   这里把「建面板 + 容器」抽出来，open()/ _ready() 都先确保它俩存在，避免首次打开时空引用报错。
+func _ensure_init() -> void:
+	if _panel == null:
+		_panel = UIPanel.new()
+		_panel.name = "UIPanel"
+		_panel.set_corner_radius(UIStyle.CORNER_RADIUS)
+		_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+		add_child(_panel)
+	if _items_container == null:
+		_items_container = Control.new()
+		_items_container.name = "ItemsContainer"
+		_items_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_items_container)
+
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	_panel = UIPanel.new()
-	_panel.name = "UIPanel"
-	_panel.set_corner_radius(UIStyle.CORNER_RADIUS)
-	_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(_panel)
-	_items_container = Control.new()
-	_items_container.name = "ItemsContainer"
-	_items_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_items_container)
+	_ensure_init()
 	visible = false
 	resized.connect(_on_resized)
 
@@ -57,6 +65,7 @@ func open(at_pos: Vector2, items: Array, path: PackedStringArray = PackedStringA
 	var my_gen: int = _open_gen
 	_items = items.duplicate(true)
 	_submenu_path = path
+	_ensure_init()
 	_clear()
 	_build_items()
 	await get_tree().process_frame

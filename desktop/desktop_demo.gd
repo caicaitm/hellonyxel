@@ -68,7 +68,8 @@ static func spawn(root: Node2D) -> void:
 	player.position = Vector2(700, 200)
 	player.width = 60.0
 	player.height = 60.0
-	player.tags = ["show", "border", "fill", "collision", "draggable", "gravity", "controlled"]
+	player.tags = ["show", "border", "fill", "collision", "draggable", "controlled"]
+	player.set_motion_toggles(true, false)   # 受重力 = 「积木运动」面板字段（旧 gravity 标签已移除）
 	player.fill_color = Color(0.2, 0.8, 0.4, 1.0)
 	root.add_child(player)
 
@@ -81,7 +82,8 @@ static func spawn(root: Node2D) -> void:
 	carrier.position = Vector2(250, 565)
 	carrier.width = 260.0
 	carrier.height = 30.0
-	carrier.tags = ["show", "border", "fill", "text", "collision", "draggable", "gravity"]
+	carrier.tags = ["show", "border", "fill", "text", "collision", "draggable"]
+	carrier.set_motion_toggles(true, false)   # 同上：受重力走面板字段
 	carrier.fill_color = Color(0.55, 0.42, 0.22, 1.0)
 	carrier.border_color = Color(0.95, 0.82, 0.45, 1.0)
 	root.add_child(carrier)   # 入树后 id 才分配
@@ -111,7 +113,8 @@ static func spawn(root: Node2D) -> void:
 		kid.width = 44.0
 		kid.height = 44.0
 		kid.position = Vector2(carrier.position.x + ox, carrier.position.y - 15.0 - 22.0)
-		kid.tags = ["show", "border", "fill", "collision", "gravity"]
+		kid.tags = ["show", "border", "fill", "collision"]
+		kid.set_motion_toggles(true, false)   # 同上：受重力走面板字段
 		kid.fill_color = Color(0.9, 0.62, 0.25, 1.0)
 		kid.border_color = Color(0.95, 0.85, 0.6, 1.0)
 		root.add_child(kid)

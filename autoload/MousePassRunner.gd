@@ -16,12 +16,17 @@ extends Node
 #    例外：带「桌面屏障」标签的积木位于屏幕外、且不绘制 → 直接排除（见 _collect_rects）。
 #
 # ★★ 另一个约束：这条 API 只收**一个**多边形，而我们要表达的是「一堆互不相交的矩形」。
-#    直接把多个矩形首尾相接会因为在两条矩形之间产生"跳跃边"而算错填充，
-#    直接把重叠矩形接起来又会因 GDI 的奇偶填充在重叠处挖洞。所以这里老老实实做三步：
-#      1) _union_strips  —— 矩形并集 → **互不相交**的竖条
-#      2) _connect_strips —— 加"梳齿"把竖条连成**一个连通体**（否则会得到多个环）
-#      3) _trace_outline  —— 拆边 + 抵消共边 + 串环 → **单环**轮廓
-#    任何一步算不出合法结果，都退化为「满屏区域」= 关闭穿透（绝不让窗口被裁没）。
+#    做法（批次 126 起，见 _build_polygon）：
+#      1) _prune_contained + _union_strips + _coalesce —— 矩形并集 → **互不相交**的竖条
+#         （先做并集很关键：直接把重叠矩形接起来会因奇偶填充在重叠处挖洞）。
+#      2) 用「零宽桥」把各竖条并成**单个多边形**：每条竖条画成 4 角环，环与环之间插一对
+#         方向相反、完全重合的桥边（出去 + 原路返回）→ 填充下净面积为 0，既满足"单多边形"
+#         约束，又不在条间制造实心走廊 / 洞 → 填充结果 = 竖条的精确并集，空隙保持镂空。
+#    ★ 旧实现（批次 126 前）用「1px 梳齿 + 追边串单环」：梳齿会在齿间形成被四面包围的洞，
+#      而追边把洞填进了外环 → SetWindowRgn 把齿间空隙算进接收区 → 那块鼠标被挡
+#      （典型：调试面板最小化后顶部只剩标题栏、底部是积木，中间空桌面被整片挡住）。
+#      已改用零宽桥，从根上消除该问题。任何一步算不出合法结果，都退化为「满屏区域」
+#      = 关闭穿透（绝不让窗口被裁没）。
 #
 # ★ 顺带一提：DisplayServer.WINDOW_FLAG_MOUSE_PASSTHROUGH 在 Windows 上**不是**
 #   桌面穿透（实测它不改窗口扩展样式、命中测试照样命中本窗口），别用它。
@@ -278,10 +283,12 @@ func _collect_rects() -> Array:
 		# ★ 本区域是**屏幕像素**（SetWindowRgn 用），而积木的 global_position 是**画布坐标**：
 		#   关卡页面在自己的 CanvasLayer 里、浮层面板层还带 UI 缩放 → 必须按所在画布换算，
 		#   否则接收区与画面错位（漏一个就会被裁没）。外扩 4px 也放在屏幕像素上。
+		# ★ 积木可滚动 → 带 rotation：屏幕占据范围须用「旋转后的世界 AABB」而非轴对齐
+		#   width×height，否则滚动后接收区仍是滚动前的朝向（显示/点击区域错位，鼠标穿透异常）。
 		var xf: Transform2D = blk.get_canvas_transform()
-		var sz: Vector2 = xf.basis_xform(Vector2(w, h)).abs()
-		var ctr: Vector2 = xf * blk.global_position
-		raw.append(Rect2(ctr - sz * 0.5, sz).grow(4.0))
+		var world_aabb := _block_world_aabb(blk)
+		var r := Rect2(xf * world_aabb.position, Vector2.ZERO).expand(xf * world_aabb.end).grow(4.0)
+		raw.append(r)
 
 	# UI：所有可见 Control（含挂在积木上的文本框 TextBoxView）
 	var t_ctl: int = 0
@@ -351,6 +358,20 @@ func _is_rect_covered_by_cutout(blk: Block) -> bool:
 	return false
 
 
+# ★ 积木「旋转后的世界 AABB」：可滚动积木带 rotation，屏幕占据范围须用旋转多边形包围盒，
+#   不能用轴对齐 width×height（否则滚动后接收区仍是滚动前朝向，显示/点击区域错位、鼠标穿透异常）。
+#   世界多边形由 Block 提供（OBB 随 rotation 旋转，与画面一致），此处只取其在画布坐标下的轴对齐包围盒。
+func _block_world_aabb(blk: Block) -> Rect2:
+	var poly := blk._obb_corners(blk.global_position)
+	if poly.is_empty():
+		return Rect2(blk.global_position - Vector2(blk.width, blk.height) * 0.5,
+			Vector2(blk.width, blk.height))
+	var aabb := Rect2(poly[0], Vector2.ZERO)
+	for i in range(1, poly.size()):
+		aabb = aabb.expand(poly[i])
+	return aabb
+
+
 func _collect_controls(root: Node, out: Array) -> void:
 	var stack: Array = [root]
 	while not stack.is_empty():
@@ -405,18 +426,52 @@ func _build_polygon(rects: Array) -> PackedVector2Array:
 		# 什么都没画：给一个小锚点区域。空区域会把窗口整个裁掉，所以绝不能用空数组
 		return PackedVector2Array([Vector2.ZERO, Vector2(GRID, 0.0), Vector2(GRID, GRID), Vector2(0.0, GRID)])
 
+	# 精确并集 → 互不相交的竖条（同一 x 列的 y 区间已合并，条与条不重叠）
 	var strips := _coalesce(_union_strips(_prune_contained(rects)))
 	if strips.is_empty():
 		return full
-	var strips2 := _coalesce(_union_strips(_connect_strips(strips)))
-	if strips2.is_empty():
+
+	# ★ 批次 126：旧实现用「1px 横脊 + 1px 竖齿」的梳齿把各竖条连成单环，再 _trace_outline
+	#   贪心追边。但梳齿会在齿与齿之间形成**被四面包围的空隙（洞）**，而追边把这些洞当成
+	#   实心填进外环 → SetWindowRgn 把齿间空隙整片算进接收区 → 那块鼠标被挡。
+	#   典型触发：调试面板最小化后顶部只剩标题栏窄条、底部是桌面积木，中间大片空桌面——
+	#   齿间空隙被填实，"原本是调试面板的位置仍然阻挡鼠标"（面板展开时 _content 大矩形
+	#   正好盖住空隙，bug 被掩盖；最小化后空隙暴露才显现）。
+	#   修复：改用「零宽桥」把各不相交竖条并成**单个多边形**：
+	#     每条竖条画成 4 角环；首条的左下角作为公共回归点 end_pt，其余每条前都插一对
+	#     「end_pt → 本条左上」与「本条左上 → end_pt」方向相反、完全重合的桥边。
+	#     这对桥边在 even-odd / winding 填充下净面积为 0（往返抵消），既满足 API 的
+	#     「单多边形」约束，又不在条间制造实心走廊、也不制造洞 → 填充结果 = 竖条的精确
+	#     并集，条间空隙保持镂空（鼠标可穿透）。
+	#   （旧注释担心的"跳跃边算错填充"指的是**单程**跳跃边；零宽桥是**双程往返**，性质不同：
+	#     单程跳跃边只被穿过一次会翻转奇偶，双程往返两次抵消、不改变任何点的奇偶性。）
+	var poly := PackedVector2Array()
+	var end_pt := Vector2.ZERO   # 首条左下角 = 所有零宽桥的公共回归点（恒不变）
+	for i in strips.size():
+		var sr: Rect2 = strips[i]
+		var tl: Vector2 = sr.position
+		var tr := Vector2(sr.end.x, sr.position.y)
+		var br := sr.end
+		var bl := Vector2(sr.position.x, sr.end.y)
+		if i == 0:
+			poly.append(tl)
+			poly.append(tr)
+			poly.append(br)
+			poly.append(bl)
+			end_pt = bl
+		else:
+			# 上一处停在 end_pt → 桥到本条左上（出）→ 画整条 4 角环 → 桥回 end_pt（返，抵消）
+			poly.append(tl)
+			poly.append(tr)
+			poly.append(br)
+			poly.append(bl)
+			poly.append(tl)
+			poly.append(end_pt)
+	if poly.size() < 3:
+		# 兜底：算不出合法多边形就"整窗可点"，宁可没有穿透，也不能把窗口裁没
+		push_warning("[MousePass] 多边形顶点不足，退化为整窗可点")
 		return full
-	var loop := _trace_outline(strips2)
-	if loop.size() < 3:
-		# 兜底：算不出轮廓就"整窗可点"，宁可没有穿透，也不能把窗口裁没
-		push_warning("[MousePass] 轮廓构造失败，退化为整窗可点")
-		return full
-	return loop
+	return poly
 
 
 # ★★ 批次 6：丢掉"被另一个矩形完全包住"的矩形后再做几何计算。
@@ -524,171 +579,6 @@ func _coalesce(strips: Array) -> Array:
 				cur = s
 		out.append(cur)
 	return out
-
-
-# 加"梳齿"：一条 1px 横脊 + 每条竖条一根 1px 竖齿 → 所有条带连成一个连通体。
-# （之后的第二次并集会把重叠部分清理干净，所以这里不用小心翼翼。）
-func _connect_strips(strips: Array) -> Array:
-	var out: Array = []
-	for s in strips:
-		out.append(s)
-	if strips.size() <= 1:
-		return out
-	var min_top := INF
-	var min_left := INF
-	var max_right := -INF
-	for s in strips:
-		var sr: Rect2 = s
-		min_top = minf(min_top, sr.position.y)
-		min_left = minf(min_left, sr.position.x)
-		max_right = maxf(max_right, sr.end.x)
-	var spine_y := maxf(0.0, min_top - 3.0)
-	out.append(Rect2(Vector2(min_left, spine_y), Vector2(max_right - min_left, 1.0)))
-	for s in strips:
-		var sr2: Rect2 = s
-		var h: float = sr2.position.y - spine_y + 1.0
-		if h > 0.0:
-			out.append(Rect2(Vector2(sr2.position.x, spine_y), Vector2(1.0, h)))
-	return out
-
-
-# 拆边 + 抵消共边 + 串环 → 单环轮廓。输入必须**互不相交**（由 _union_strips 保证）。
-#
-# ★★ 批次 6：原来顶点/边都用**字符串**做键 —— `_vk` 走 `"%d,%d" % [...]` 格式化，
-#   `_add_edge` 拼 `ka + ">" + kb`，遍历时再 `String(key).split(">")` 解析回来。
-#   面板全开时（393 矩形 → 33 条互不相交竖条）实测这一步独占 **1405 µs**，
-#   占整条"建多边形"尾巴的 **91%**，全是字符串分配 / 解析的代价。
-#   改用 **Vector2i（顶点）/ Vector4i（有向边）** 做键后零字符串、零解析。
-#   ★ 语义完全不变：取整仍用 `roundi`，插入顺序不变（Godot Dictionary 保序），
-#     起点仍是"最靠上、再靠左"，环的走向与**点序列逐点相同**（探针实测 poly_points_identical=true）。
-func _trace_outline(strips: Array) -> PackedVector2Array:
-	var xs: Array = []
-	var ys: Array = []
-	for s in strips:
-		xs.append(s.position.x)
-		xs.append(s.end.x)
-		ys.append(s.position.y)
-		ys.append(s.end.y)
-	xs.sort()
-	ys.sort()
-	xs = _dedup(xs)
-	ys = _dedup(ys)
-
-	var edges: Dictionary = {}
-	for s in strips:
-		var corners: Array = [
-			Vector2(s.position.x, s.position.y),
-			Vector2(s.end.x, s.position.y),
-			Vector2(s.end.x, s.end.y),
-			Vector2(s.position.x, s.end.y),
-		]
-		for i in 4:
-			_emit_split_edges(edges, corners[i], corners[(i + 1) % 4], xs, ys)
-
-	var adj: Dictionary = {}
-	for key in edges.keys():
-		var e: Vector4i = key
-		var ka := Vector2i(e.x, e.y)
-		if not adj.has(ka):
-			adj[ka] = []
-		adj[ka].append(Vector2i(e.z, e.w))
-
-	# 起点取最靠上、再靠左的那个顶点，环的走向稳定
-	var start := Vector2i.ZERO
-	var best := INF
-	var found := false
-	for key in adj.keys():
-		var v: Vector2i = key
-		var score := float(v.y) * 1000000.0 + float(v.x)
-		if score < best:
-			best = score
-			start = v
-			found = true
-	if not found:
-		return PackedVector2Array()
-
-	var used: Dictionary = {}
-	var loop := PackedVector2Array()
-	var cur := start
-	# 屏幕坐标恒 >= 0，用 (-1,-1) 当"没得走"的哨兵
-	var none := Vector2i(-1, -1)
-	for _guard in range(200000):
-		loop.append(Vector2(cur.x, cur.y))
-		var outs: Array = adj.get(cur, [])
-		var chosen := none
-		for o in outs:
-			var ob: Vector2i = o
-			var ek := Vector4i(cur.x, cur.y, ob.x, ob.y)
-			if not used.has(ek):
-				chosen = ob
-				used[ek] = true
-				break
-		if chosen == none:
-			break
-		cur = chosen
-		if cur == start:
-			break
-	if loop.size() < 3:
-		return PackedVector2Array()
-	return loop
-
-
-func _emit_split_edges(edges: Dictionary, a: Vector2, b: Vector2, xs: Array, ys: Array) -> void:
-	if absf(a.y - b.y) <= EPS:
-		var lo := minf(a.x, b.x)
-		var hi := maxf(a.x, b.x)
-		if hi - lo <= EPS:
-			return
-		var cuts: Array = [lo]
-		for x in xs:
-			if x > lo + EPS and x < hi - EPS:
-				cuts.append(x)
-		cuts.append(hi)
-		var l2r := b.x > a.x
-		for i in range(cuts.size() - 1):
-			var p0 := Vector2(cuts[i], a.y)
-			var p1 := Vector2(cuts[i + 1], a.y)
-			if l2r:
-				_add_edge(edges, p0, p1)
-			else:
-				_add_edge(edges, p1, p0)
-	elif absf(a.x - b.x) <= EPS:
-		var lo := minf(a.y, b.y)
-		var hi := maxf(a.y, b.y)
-		if hi - lo <= EPS:
-			return
-		var cuts: Array = [lo]
-		for y in ys:
-			if y > lo + EPS and y < hi - EPS:
-				cuts.append(y)
-		cuts.append(hi)
-		var t2b := b.y > a.y
-		for i in range(cuts.size() - 1):
-			var p0 := Vector2(a.x, cuts[i])
-			var p1 := Vector2(a.x, cuts[i + 1])
-			if t2b:
-				_add_edge(edges, p0, p1)
-			else:
-				_add_edge(edges, p1, p0)
-
-
-# 反向边成对抵消（= 两个矩形之间的公共内部边，不该出现在外轮廓上）
-# ★ 批次 6：键从 `"x1,y1>x2,y2"` 字符串换成 `Vector4i(x1,y1,x2,y2)`（见 _trace_outline 注释）。
-func _add_edge(edges: Dictionary, a: Vector2, b: Vector2) -> void:
-	var ka := Vector2i(roundi(a.x), roundi(a.y))
-	var kb := Vector2i(roundi(b.x), roundi(b.y))
-	if ka == kb:
-		return
-	var key := Vector4i(ka.x, ka.y, kb.x, kb.y)
-	var rev := Vector4i(kb.x, kb.y, ka.x, ka.y)
-	if edges.has(rev):
-		var c := int(edges[rev]) - 1
-		if c <= 0:
-			edges.erase(rev)
-		else:
-			edges[rev] = c
-		return
-	edges[key] = int(edges.get(key, 0)) + 1
 
 
 func _dedup(sorted_vals: Array) -> Array:

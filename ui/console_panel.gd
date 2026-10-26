@@ -70,6 +70,7 @@ var _minimized: bool = false
 
 func _build() -> void:
 	_bg = UIPanel.new()
+	_bg.bind_page_dark_bg()
 	_bg.position = Vector2(520.0, 60.0)
 	_bg.size = Vector2(PANEL_W, PANEL_H)
 	_bg.set_corner_radius(UIStyle.CORNER_RADIUS)

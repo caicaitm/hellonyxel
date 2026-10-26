@@ -102,7 +102,10 @@ const BUILD_MOD_KEYS := [
 	"width", "height", "display_layer", "border_width", "border_color",
 	"fill_color", "collision_layer", "tags", "rotation_deg", "facing",
 	"base_attack", "can_fly", "horiz_max_speed", "horiz_accel",
-	"fly_up_max_speed", "fly_up_accel",
+	"fly_up_max_speed", "fly_up_accel", "mass",
+	"gravity_enabled", "roll_enabled", "free_roll", "roll_axis_x", "roll_axis_y",
+	"friction_coef", "air_drag", "restitution", "squash_amount", "squash_stiffness",
+	"inertia_enabled", "inertia_value",
 ]
 
 # 修饰串里按「逗号分隔 → Array」处理的键（其余按 parse_attr_value 单值解析）

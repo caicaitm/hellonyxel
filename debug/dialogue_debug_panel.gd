@@ -76,6 +76,7 @@ const ARRAY_FIELDS: Array = ["bottom_buttons", "popup_buttons"]
 # 文件路径类栏位 → [默认目录, 扩展名过滤, 类型名, 对话框标题]（右侧挂文件夹按钮，选中回填 res:// 相对路径）
 const PATH_FIELDS := {
 	"avatar_path": [UIPathPicker.DIR_TEXTURES, UIPathPicker.IMG_EXTS, "图片", "选择头像图片"],
+	"avatar_background_path": [UIPathPicker.DIR_TEXTURES, UIPathPicker.IMG_EXTS, "图片", "选择头像背景图片"],
 	"event_image_path": [UIPathPicker.DIR_TEXTURES, UIPathPicker.IMG_EXTS, "图片", "选择事件配图"],
 	"voice": [UIPathPicker.DIR_AUDIO, UIPathPicker.AUDIO_EXTS, "音频", "选择声音文件"],
 }
@@ -86,6 +87,7 @@ const _BAR_FIELDS: Array = [
 	# [var_name, 显示名, 是否数组]
 	["line_text", "台词栏", false],
 	["avatar_path", "头像路径", false],
+	["avatar_background_path", "头像背景路径", false],
 	["character_name", "角色名称", false],
 	["voice", "语音", false],
 	["line_effect", "台词效果", false],
@@ -96,7 +98,7 @@ const _BAR_FIELDS: Array = [
 	["popup_buttons", "按钮(JSON)", true],
 ]
 # 底部对话面板占前几条（其余 = 弹窗对话面板）
-const BOTTOM_BAR_COUNT: int = 6
+const BOTTOM_BAR_COUNT: int = 7
 
 
 func _ready() -> void:
@@ -416,6 +418,7 @@ func _make_field(var_name: String, label_text: String, is_array: bool) -> Contro
 	# 文件路径类字段：占位提示默认填写相对路径（res:// 项目相对）
 	match var_name:
 		"avatar_path": le.placeholder_text = "res://textures/（头像图片相对路径）"
+		"avatar_background_path": le.placeholder_text = "res://textures/（头像背景图片相对路径；头像透明处透出此图，留空=无背景）"
 		"event_image_path": le.placeholder_text = "res://textures/（事件配图相对路径）"
 		"voice": le.placeholder_text = "auto = 逐字/逐词泡泡声；auto:res://audio/x.wav = 同样的逐字/逐词但换成该音频；或 res://audio/（声音文件相对路径，整段播放）"
 		"line_effect": le.placeholder_text = "点击台词时执行的效果（DSL，如 /add_var player_profile.json:tags = \"正义\"）"

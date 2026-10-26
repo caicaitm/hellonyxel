@@ -221,6 +221,7 @@ var _minimized: bool = false
 func _build_ui() -> void:
 	# 背景
 	_bg = UIPanel.new()
+	_bg.bind_page_dark_bg()
 	_bg.name = "Bg"
 	_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_bg.set_corner_radius(UIStyle.CORNER_RADIUS)

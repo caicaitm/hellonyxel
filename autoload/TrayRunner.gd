@@ -9,7 +9,9 @@ extends Node
 # 「退出游戏」的链路（不是杀进程）：
 #   托盘右键菜单 → 点「退出游戏」→ 辅助进程写出「退出请求文件」
 #   → 本脚本轮询到 → get_tree().quit()（走正常退出流程，保留"退出前存档"等钩子）
-#   → _exit_tree 里结束辅助进程（正常路径），辅助进程的看门狗也会在游戏进程消失时自行退出（异常路径）。
+#   ★★ 托盘**不由本脚本结束**：它的生命周期跟**游戏进程**走 —— 游戏进程一消失，由自身看门狗
+#      （1s 轮询 GameAlive）自退；若游戏退出被卡住，则由其超时兜底强杀游戏（见 TrayIcon.cs 的 QuitWatch）。
+#      这样退出期间托盘图标始终留在屏上，玩家不会遇到「托盘没了、页面还在、又再也退不掉」。
 #
 # 注意：autoload 脚本不要声明与 autoload 名不同的 class_name（见项目记忆）。
 
@@ -43,8 +45,12 @@ signal weather_config_requested
 signal ai_config_requested
 # 托盘「打开日历」请求（右键 → 打开日历）：收到后发 calendar_requested 信号
 signal calendar_requested
+# 托盘「课程表」请求（右键 → 打开课程表）：收到后发 course_schedule_requested 信号
+signal course_schedule_requested
 # 托盘「进入/退出调试模式」请求（右键 → 进入/退出调试模式）：收到后发 toggle_debug_requested 信号
 signal toggle_debug_requested
+# 托盘「版本」请求（右键 → 版本）：收到后发 version_requested 信号
+signal version_requested
 
 var _tray_pid: int = -1               # 辅助进程 PID；-1 = 未运行
 var _request_path: String = ""        # 「退出游戏」请求文件（含本进程 PID，避免多开互相干扰）
@@ -55,12 +61,14 @@ var _perf_busy_request_path: String = ""   # 「性能忙闲判断」请求文�
 var _weather_request_path: String = ""      # 「配置天气」请求文件
 var _ai_request_path: String = ""          # 「配置人工智能」请求文件
 var _calendar_request_path: String = ""    # 「打开日历」请求文件
+var _course_schedule_request_path: String = ""  # 「课程表」请求文件
 var _passthrough_request_path: String = ""  # 「关闭桌面穿透」请求文件
 var _debug_request_path: String = ""        # 「进入/退出调试模式」请求文件
 var _busy_state_path: String = ""           # 忙闲状态文件（本进程 → 托盘：内容 "busy|locked" 等）
 var _debug_state_path: String = ""          # 调试状态文件（本进程 → 托盘：内容 "on"/"off"）
 var _busy_now_request_path: String = ""     # 「现在在忙」请求文件（托盘 → 本进程）
 var _idle_now_request_path: String = ""     # 「现在空闲」请求文件（托盘 → 本进程）
+var _version_request_path: String = ""       # 「版本」请求文件（托盘 → 本进程）
 var _accum: float = 0.0
 var _quit_handled: bool = false
 var _exe_warned: bool = false          # TrayIcon.exe 缺失/拉起失败的告警只发一次
@@ -78,6 +86,15 @@ func _ready() -> void:
 	if DisplayServer.get_name() == "headless" or OS.get_environment("HELLONYXEL_NO_TRAY") == "1":
 		print("[TrayRunner] 跳过系统托盘（headless / HELLONYXEL_NO_TRAY=1）")
 		return
+	# ★ 单实例守卫联动：若本进程是"被拦下的第二个实例"，绝不重复拉起托盘。
+	#   理论上 single_instance 已经把第二个实例 quit 掉了，但 autoload 的 _ready 按注册顺序
+	#   跑、且 Godot 的 quit() 是帧末才生效 —— 第二个实例在真正退出前可能先跑到这里并拉起一个
+	#   绑定自身 PID 的托盘，造成"闪一下托盘 / 偶发残留"。这里再挡一层。
+	#   （托盘唯一性的最终兜底由 TrayIcon.exe 自身的命名 Mutex 负责，见 TrayIcon.cs 的 SetupSingleton。）
+	var si_node = get_node_or_null("/root/SingleInstance")
+	if si_node != null and not bool(si_node.is_primary):
+		print("[TrayRunner] 本实例非主实例（is_primary=false），跳过托盘")
+		return
 	_request_path = ProjectSettings.globalize_path("user://tray_quit_%d.request" % OS.get_process_id())
 	_settings_request_path = ProjectSettings.globalize_path("user://tray_settings_%d.request" % OS.get_process_id())
 	_saves_request_path = ProjectSettings.globalize_path("user://tray_saves_%d.request" % OS.get_process_id())
@@ -86,12 +103,14 @@ func _ready() -> void:
 	_weather_request_path = ProjectSettings.globalize_path("user://tray_weather_%d.request" % OS.get_process_id())
 	_ai_request_path = ProjectSettings.globalize_path("user://tray_ai_%d.request" % OS.get_process_id())
 	_calendar_request_path = ProjectSettings.globalize_path("user://tray_calendar_%d.request" % OS.get_process_id())
+	_course_schedule_request_path = ProjectSettings.globalize_path("user://tray_courseschedule_%d.request" % OS.get_process_id())
 	_passthrough_request_path = ProjectSettings.globalize_path("user://tray_passthrough_%d.request" % OS.get_process_id())
 	_debug_request_path = ProjectSettings.globalize_path("user://tray_debug_%d.request" % OS.get_process_id())
 	_busy_state_path = _busy_state_file()
 	_debug_state_path = _debug_state_file()
 	_busy_now_request_path = ProjectSettings.globalize_path("user://tray_busynow_%d.request" % OS.get_process_id())
 	_idle_now_request_path = ProjectSettings.globalize_path("user://tray_idlenow_%d.request" % OS.get_process_id())
+	_version_request_path = ProjectSettings.globalize_path("user://tray_version_%d.request" % OS.get_process_id())
 	_tray_pid = _launch_tray()
 	if _tray_pid > 0:
 		set_process(true)
@@ -153,6 +172,16 @@ func _process(delta: float) -> void:
 		DirAccess.remove_absolute(_calendar_request_path)
 		print("[TrayRunner] 收到托盘「打开日历」请求")
 		calendar_requested.emit()
+	# 7.55) 「课程表」请求：辅助进程写的文件 → 发信号让桌面打开课程表面板
+	if not _course_schedule_request_path.is_empty() and FileAccess.file_exists(_course_schedule_request_path):
+		DirAccess.remove_absolute(_course_schedule_request_path)
+		print("[TrayRunner] 收到托盘「课程表」请求")
+		course_schedule_requested.emit()
+	# 7.7) 「版本」请求：辅助进程写的文件 → 发信号让桌面打开版本显示 + 更新公告面板
+	if not _version_request_path.is_empty() and FileAccess.file_exists(_version_request_path):
+		DirAccess.remove_absolute(_version_request_path)
+		print("[TrayRunner] 收到托盘「版本」请求")
+		version_requested.emit()
 	# 7.6) 「进入/退出调试模式」请求：辅助进程写的文件 → 发信号让桌面切换 Debug.debug_mode
 	if not _debug_request_path.is_empty() and FileAccess.file_exists(_debug_request_path):
 		DirAccess.remove_absolute(_debug_request_path)
@@ -242,6 +271,24 @@ func write_calendar_request() -> void:
 	if _calendar_request_path.is_empty():
 		_calendar_request_path = ProjectSettings.globalize_path("user://tray_calendar_%d.request" % OS.get_process_id())
 	var f := FileAccess.open(_calendar_request_path, FileAccess.WRITE)
+	if f != null:
+		f.close()
+
+
+# 写出「课程表」请求 —— 与托盘右键菜单「课程表」等价（测试 / 外部工具可用）。
+func write_course_schedule_request() -> void:
+	if _course_schedule_request_path.is_empty():
+		_course_schedule_request_path = ProjectSettings.globalize_path("user://tray_courseschedule_%d.request" % OS.get_process_id())
+	var f := FileAccess.open(_course_schedule_request_path, FileAccess.WRITE)
+	if f != null:
+		f.close()
+
+
+# 写出「版本」请求 —— 与托盘右键菜单「版本」等价（测试 / 外部工具可用）。
+func write_version_request() -> void:
+	if _version_request_path.is_empty():
+		_version_request_path = ProjectSettings.globalize_path("user://tray_version_%d.request" % OS.get_process_id())
+	var f := FileAccess.open(_version_request_path, FileAccess.WRITE)
 	if f != null:
 		f.close()
 
@@ -366,8 +413,11 @@ func get_request_path() -> String:
 	return _request_path
 
 
-# 结束托盘辅助进程（游戏退出时自动调用；脚本 / 调试面板也可手动调用）。
-# 正常路径由这里 OS.kill 收掉；异常路径（游戏崩溃）由辅助进程自己的看门狗收掉。
+# 结束托盘辅助进程（**手动 / 调试用**；退出流程已不再自动调用它）。
+# ★★ 为什么退出流程不杀托盘：托盘必须活到游戏进程真正消失为止，否则退出阶段一旦被拖住
+#    （`_exit_tree` 里 join 后台线程、线程卡在子进程上），就会变成「托盘已消失、页面还在、
+#    且已无退出入口」。托盘的正常收尾由它自己的看门狗负责（游戏进程消失即自退），
+#    退出卡住时由超时兜底强杀游戏（见 TrayIcon.cs 的 QuitWatch）。
 func stop_tray() -> void:
 	if _tray_pid <= 0:
 		return
@@ -377,12 +427,14 @@ func stop_tray() -> void:
 
 
 # 正常退出流程：若开启了「退出自动存档」，先存档再退出。
+# ★★ 这里**不再**顺手杀托盘（旧顺序 = `_cleanup()` 先 OS.kill 托盘、再 `get_tree().quit()`）。
+#    那只会在「退出阶段被拖住」时造成：托盘图标已消失、游戏页面还在 → 玩家以为退不掉，
+#    而此时退出入口已经没了。现在托盘严格跟随游戏进程（看门狗 + 超时强杀），见文件头说明。
 func graceful_quit() -> void:
 	if _quit_handled:
 		return
 	_quit_handled = true
 	_maybe_quit_auto_save()
-	_cleanup()
 	get_tree().quit()
 
 
@@ -428,6 +480,7 @@ func _launch_tray() -> int:
 		"-WeatherRequestPath", _q(_weather_request_path),
 		"-AIRequestPath", _q(_ai_request_path),
 		"-CalendarRequestPath", _q(_calendar_request_path),
+		"-CourseScheduleRequestPath", _q(_course_schedule_request_path),
 		"-PassthroughRequestPath", _q(_passthrough_request_path),
 		"-DebugRequestPath", _q(_debug_request_path),
 		"-BusyStatePath", _q(_busy_state_path),
@@ -436,6 +489,7 @@ func _launch_tray() -> int:
 		"-ShowDebugItem", "1" if _debug_button_visible() else "0",
 		"-BusyNowRequestPath", _q(_busy_now_request_path),
 		"-IdleNowRequestPath", _q(_idle_now_request_path),
+		"-VersionRequestPath", _q(_version_request_path),
 		"-GamePid", str(OS.get_process_id()),
 		"-AutoClickSeconds", auto_click,
 	])
@@ -479,12 +533,12 @@ func _clean_stale_files() -> void:
 	if dir == null:
 		return
 	var keep: Array = [_request_path, _settings_request_path, _saves_request_path, _mod_request_path, _perf_busy_request_path,
-		_weather_request_path, _ai_request_path, _calendar_request_path, _passthrough_request_path, _debug_request_path,
-		_busy_state_path, _debug_state_path, _debug_visible_file(), _busy_now_request_path, _idle_now_request_path,
+		_weather_request_path, _ai_request_path, _calendar_request_path, _course_schedule_request_path, _passthrough_request_path, _debug_request_path,
+		_busy_state_path, _debug_state_path, _debug_visible_file(), _busy_now_request_path, _idle_now_request_path, _version_request_path,
 		_request_path + ".log", _settings_request_path + ".log", _saves_request_path + ".log", _mod_request_path + ".log",
-		_perf_busy_request_path + ".log", _weather_request_path + ".log", _ai_request_path + ".log", _calendar_request_path + ".log", _passthrough_request_path + ".log"]
+		_perf_busy_request_path + ".log", _weather_request_path + ".log", _ai_request_path + ".log", _calendar_request_path + ".log", _course_schedule_request_path + ".log", _passthrough_request_path + ".log", _version_request_path + ".log"]
 	for f in dir.get_files():
-		if not f.begins_with("tray_quit_") and not f.begins_with("tray_settings_") and not f.begins_with("tray_saves_") and not f.begins_with("tray_modlist_") and not f.begins_with("tray_perfbusy_") and not f.begins_with("tray_weather_") and not f.begins_with("tray_ai_") and not f.begins_with("tray_calendar_") and not f.begins_with("tray_passthrough_") and not f.begins_with("tray_debug_") and not f.begins_with("tray_busystate_") and not f.begins_with("tray_debugstate_") and not f.begins_with("tray_debugvisible_") and not f.begins_with("tray_busynow_") and not f.begins_with("tray_idlenow_"):
+		if not f.begins_with("tray_quit_") and not f.begins_with("tray_settings_") and not f.begins_with("tray_saves_") and not f.begins_with("tray_modlist_") and not f.begins_with("tray_perfbusy_") and not f.begins_with("tray_weather_") and not f.begins_with("tray_ai_") and not f.begins_with("tray_calendar_") and not f.begins_with("tray_courseschedule_") and not f.begins_with("tray_passthrough_") and not f.begins_with("tray_debug_") and not f.begins_with("tray_busystate_") and not f.begins_with("tray_debugstate_") and not f.begins_with("tray_debugvisible_") and not f.begins_with("tray_busynow_") and not f.begins_with("tray_idlenow_") and not f.begins_with("tray_version_"):
 			continue
 		var full := ProjectSettings.globalize_path("user://" + f)
 		if full in keep:
@@ -555,4 +609,7 @@ func _cleanup() -> void:
 		DirAccess.remove_absolute(_busy_now_request_path)
 	if not _idle_now_request_path.is_empty() and FileAccess.file_exists(_idle_now_request_path):
 		DirAccess.remove_absolute(_idle_now_request_path)
-	stop_tray()
+	if not _version_request_path.is_empty() and FileAccess.file_exists(_version_request_path):
+		DirAccess.remove_absolute(_version_request_path)
+	# ★ 这里刻意**不**调用 stop_tray()：托盘必须活到游戏进程真正消失为止（见文件头）。
+	#   删请求文件只是收尾，托盘进程由它自己的看门狗 / 超时兜底收掉。

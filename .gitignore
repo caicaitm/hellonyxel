@@ -4,3 +4,7 @@
 
 # Editor/import transient artifacts
 *.tmp
+
+# QiumingDLL (third-party; license forbids redistribution) + compiled wrapper
+addons/hellonyxel_qiuming/qiumingdll.dll
+addons/hellonyxel_qiuming/QiumingProc.exe

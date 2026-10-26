@@ -6,6 +6,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
 
 // HelloNyxel —— Windows 系统托盘（任务栏右下角「通知区域」）小图标。
@@ -24,7 +25,13 @@ using System.Windows.Forms;
 //
 // 「退出游戏」不是直接杀进程：
 //   菜单点击 → 写一个「退出请求文件」→ 游戏侧 TrayRunner.gd 轮询到 → 走正常退出流程
-//   （get_tree().quit()，保留后续"退出前存档"等钩子）。托盘自身随后由游戏侧 OS.kill 结束。
+//   （get_tree().quit()，保留后续"退出前存档"等钩子）。
+//
+// ★★ 托盘的生命周期跟**游戏进程**走，不跟「退出请求」走（见 QuitWatch）：点击退出后图标继续
+//    留在通知区域，直到游戏进程真的消失（看门狗 1s 轮询）或超时被强杀。已修 bug 的反例：
+//    旧实现里游戏侧在 quit() 之前先 OS.kill 托盘，一旦退出阶段被后台线程的 wait_to_finish()
+//    拖住（线程里跑 SysInfo.exe / PowerShell 子进程），就变成「托盘已消失、游戏页面还在」——
+//    玩家以为退不掉，而且此时退出入口已经没了。
 public static class TrayIcon
 {
     private const string QuitLabel = "退出游戏";
@@ -34,6 +41,7 @@ public static class TrayIcon
     private const string WeatherLabel = "配置天气";
     private const string AILabel = "配置人工智能";
     private const string CalendarLabel = "打开日历";
+    private const string CourseScheduleLabel = "课程表";
     private const string PassthroughOffLabel = "关闭桌面穿透";
     private const string PerfBusyLabel = "性能忙闲判断";
     private const string BusyNowLabel = "现在在忙";
@@ -41,6 +49,7 @@ public static class TrayIcon
     // 「进入调试模式 / 退出调试模式」：同一项的两种文案，随当前调试状态切换（见 RefreshDebugItem）。
     private const string DebugEnterLabel = "进入调试模式";
     private const string DebugExitLabel = "退出调试模式";
+    private const string VersionLabel = "版本";
 
     private static NotifyIcon _notifier;
     private static string _requestPath = "";
@@ -51,6 +60,7 @@ public static class TrayIcon
     private static string _weatherRequestPath = "";
     private static string _aiRequestPath = "";
     private static string _calendarRequestPath = "";
+    private static string _courseScheduleRequestPath = "";
     private static string _passthroughRequestPath = "";
     private static string _debugRequestPath = "";      // 「进入/退出调试模式」要写出的请求文件
     private static string _busyStatePath = "";        // 游戏侧写来的忙闲状态（"busy|locked" / "idle|unlocked"）
@@ -59,7 +69,28 @@ public static class TrayIcon
     private static bool _showDebugItem = true;        // 是否显示「进入/退出调试模式」项（启动参数，文件缺失时兜底）
     private static string _busyNowRequestPath = "";   // 「现在在忙」要写出的请求文件
     private static string _idleNowRequestPath = "";   // 「现在空闲」要写出的请求文件
+    private static string _versionRequestPath = "";    // 「版本」要写出的请求文件
     private static int _gamePid = 0;
+
+    // ---- 托盘单实例（跨进程）：命名 Mutex 当锁，确保通知区域永远只有一个本游戏图标 ----
+    // 为何需要：即便游戏侧单实例守卫挡住"第二个游戏进程"，仍有边界会让两个托盘并存
+    // （守卫竞态窗口、守卫被显式关闭、上一个托盘崩溃残留等）。托盘是独立进程，
+    // 必须由它自己保证唯一性 —— 否则每次启动都会往通知区域累加一个图标。
+    private const string TrayMutexName = "HelloNyxel.TrayIcon.Singleton";
+    private const string TrayDieEventName = "HelloNyxel.TrayIcon.Die";
+    private const string TrayOwnerFile = "tray_owner.info";   // 记录"当前持锁托盘所服务的游戏 PID"
+    private const int SingletonTakeoverMs = 3000;   // 等旧托盘让出锁的最长时间
+    private static Mutex _traySingleton = null;
+    private static EventWaitHandle _dieEvent = null;
+    private static System.Windows.Forms.Timer _dieWatch = null;
+
+    // ---- 「退出游戏」兜底强杀 ----
+    // 点击「退出游戏」后启动：若游戏在 QuitKillAfterSeconds 秒内仍未退出，判定其**退出流程被卡住**
+    // （典型：`get_tree().quit()` 的关机阶段在 join 后台线程，而线程卡在子进程上）→ 强杀游戏进程，
+    // 再由看门狗收尾托盘。这是「退出游戏」永远能退掉的保证（超时给足，正常退出 < 1s）。
+    private const int QuitKillAfterSeconds = 15;
+    private static System.Windows.Forms.Timer _quitWatch = null;
+    private static int _quitWaitedSeconds = 0;
 
     // ---- 忙闲 → 托盘图标（批次 62）----
     // 空闲 = -IconPath（icon.ico），在忙 = -BusyIconPath（icon_zzz.ico）。
@@ -101,8 +132,14 @@ public static class TrayIcon
     //   gamePid             —— 游戏进程 PID；为 0 表示不监视（监视用于游戏崩溃时自动收掉托盘）
     //   autoClickSeconds    —— >0 时 N 秒后自动点一次「退出游戏」（端到端自测钩子，正常为 0）
     //   busyIconPath        —— 「在忙」时用的 .ico（icon_zzz.ico）；空则忙闲不换图标
-    public static void Run(string iconPath, string requestPath, string settingsRequestPath, string savesRequestPath, string modListRequestPath, string passthroughRequestPath, string perfBusyRequestPath, string weatherRequestPath, string aiRequestPath, string calendarRequestPath, string debugRequestPath, string busyStatePath, string debugStatePath, string debugVisiblePath, int showDebugItem, string busyNowRequestPath, string idleNowRequestPath, int gamePid, int autoClickSeconds, string busyIconPath)
+    public static void Run(string iconPath, string requestPath, string settingsRequestPath, string savesRequestPath, string modListRequestPath, string passthroughRequestPath, string perfBusyRequestPath, string weatherRequestPath, string aiRequestPath, string calendarRequestPath, string courseScheduleRequestPath, string debugRequestPath, string busyStatePath, string debugStatePath, string debugVisiblePath, int showDebugItem, string busyNowRequestPath, string idleNowRequestPath, int gamePid, int autoClickSeconds, string busyIconPath, string versionRequestPath)
     {
+        // ★★ 托盘单实例：确保通知区域永远只有一个本游戏图标（详见 SetupSingleton）。
+        //    即便游戏侧单实例守卫漏过第二个进程、或上一个托盘崩溃残留，这里也保证不重复建图标。
+        if (!SetupSingleton())
+        {
+            return;
+        }
         _requestPath = requestPath;
         _settingsRequestPath = settingsRequestPath;
         _savesRequestPath = savesRequestPath;
@@ -112,6 +149,7 @@ public static class TrayIcon
         _weatherRequestPath = weatherRequestPath;
         _aiRequestPath = aiRequestPath;
         _calendarRequestPath = calendarRequestPath;
+        _courseScheduleRequestPath = courseScheduleRequestPath;
         _debugRequestPath = debugRequestPath;
         _busyStatePath = busyStatePath;
         _debugStatePath = debugStatePath;
@@ -121,6 +159,7 @@ public static class TrayIcon
         _idleNowRequestPath = idleNowRequestPath;
         _gamePid = gamePid;
         _busyIconPath = busyIconPath;
+        _versionRequestPath = versionRequestPath;
 
         ToolStripMenuItem quitItem;
         _notifier = BuildNotifier(iconPath, out quitItem);
@@ -145,6 +184,25 @@ public static class TrayIcon
         watchdog.Tick += delegate { if (!GameAlive()) Application.Exit(); };
         watchdog.Start();
 
+        // 监听"请退出"事件：后来的托盘实例会置位它，我们收到后优雅删图标并把锁让给它，
+        // 这样通知区域永远只剩"最新那一个"图标，且旧图标是被主动删掉的（不留 Explorer 幽灵图标）。
+        if (_dieEvent != null)
+        {
+            _dieWatch = new System.Windows.Forms.Timer();
+            _dieWatch.Interval = 200;
+            _dieWatch.Tick += delegate
+            {
+                bool signaled = false;
+                try { signaled = _dieEvent.WaitOne(0); } catch { signaled = false; }
+                if (signaled)
+                {
+                    if (_dieWatch != null) { _dieWatch.Stop(); }
+                    Application.Exit();
+                }
+            };
+            _dieWatch.Start();
+        }
+
         if (autoClickSeconds > 0)
         {
             System.Windows.Forms.Timer auto = new System.Windows.Forms.Timer();
@@ -158,11 +216,19 @@ public static class TrayIcon
         // 走到这里说明消息循环结束（正常退出，或看门狗判定游戏已死）。
         // 托盘是独立进程，Godot 侧拿不到它的 stdout，日志是唯一的退出证据。
         Log("EXIT");
-        watchdog.Stop();
-        iconWatch.Stop();
+        if (watchdog != null) { watchdog.Stop(); }
+        if (iconWatch != null) { iconWatch.Stop(); }
+        if (_dieWatch != null) { _dieWatch.Stop(); _dieWatch = null; }
         _notifier.Visible = false;   // 必须先隐藏再 Dispose，否则通知区域会残留幽灵图标
         _notifier.Dispose();
         _notifier = null;
+        // 释放托盘单实例锁：让等待中的后来者可以接管，通知区域始终只剩一个图标。
+        if (_traySingleton != null)
+        {
+            try { _traySingleton.ReleaseMutex(); } catch { }
+            try { _traySingleton.Close(); } catch { }
+            _traySingleton = null;
+        }
     }
 
     // ---------------- 独立 EXE 入口（批次 5 / P0-C / C1） ----------------
@@ -203,6 +269,7 @@ public static class TrayIcon
                 Arg(args, "-WeatherRequestPath"),
                 Arg(args, "-AIRequestPath"),
                 Arg(args, "-CalendarRequestPath"),
+                Arg(args, "-CourseScheduleRequestPath"),
                 Arg(args, "-DebugRequestPath"),
                 Arg(args, "-BusyStatePath"),
                 Arg(args, "-DebugStatePath"),
@@ -212,7 +279,8 @@ public static class TrayIcon
                 Arg(args, "-IdleNowRequestPath"),
                 ArgInt(args, "-GamePid"),
                 ArgInt(args, "-AutoClickSeconds"),
-                Arg(args, "-BusyIconPath"));
+                Arg(args, "-BusyIconPath"),
+                Arg(args, "-VersionRequestPath"));
         }
         catch (Exception ex)
         {
@@ -333,6 +401,14 @@ public static class TrayIcon
         ToolStripMenuItem calendarItem = new ToolStripMenuItem(CalendarLabel);
         calendarItem.Click += delegate { RequestCalendar(); };
 
+        // 课程表（与日历同级的独立项）：右键托盘 → 打开课程表面板
+        ToolStripMenuItem courseScheduleItem = new ToolStripMenuItem(CourseScheduleLabel);
+        courseScheduleItem.Click += delegate { RequestCourseSchedule(); };
+
+        // 版本（与设置/存档/天气/AI/日历同级的独立项）：右键托盘 → 打开版本显示 + 更新公告面板
+        ToolStripMenuItem versionItem = new ToolStripMenuItem(VersionLabel);
+        versionItem.Click += delegate { RequestVersion(); };
+
         // 进入/退出调试模式：显隐由设置页开关（_showDebugItem）决定，
         // 文案随当前调试状态切换、状态由游戏侧写进 debugStatePath（菜单展开时刷新）。
         _debugItem = new ToolStripMenuItem(DebugEnterLabel);
@@ -363,6 +439,8 @@ public static class TrayIcon
         menu.Items.Add(weatherItem);
         menu.Items.Add(aiItem);
         menu.Items.Add(calendarItem);
+        menu.Items.Add(courseScheduleItem);
+        menu.Items.Add(versionItem);
         menu.Items.Add(perfBusyItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_debugItem);
@@ -704,7 +782,7 @@ public static class TrayIcon
         Log(busy ? "ICON busy" : "ICON idle");
     }
 
-    // 写出退出请求文件（内容不重要，存在即代表"请求退出"）。
+    // 写出退出请求文件（内容不重要，存在即代表"请求退出"），并启动兜底强杀计时器。
     private static void RequestQuit()
     {
         try
@@ -715,6 +793,70 @@ public static class TrayIcon
                 Directory.CreateDirectory(dir);
             }
             File.WriteAllText(_requestPath, "quit");
+        }
+        catch { }
+        StartQuitWatch();
+    }
+
+    // 启动「退出兜底」计时器（幂等：重复点击只启一次）。
+    private static void StartQuitWatch()
+    {
+        if (_quitWatch != null)
+        {
+            return;
+        }
+        if (_gamePid <= 0)
+        {
+            return;   // 不知道游戏 pid → 无法兜底；看门狗仍会照常收尾
+        }
+        _quitWaitedSeconds = 0;
+        _quitWatch = new System.Windows.Forms.Timer();
+        _quitWatch.Interval = 1000;
+        _quitWatch.Tick += delegate { OnQuitWatchTick(); };
+        _quitWatch.Start();
+        Log("QUIT requested (kill after " + QuitKillAfterSeconds + "s)");
+    }
+
+    private static void OnQuitWatchTick()
+    {
+        if (!GameAlive())
+        {
+            StopQuitWatch();
+            Application.Exit();     // 游戏已退出 → 托盘收尾（图标随之消失）
+            return;
+        }
+        _quitWaitedSeconds++;
+        if (_quitWaitedSeconds >= QuitKillAfterSeconds)
+        {
+            StopQuitWatch();
+            Log("QUIT timeout -> force kill game pid=" + _gamePid);
+            KillGame();
+            Application.Exit();
+        }
+    }
+
+    private static void StopQuitWatch()
+    {
+        if (_quitWatch != null)
+        {
+            _quitWatch.Stop();
+            _quitWatch = null;
+        }
+    }
+
+    // 强制结束游戏进程（只用于「退出游戏」后游戏卡住不退的兜底）。
+    private static void KillGame()
+    {
+        if (_gamePid <= 0)
+        {
+            return;
+        }
+        try
+        {
+            using (Process p = Process.GetProcessById(_gamePid))
+            {
+                p.Kill();
+            }
         }
         catch { }
     }
@@ -950,6 +1092,36 @@ public static class TrayIcon
         catch { }
     }
 
+    // 写出「课程表」请求文件（存在即代表"请求打开课程表面板"）。
+    private static void RequestCourseSchedule()
+    {
+        try
+        {
+            string dir = Path.GetDirectoryName(_courseScheduleRequestPath);
+            if (!string.IsNullOrEmpty(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+            File.WriteAllText(_courseScheduleRequestPath, "course_schedule");
+        }
+        catch { }
+    }
+
+    // 写出「版本」请求文件（存在即代表"请求打开版本显示 + 更新公告面板"）。
+    private static void RequestVersion()
+    {
+        try
+        {
+            string dir = Path.GetDirectoryName(_versionRequestPath);
+            if (!string.IsNullOrEmpty(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+            File.WriteAllText(_versionRequestPath, "version");
+        }
+        catch { }
+    }
+
     private static bool GameAlive()
     {
         if (_gamePid <= 0)
@@ -967,5 +1139,127 @@ public static class TrayIcon
         {
             return false;   // 进程已不存在
         }
+    }
+
+    // 托盘单实例判定：返回 true = 本进程应继续创建图标；false = 放弃（不建图标，避免重复）。
+    // ★★ 关键修复（批次 548）：若已有托盘持有锁，先确认"那个已存在托盘所服务的游戏是否还活着"。
+    //    —— 只要旧托盘的游戏仍存活（= 正在运行的游戏、其合法托盘），本进程绝不抢走它、绝不杀它，
+    //      直接放弃建图标。否则会出现"托盘被移除但桌面窗口还在"的孤儿窗口。
+    //    —— 只有当旧托盘的游戏已死（崩溃 / 卡死残留），才发"请退出"信号、阻塞等它让出锁、再接管。
+    //    这样无论启动多少次，通知区域始终最多一个图标，且不破坏任何仍在运行游戏的托盘。
+    private static bool SetupSingleton()
+    {
+        try
+        {
+            bool createdNew = false;
+            _traySingleton = new Mutex(true, TrayMutexName, out createdNew);
+            if (createdNew)
+            {
+                _dieEvent = EnsureDieEvent();
+                WriteTrayOwner();   // 记录"本托盘服务的游戏 PID"
+                return true;
+            }
+            // 已有托盘持锁：先读"它的游戏 PID"并判断是否还活着
+            int ownerPid = ReadTrayOwnerPid();
+            // ★★ 只有在"能确认旧托盘的游戏已死"（属主 PID 有记录且进程已不存在）时才接管；
+            //    其余情况（无记录 / 其游戏仍存活）一律放弃建图标 —— 宁可让残留图标多活一会儿，
+            //    也绝不杀掉一个还在服务运行游戏的托盘（那会制造"托盘没了、窗口还在"的孤儿窗口）。
+            if (!(ownerPid > 0 && !IsProcessAlive(ownerPid)))
+            {
+                Log("SINGLETON cannot confirm old tray's game is dead (ownerPid=" + ownerPid + ") -> bail (keep existing)");
+                try { _traySingleton.Close(); } catch { }
+                _traySingleton = null;
+                return false;
+            }
+            // 旧托盘的游戏已死（残留）-> 请求它优雅退出，再等它让出锁后接管
+            Log("SINGLETON existing tray (game dead) -> requesting exit");
+            try { using (EventWaitHandle die = EventWaitHandle.OpenExisting(TrayDieEventName)) { die.Set(); } } catch { }
+            try { _traySingleton.Close(); } catch { }
+            _traySingleton = null;
+
+            Mutex waitMx = new Mutex(false, TrayMutexName);
+            bool acquired = false;
+            try { acquired = waitMx.WaitOne(SingletonTakeoverMs); }
+            catch (System.Threading.AbandonedMutexException) { acquired = true; }  // 旧托盘崩溃残留 -> 视为已取得
+            catch { acquired = false; }
+            if (!acquired)
+            {
+                Log("SINGLETON takeover timeout -> not creating duplicate icon");
+                try { waitMx.Close(); } catch { }
+                return false;
+            }
+            _traySingleton = waitMx;
+            _dieEvent = EnsureDieEvent();   // 打开(或复用)事件并复位，避免自己的 dieWatch 误触发
+            WriteTrayOwner();               // 接管后更新为"本托盘服务的游戏 PID"
+            Log("SINGLETON took over; old tray removing its icon");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log("SINGLETON error " + Msg(ex));
+            return true;   // 出错也放行：宁可多开也不能让托盘起不来（与单实例守卫"宁可多开"原则一致）
+        }
+    }
+
+    // 打开(不存在则创建)"请退出"事件，并复位为非信号态。后来的托盘用它请求我们退出。
+    private static EventWaitHandle EnsureDieEvent()
+    {
+        try
+        {
+            EventWaitHandle e = new EventWaitHandle(false, EventResetMode.ManualReset, TrayDieEventName);
+            e.Reset();
+            return e;
+        }
+        catch { return null; }
+    }
+
+    // 托盘属主文件路径：与单实例守卫同源（%文档%\HelloNyxel\Temp），记录"当前持锁托盘服务的游戏 PID"。
+    // 仅本进程自写自读，路径由自己算，内部一致即可（不依赖游戏侧传入）。
+    private static string TrayOwnerPath()
+    {
+        try
+        {
+            string docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string dir = Path.Combine(docs, "HelloNyxel", "Temp");
+            return Path.Combine(dir, TrayOwnerFile);
+        }
+        catch { return ""; }
+    }
+
+    // 写入"本托盘服务的游戏 PID"（持锁成功 / 接管成功时调用）。
+    private static void WriteTrayOwner()
+    {
+        try
+        {
+            string p = TrayOwnerPath();
+            if (string.IsNullOrEmpty(p)) { return; }
+            string dir = Path.GetDirectoryName(p);
+            if (!string.IsNullOrEmpty(dir)) { Directory.CreateDirectory(dir); }
+            File.WriteAllText(p, _gamePid.ToString());
+        }
+        catch { }
+    }
+
+    // 读出"当前持锁托盘服务的游戏 PID"（0 = 无记录 / 读不到）。
+    private static int ReadTrayOwnerPid()
+    {
+        try
+        {
+            string p = TrayOwnerPath();
+            if (string.IsNullOrEmpty(p) || !File.Exists(p)) { return 0; }
+            string txt = File.ReadAllText(p).Trim();
+            int pid = 0;
+            if (int.TryParse(txt, out pid)) { return pid; }
+        }
+        catch { }
+        return 0;
+    }
+
+    // 进程是否还存活（按 PID）。
+    private static bool IsProcessAlive(int pid)
+    {
+        if (pid <= 0) { return false; }
+        try { using (Process p = Process.GetProcessById(pid)) { return !p.HasExited; } }
+        catch { return false; }
     }
 }

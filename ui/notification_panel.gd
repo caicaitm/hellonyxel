@@ -55,6 +55,7 @@ func _build_children() -> void:
 	var fnt := UIStyle.get_cjk_font()
 
 	_bg = UIPanel.new()
+	_bg.bind_page_dark_bg()
 	_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_bg.set_corner_radius(UIStyle.CORNER_RADIUS)
 	_bg.set_fill_color(UIStyle.FILL_DEFAULT)

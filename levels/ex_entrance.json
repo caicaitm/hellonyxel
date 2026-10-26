@@ -1,0 +1,12 @@
+{
+  "name": "ex_entrance",
+  "brief": "入口关卡（最小单元）：含关卡入口锚点（左，绿）+ 关卡出口锚点（右，蓝），并带一个传送门出口（紫，演示）。",
+  "layout": "row",
+  "env": ["entrance_level"],
+  "blocks": [
+    { "x": -200.0, "y": 0.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "collision", "level_entrance"], "fill_color": [0.30, 0.80, 0.40, 1.0] },
+    { "x": 0.0, "y": 0.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "collision"] },
+    { "x": 200.0, "y": 0.0, "width": 80.0, "height": 80.0, "tags": ["show", "border", "fill", "collision", "level_exit"], "fill_color": [0.30, 0.50, 0.90, 1.0] },
+    { "x": 0.0, "y": 150.0, "width": 60.0, "height": 60.0, "tags": ["show", "border", "fill", "portal_exit_test"], "fill_color": [0.70, 0.40, 0.90, 1.0] }
+  ]
+}

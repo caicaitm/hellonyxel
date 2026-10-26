@@ -40,6 +40,12 @@ const DialogueDebugPanelScript := preload("res://debug/dialogue_debug_panel.gd")
 const SelfProfilePanelScript := preload("res://ui/self_profile_panel.gd")
 # 显式 preload 状态页查看器脚本（批次 47：读取 %文档%/HelloNyxel/Temp/<文件>.json 并展示）
 const StateViewPanelScript := preload("res://ui/state_view_panel.gd")
+# 显式 preload 关卡组生成器面板脚本（调试面板「关卡组生成器」开关打开）
+const LevelGroupPanelScript := preload("res://ui/level_group_panel.gd")
+# 显式 preload 动画预览面板脚本（预览 PSD 分层绑骨的走路动画）
+const AnimationPreviewPanelScript := preload("res://ui/animation_preview_panel.gd")
+# 关卡组生成器面板实例（开关切换用）
+var _level_group_panel = null
 
 # 状态页表（批次 47 / 48）：key / 标题 / Temp 目录下的 json 文件名 / 可选的自定义面板脚本。
 # ★ 这些状态系统大多尚未开发 → 文件不存在属正常，页面仍需能正常打开（显示占位提示 + 预期路径）。
@@ -136,13 +142,16 @@ var _toggle_passthrough: UIBtn
 var _toggle_topmost: UIBtn
 var _toggle_force_border: UIBtn   # 强制显示积木边框开关
 var _toggle_level_page: UIBtn     # 关卡页面开关
+var _toggle_world_page: UIBtn     # 世界页面开关（3D 宏观世界）
 var _event_editor: EventChainEditorPanel = null   # 事件链编辑器（独立层）
+var _behavior_editor: BehaviorScriptEditorPanel = null   # 行为脚本编辑器（独立层）
 var _timeline_panel: Control = null               # 时间轴调试面板（独立层）
 var _console_panel: Control = null                # 控制台面板（独立层）
 var _perf_busy_panel: Control = null              # 性能忙闲判断面板（独立层）
 var _dialogue_panel: DialogueDebugPanel = null    # 对话调试面板（独立层；含底部/弹窗/冒泡对话 + 右下角提醒）
 var _self_profile_panel: Control = null           # 自测量面板（独立层 136；默认关闭 = 零开销）
 var _state_panels: Dictionary = {}                # 状态页（批次 47）：key -> StateViewPanel（各自的独立层）
+var _animation_preview_panel: Control = null      # 动画预览（骨骼走路）独立层 161
 
 
 # 系统信息刷新节流：原实现每帧调用 DisplayServer/Time 并重建字符串，属无谓开销。
@@ -212,6 +221,7 @@ func _make_layer(layer_index: int) -> CanvasLayer:
 func _build_panel() -> void:
 	_panel = _make_layer(128)
 	_bg = UIPanel.new()
+	_bg.bind_page_dark_bg()
 	_bg.position = PANEL_POS
 	_bg.size = Vector2(PANEL_W, PANEL_H)
 	_bg.set_corner_radius(UIStyle.CORNER_RADIUS)
@@ -310,6 +320,13 @@ func _build_panel() -> void:
 	_toggle_level_page = _make_toggle("toggle_level_page", "关卡页面")
 	vbox.add_child(_toggle_level_page)
 
+	# 世界页面 区块（3D 宏观世界）：同一入口模式 —— desktop.toggle_world_page
+	_toggle_world_page = _make_toggle("toggle_world_page", "世界页面")
+	vbox.add_child(_toggle_world_page)
+
+	# 关卡组生成器 区块：临时调试入口，打开后输入数量/种子生成并试看
+	vbox.add_child(_make_toggle("level_group", "关卡组生成器"))
+
 	# ★ 「关卡摄像头锚定的目标」输入行已**迁移到关卡页面的关卡配置面板**
 	#   （blocks/level_page.gd::_build_cam_row / _on_cam_apply）—— 关卡的事归关卡页面管，
 	#   这里不再重复提供入口。
@@ -319,6 +336,10 @@ func _build_panel() -> void:
 	# 事件链编辑器 区块：点开可视化编辑事件脚本（事件链名/事件名/关闭/正文/按钮/打开）
 	var ev_btn := _make_toggle("event_editor", "事件链编辑器")
 	vbox.add_child(ev_btn)
+
+	# 行为脚本编辑器 区块：管理 res://behaviors 下的行为脚本（编辑行为页面）
+	var beh_btn := _make_toggle("behavior_editor", "编辑积木行为脚本")
+	vbox.add_child(beh_btn)
 
 	vbox.add_child(_sep())
 
@@ -345,6 +366,9 @@ func _build_panel() -> void:
 	# 自测量 区块（批次 1）：帧率/帧时间/渲染与物理计数/本进程树内存/子系统每帧耗时 + 快照导出。
 	# ★ 默认关闭 —— 面板不开时所有计时闸门为 false，连一次时钟读取都不发（零开销）。
 	vbox.add_child(_make_toggle("self_profile", "自测量面板"))
+
+	# 骨骼动画预览：离屏播放 textures/cats/walk_rig 下的 PSD 分层绑骨走路动画
+	vbox.add_child(_make_toggle("animation_preview", "动画预览"))
 
 	vbox.add_child(_sep())
 
@@ -481,6 +505,8 @@ func _busy_line() -> String:
 	match str(BusyState.state_source()):
 		"schedule":                                # SOURCE_SCHEDULE
 			tag = "定时时段"
+		"class":                                   # SOURCE_CLASS（批次549 上课联动）
+			tag = "上课时段"
 		"manual":                                  # SOURCE_MANUAL
 			tag = "手动切换"
 	if tag == "手动切换" and BusyState.has_method("is_manual_locked") and BusyState.is_manual_locked():
@@ -545,6 +571,10 @@ func _on_mode_changed(on: bool) -> void:
 		if _self_profile_panel != null and is_instance_valid(_self_profile_panel):
 			_self_profile_panel.close()
 			_self_profile_panel = null
+		# ★ 动画预览也挂在独立层(161)，且开着会一直渲染 SubViewport —— 退出调试模式一并关闭。
+		if _animation_preview_panel != null and is_instance_valid(_animation_preview_panel):
+			_animation_preview_panel.close()
+			_animation_preview_panel = null
 		# ★ 同理关掉所有「状态页」（批次 47）：各自挂在独立层(137+)，不关会留在屏幕上。
 		#   注意：close() 会发 closed → _on_state_view_closed 顺手 erase，故这里先取 keys() 快照
 		#   （Godot 的 Dictionary.keys() 返回新数组，迭代安全）。
@@ -568,8 +598,14 @@ func _on_toggle_pressed(id: String) -> void:
 			_set_mouse_track_enabled(not _mouse_track_enabled)
 		"toggle_level_page":
 			_toggle_level_page_pressed()
+		"toggle_world_page":
+			_toggle_world_page_pressed()
+		"level_group":
+			_toggle_level_group()
 		"event_editor":
 			_toggle_event_editor()
+		"behavior_editor":
+			_toggle_behavior_editor()
 		"timeline_debug":
 			_toggle_timeline_debug()
 		"console":
@@ -578,6 +614,8 @@ func _on_toggle_pressed(id: String) -> void:
 			_toggle_dialogue_panel()
 		"self_profile":
 			_toggle_self_profile()
+		"animation_preview":
+			_toggle_animation_preview()
 		"html_poll":
 			HtmlBridge.set_polling(not HtmlBridge.polling)
 		"toggle_bottom":
@@ -601,6 +639,33 @@ func _toggle_level_page_pressed() -> void:
 	if scene != null and scene.has_method("toggle_level_page"):
 		scene.toggle_level_page()
 	_refresh_toggle_labels()
+
+
+# 世界页面开关：调桌面场景的统一入口（3D 宏观世界）
+func _toggle_world_page_pressed() -> void:
+	var scene = get_tree().current_scene
+	if scene != null and scene.has_method("toggle_world_page"):
+		scene.toggle_world_page()
+	_refresh_toggle_labels()
+
+
+# 关卡组生成器面板开关：按一次打开，再按一次关闭
+func _toggle_level_group() -> void:
+	if _level_group_panel != null and is_instance_valid(_level_group_panel):
+		_level_group_panel.close()
+		_level_group_panel = null
+		return
+	_level_group_panel = LevelGroupPanelScript.new()
+	var layer := _make_layer(160)
+	layer.add_child(_level_group_panel)
+	_level_group_panel.closed.connect(_on_level_group_closed.bind(layer))
+
+
+# 关卡组生成器面板关闭：释放其承载层
+func _on_level_group_closed(layer: CanvasLayer) -> void:
+	if layer != null and is_instance_valid(layer):
+		layer.queue_free()
+	_level_group_panel = null
 
 
 # 时间轴调试面板开关：按一次打开，再按一次关闭
@@ -693,6 +758,25 @@ func _on_self_profile_closed(layer: CanvasLayer) -> void:
 	if layer != null and is_instance_valid(layer):
 		layer.queue_free()
 	_self_profile_panel = null
+
+
+# 动画预览开关：按一次打开，再按一次关闭
+func _toggle_animation_preview() -> void:
+	if _animation_preview_panel != null and is_instance_valid(_animation_preview_panel):
+		_animation_preview_panel.close()
+		_animation_preview_panel = null
+		return
+	_animation_preview_panel = AnimationPreviewPanelScript.new()
+	var layer := _make_layer(161)
+	layer.add_child(_animation_preview_panel)
+	_animation_preview_panel.closed.connect(_on_animation_preview_closed.bind(layer))
+
+
+# 动画预览关闭：释放其承载层
+func _on_animation_preview_closed(layer: CanvasLayer) -> void:
+	if layer != null and is_instance_valid(layer):
+		layer.queue_free()
+	_animation_preview_panel = null
 
 
 # ---------- 状态页（批次 47）----------
@@ -791,6 +875,18 @@ func _toggle_event_editor() -> void:
 	_refresh_toggle_labels()
 
 
+# 行为脚本编辑器开关：按一次打开，再按一次关闭（未保存直接关 = 丢弃暂存）
+func _toggle_behavior_editor() -> void:
+	if _behavior_editor != null and is_instance_valid(_behavior_editor):
+		_behavior_editor.close()
+		_behavior_editor = null
+		return
+	_behavior_editor = BehaviorScriptEditorPanel.new()
+	var layer := _make_layer(132)
+	layer.add_child(_behavior_editor)
+	_refresh_toggle_labels()
+
+
 func _refresh_toggle_labels(_on: bool = false) -> void:
 	if _toggle_passthrough != null:
 		_toggle_passthrough.set_label("桌面穿透: %s" % ("开启" if MousePassRunner.is_enabled() else "关闭"))
@@ -804,6 +900,10 @@ func _refresh_toggle_labels(_on: bool = false) -> void:
 		var scene = get_tree().current_scene
 		var vis: bool = scene != null and scene.has_method("level_page_is_visible") and scene.level_page_is_visible()
 		_toggle_level_page.set_label("关卡页面: %s" % ("显示" if vis else "隐藏"))
+	if _toggle_world_page != null:
+		var scene_w = get_tree().current_scene
+		var vis_w: bool = scene_w != null and scene_w.has_method("world_page_is_visible") and scene_w.world_page_is_visible()
+		_toggle_world_page.set_label("世界页面: %s" % ("显示" if vis_w else "隐藏"))
 	if _toggle_html_poll != null and HtmlBridge != null:
 		_toggle_html_poll.set_label("HTML命令轮询: %s" % ("开启" if HtmlBridge.polling else "关闭"))
 

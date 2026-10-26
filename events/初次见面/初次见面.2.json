@@ -3,7 +3,8 @@
 	"chain": "初次见面",
 	"close": [],
 	"content": {
-		"effect": "",
+		"bg_image": "",
+		"effect": "/play_event \"初次见面.3\"; /add_var story_state.json = \"初次见面\"",
 		"image": "",
 		"panel_type": "bottom",
 		"text_file": "初次见面.2",
@@ -11,8 +12,6 @@
 		"voice": "auto"
 	},
 	"name": "初次见面.2",
-	"open": [
-		"auto"
-	],
+	"open": [],
 	"version": 1
 }
